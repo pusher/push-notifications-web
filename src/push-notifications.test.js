@@ -5,5 +5,7 @@ test('PushNotifications', () => {
 });
 
 test('Errors', () => {
-  expect(PushNotifications()).toThrow();
+  expect(() => PushNotifications()).toThrow(
+    'Push Notifications config object is required'
+  );
 });
