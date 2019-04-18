@@ -1,11 +1,11 @@
 {
   "name": "push-notifications-web",
-  "version": "1.3.0",
+  "version": "1.6.0",
   "description": "",
   "main": "dist/push-notifications.js",
   "scripts": {
     "test": "jest",
-    "postinstall": "npx rollup -c"
+    "prepublish": "rollup -c"
   },
   "keywords": [],
   "author": "minaorangina",
