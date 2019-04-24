@@ -55,7 +55,7 @@ export class PushNotifications {
     const reg = await window.navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey)
+      applicationServerKey: urlBase64ToUInt8Array(publicKey)
     });
 
     return btoa(JSON.stringify(sub));
@@ -70,7 +70,7 @@ export class PushNotifications {
   }
 }
 
-function urlBase64ToUint8Array(base64String) {
+function urlBase64ToUInt8Array(base64String) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
     .replace(/\-/g, "+")
