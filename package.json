@@ -1,19 +1,22 @@
 {
   "name": "push-notifications-web",
-  "version": "1.0.0",
+  "version": "1.6.0",
   "description": "",
-  "main": "index.js",
+  "main": "push-notifications.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "prepublish": "rollup -c"
   },
   "keywords": [],
-  "author": "",
+  "author": "minaorangina",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "babel-jest": "^24.7.1",
     "jest": "^24.7.1",
-    "parcel": "^1.12.3"
+    "rollup": "^1.10.0",
+    "rollup-plugin-commonjs": "^9.3.4",
+    "rollup-plugin-node-resolve": "^4.2.3"
   }
 }
