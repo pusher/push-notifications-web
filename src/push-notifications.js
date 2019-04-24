@@ -1,6 +1,6 @@
 import doRequest from "./doRequest";
 
-export default class PushNotifications {
+export class PushNotifications {
   constructor(config) {
     if (!config) {
       throw new Error("Config object required");
@@ -27,29 +27,56 @@ export default class PushNotifications {
     if (this._endpoint !== null) {
       return this._endpoint;
     }
-    return `http://${this.instanceId}.pushnotifications.com`;
+    return `https://${this.instanceId}.pushnotifications.pusher.com`;
   }
 
   async start() {
-    const { vapidPublicKey: publicKey } = await this.getPublicKey();
+    const { vapidPublicKey: publicKey } = await this._getPublicKey();
 
     // register with pushManager, get endpoint etc
-    const token = await this.getPushToken(publicKey).catch(console.error);
+    const token = await this._getPushToken(publicKey);
 
     // get device id from errol
-    const path = `/device_api/v1/instances/${this.instanceId}/devices/web`;
+    const response = await this._registerDevice(token);
 
-    const response = await this.doRequest("POST", path, { token });
-
-    // put response.id in indexedDB
-    this.deviceId = response.id;
+    // // put response.id in indexedDB
+    // this.deviceId = response.id;
   }
 
-  getPublicKey() {
-    const path = `${this.baseUrl}/device_api/v1/instances/${
+  async _getPublicKey() {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    }/web-vapid-public-key`;
-    const options = { method: "GET", path };
-    return doRequest(options);
+    )}/web-vapid-public-key`;
+    return doRequest("GET", path);
+  }
+
+  async _getPushToken(publicKey) {
+    window.navigator.serviceWorker.register("sw.js");
+    const reg = await window.navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey)
+    });
+
+    return btoa(JSON.stringify(sub));
+  }
+
+  async _registerDevice(token) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web`;
+
+    return await doRequest("POST", path, { token });
   }
 }
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, "+")
+    .replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+export default { PushNotifications };

@@ -1,11 +1,16 @@
-export default function doRequest({ path, method, body, headers }) {
-  const options = { method, body: JSON.stringify(body), headers };
+export default function doRequest(method, path, body = null, headers = {}) {
+  const options = {
+    method,
+    headers: { "Content-Type": "application/json", ...headers }
+  };
+
+  if (body !== null) {
+    options.body = JSON.stringify(body);
+  }
+
   return fetch(path, options)
     .then(response => {
       return response.json();
-    })
-    .then(myJson => {
-      console.log(JSON.stringify(myJson));
     })
     .catch(console.error);
 }
