@@ -1,4 +1,4 @@
-import PushNotifications from "./push-notifications";
+import { PushNotifications } from "./push-notifications";
 
 test("PushNotifications", () => {
   expect(typeof PushNotifications).toBe("function");
