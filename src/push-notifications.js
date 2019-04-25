@@ -38,7 +38,6 @@ export class PushNotifications {
 
     // get device id from errol
     const response = await this._registerDevice(token);
-
     // // put response.id in indexedDB
     // this.deviceId = response.id;
   }
@@ -66,7 +65,7 @@ export class PushNotifications {
       this.instanceId
     )}/devices/web`;
 
-    return await doRequest("POST", path, { token });
+    return doRequest("POST", path, { token });
   }
 }
 
