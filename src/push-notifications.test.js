@@ -30,32 +30,26 @@ test("It will throw if the instance id is the empty string", () => {
   );
 });
 
-test("It will successfully register the device", () => {
-  jest.doMock("./doRequest");
-  const mockDoRequest = require("./doRequest").default;
-  mockDoRequest.mockResolvedValueOnce({ vapidPublicKey: "this-is-vapid-key" });
-  mockDoRequest.mockResolvedValueOnce({
-    instanceId: "instance-id",
-    id: "device-id"
+describe("Beams", () => {
+  beforeAll(async () => {
+    await page.goto("http://localhost:3000/");
   });
 
-  const mockGetPushToken = jest.fn();
-  mockGetPushToken.mockResolvedValueOnce("some-token");
+  it('should be titled "Beams"', async () => {
+    await expect(page.title()).resolves.toMatch("Beams");
+  });
 
-  const sdk = require("./push-notifications");
-  const beamsClient = new sdk.PushNotifications({ instanceId: "abcd" });
-  beamsClient._getPushToken = mockGetPushToken;
+  it("should register the device", async () => {
+    const result = await page.evaluate(() => {
+      var beamsClient = new PusherPushNotifications.PushNotifications({
+        instanceId: "deadc0de-2ce6-46e3-ad9a-5c02d0ab119b"
+      });
 
-  beamsClient.start().then(() => {
-    expect(mockDoRequest).toHaveBeenCalledWith(
-      "GET",
-      "https://abcd.pushnotifications.pusher.com/device_api/v1/instances/abcd/web-vapid-public-key"
-    );
+      return beamsClient.start().then(() => {
+        return beamsClient.deviceId;
+      });
+    });
 
-    expect(mockDoRequest).toHaveBeenCalledWith(
-      "POST",
-      "https://abcd.pushnotifications.pusher.com/device_api/v1/instances/abcd/devices/web",
-      { token: "some-token" }
-    );
+    console.log("hello", result);
   });
 });

@@ -39,7 +39,7 @@ export class PushNotifications {
     // get device id from errol
     const response = await this._registerDevice(token);
     // // put response.id in indexedDB
-    // this.deviceId = response.id;
+    this.deviceId = response;
   }
 
   async _getPublicKey() {
@@ -50,12 +50,16 @@ export class PushNotifications {
   }
 
   async _getPushToken(publicKey) {
-    window.navigator.serviceWorker.register("sw.js");
-    const reg = await window.navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUInt8Array(publicKey)
-    });
+    try {
+      window.navigator.serviceWorker.register("sw.js");
+      const reg = await window.navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUInt8Array(publicKey)
+      });
+    } catch (e) {
+      return Promise.reject(e);
+    }
 
     return btoa(JSON.stringify(sub));
   }
