@@ -24,7 +24,11 @@ export class Client {
     this.instanceId = instanceId;
     this._endpoint = endpointOverride; // Internal only
 
+<<<<<<< HEAD
     this._initDb('beams');
+=======
+    this._initDb("beams");
+>>>>>>> 17dbab0... [WIP] Add option to persist data in IndexedDB
   }
 
   get _baseURL() {
@@ -78,6 +82,7 @@ export class Client {
   }
 
   _initDb(dbName) {
+<<<<<<< HEAD
     const request = indexedDB.open(dbName);
 
     request.onerror = event => {
@@ -96,10 +101,31 @@ export class Client {
       objectStore.createIndex('instance_id', 'instance_id', { unique: true });
       objectStore.createIndex('token', 'token', { unique: true });
       objectStore.createIndex('device_id', 'device_id', { unique: true });
+=======
+    var request = indexedDB.open(dbName);
+
+    request.onerror = function(event) {
+      console.log(`Database error: " + ${event.target.errorCode}`);
+    };
+
+    request.onsuccess = function(event) {
+      db = event.target.result;
+    };
+
+    request.onupgradeneeded = function(event) {
+      var db = event.target.result;
+      var objectStore = db.createObjectStore("beams", {
+        keyPath: "instance_id"
+      });
+      objectStore.createIndex("instance_id", "instance_id", { unique: true });
+      objectStore.createIndex("token", "token", { unique: true });
+      objectStore.createIndex("device_id", "device_id", { unique: true });
+>>>>>>> 17dbab0... [WIP] Add option to persist data in IndexedDB
     };
   }
 
   _save(instanceId, token, deviceId) {
+<<<<<<< HEAD
     const request = db
       .transaction('beams', 'readwrite')
       .objectStore('beams')
@@ -115,14 +141,37 @@ export class Client {
 
     request.onerror = event => {
       console.error(`Database error: ${event.target.errorCode}`);
+=======
+    var request = db
+      .transaction("beams", "readwrite")
+      .objectStore("beams")
+      .add({
+        instance_id: instanceId,
+        token: token,
+        device_id: deviceId
+      });
+
+    request.onsuccess = function(event) {
+      // TODO
+    };
+
+    request.onerror = function(event) {
+      console.log(`Database error: " + ${event.target.errorCode}`);
+>>>>>>> 17dbab0... [WIP] Add option to persist data in IndexedDB
     };
   }
 
   _read(instanceId) {
     db
+<<<<<<< HEAD
       .transaction('beams')
       .objectStore('beams')
       .get(instanceId).onsuccess = event => {
+=======
+      .transaction("beams")
+      .objectStore("beams")
+      .get(instanceId).onsuccess = function(event) {
+>>>>>>> 17dbab0... [WIP] Add option to persist data in IndexedDB
       result = event.target.result;
     };
   }
