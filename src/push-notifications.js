@@ -46,16 +46,17 @@ export class PushNotifications {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/web-vapid-public-key`;
-    return doRequest("GET", path);
+    return doRequest('GET', path);
   }
 
   async _getPushToken(publicKey) {
+    let sub;
     try {
-      window.navigator.serviceWorker.register("sw.js");
+      window.navigator.serviceWorker.register('sw.js');
       const reg = await window.navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
+      sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUInt8Array(publicKey)
+        applicationServerKey: urlBase64ToUInt8Array(publicKey),
       });
     } catch (e) {
       return Promise.reject(e);
