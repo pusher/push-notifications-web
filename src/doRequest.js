@@ -9,8 +9,19 @@ export default function doRequest(method, path, body = null, headers = {}) {
   }
 
   return fetch(path, options)
-    .then(response => {
-      return response.json();
+    .then(response => response.text())
+    .then(text => {
+      if (text) {
+        return JSON.parse(text);
+      }
+      return null;
     })
-    .catch(console.error);
+    .catch(err => {
+      if (err.message.toLowerCase().includes('unexpected')) {
+        console.warn('Response body in unexpected format.');
+        return null;
+      } else {
+        throw err;
+      }
+    });
 }

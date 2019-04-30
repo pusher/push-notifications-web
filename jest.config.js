@@ -1,3 +1,4 @@
 module.exports = {
-  preset: "jest-puppeteer"
+  automock: false,
+  setupFiles: ['./test-setup.js'],
 };

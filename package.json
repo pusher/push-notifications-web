@@ -2,7 +2,7 @@
   "name": "push-notifications-web",
   "version": "1.6.0",
   "description": "",
-  "main": "push-notifications.js",
+  "main": "src/push-notifications.js",
   "scripts": {
     "test": "jest",
     "prepublish": "rollup -c"

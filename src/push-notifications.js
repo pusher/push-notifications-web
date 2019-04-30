@@ -1,6 +1,10 @@
 import doRequest from './doRequest';
 
-export class PushNotifications {
+export function init(config) {
+  return new Client(config);
+}
+
+export class Client {
   constructor(config) {
     if (!config) {
       throw new Error('Config object required');
