@@ -1,7 +1,7 @@
 export default function doRequest(method, path, body = null, headers = {}) {
   const options = {
     method,
-    headers: { "Content-Type": "application/json", ...headers }
+    headers: { 'Content-Type': 'application/json', ...headers },
   };
 
   if (body !== null) {

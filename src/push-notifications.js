@@ -1,20 +1,20 @@
-import doRequest from "./doRequest";
+import doRequest from './doRequest';
 
 export class PushNotifications {
   constructor(config) {
     if (!config) {
-      throw new Error("Config object required");
+      throw new Error('Config object required');
     }
     const { instanceId, endpointOverride = null } = config;
 
     if (instanceId === undefined) {
-      throw new Error("Instance ID is required");
+      throw new Error('Instance ID is required');
     }
-    if (typeof instanceId !== "string") {
-      throw new Error("Instance ID must be a string");
+    if (typeof instanceId !== 'string') {
+      throw new Error('Instance ID must be a string');
     }
     if (instanceId.length === 0) {
-      throw new Error("Instance ID cannot be empty");
+      throw new Error('Instance ID cannot be empty');
     }
 
     this.instanceId = instanceId;
@@ -70,17 +70,15 @@ export class PushNotifications {
       this.instanceId
     )}/devices/web`;
 
-    return doRequest("POST", path, { token });
+    return doRequest('POST', path, { token });
   }
 }
 
 function urlBase64ToUInt8Array(base64String) {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
-    .replace(/\-/g, "+")
-    .replace(/_/g, "/");
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
-
-export default { PushNotifications };
