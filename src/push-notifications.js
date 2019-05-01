@@ -49,16 +49,23 @@ export class Client {
   }
 
   async start() {
-    const { vapidPublicKey: publicKey } = await this._getPublicKey();
+    const data = this._read(this.instanceId);
+    if (typeof data !== 'undefined' && data.length > 0) {
+      this.token = data[0];
+      this.deviceId = data[1];
+      return;
+    } else {
+      const { vapidPublicKey: publicKey } = await this._getPublicKey();
 
-    // register with pushManager, get endpoint etc
-    const token = await this._getPushToken(publicKey);
+      // register with pushManager, get endpoint etc
+      const token = await this._getPushToken(publicKey);
 
-    // get device id from errol
-    const response = await this._registerDevice(token);
-    this.deviceId = response;
+      // get device id from errol
+      const response = await this._registerDevice(token);
+      this.deviceId = response;
 
-    this._save(this.instanceId, token, this.deviceId);
+      this._save(this.instanceId, token, this.deviceId);
+    }
   }
 
   async _getPublicKey() {
@@ -139,6 +146,7 @@ export class Client {
       .objectStore('beams')
       .get(instanceId).onsuccess = event => {
       result = event.target.result;
+      return [result.token, result.device_id];
     };
   }
 }
