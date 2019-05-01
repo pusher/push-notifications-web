@@ -80,16 +80,16 @@ export class Client {
   _initDb(dbName) {
     const request = indexedDB.open(dbName);
 
-    request.onerror = function(event) {
+    request.onerror = event => {
       console.error(`Database error: ${event.target.errorCode}`);
     };
 
-    request.onsuccess = function(event) {
-      db = event.target.result;
+    request.onsuccess = event => {
+      const db = event.target.result;
     };
 
-    request.onupgradeneeded = function(event) {
-      var db = event.target.result;
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
       var objectStore = db.createObjectStore('beams', {
         keyPath: 'instance_id',
       });
@@ -109,11 +109,11 @@ export class Client {
         device_id: deviceId,
       });
 
-    request.onsuccess = function(event) {
+    request.onsuccess = event => {
       // TODO
     };
 
-    request.onerror = function(event) {
+    request.onerror = event => {
       console.error(`Database error: ${event.target.errorCode}`);
     };
   }
@@ -122,7 +122,7 @@ export class Client {
     db
       .transaction('beams')
       .objectStore('beams')
-      .get(instanceId).onsuccess = function(event) {
+      .get(instanceId).onsuccess = event => {
       result = event.target.result;
     };
   }
