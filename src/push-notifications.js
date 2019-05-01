@@ -42,7 +42,6 @@ export class Client {
 
     // get device id from errol
     const response = await this._registerDevice(token);
-    // // put response.id in indexedDB
     this.deviceId = response;
 
     this._save(this.instanceId, token, this.deviceId);
