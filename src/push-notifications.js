@@ -21,6 +21,12 @@ export class Client {
       throw new Error('Instance ID cannot be empty');
     }
 
+    if (!window.indexedDB) {
+      throw new Error(
+        "Browser doesn't support a stable version of IndexedDB which is required for the SDK to work."
+      );
+    }
+
     this.instanceId = instanceId;
     this._endpoint = endpointOverride; // Internal only
 
