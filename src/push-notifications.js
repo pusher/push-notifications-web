@@ -27,6 +27,14 @@ export class Client {
       );
     }
 
+    if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
+      throw new Error("Notifications aren't supported.");
+    }
+
+    if (!('PushManager' in window)) {
+      throw new Error("Push messaging isn't supported.");
+    }
+
     this.instanceId = instanceId;
     this._endpoint = endpointOverride; // Internal only
 
