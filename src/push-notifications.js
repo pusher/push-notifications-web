@@ -81,7 +81,7 @@ export class Client {
     var request = indexedDB.open(dbName);
 
     request.onerror = function(event) {
-      console.log(`Database error: ${event.target.errorCode}`);
+      console.error(`Database error: ${event.target.errorCode}`);
     };
 
     request.onsuccess = function(event) {
@@ -114,7 +114,7 @@ export class Client {
     };
 
     request.onerror = function(event) {
-      console.log(`Database error: ${event.target.errorCode}`);
+      console.error(`Database error: ${event.target.errorCode}`);
     };
   }
 
