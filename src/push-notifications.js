@@ -24,7 +24,7 @@ export class Client {
     this.instanceId = instanceId;
     this._endpoint = endpointOverride; // Internal only
 
-    this._initDb("beams");
+    this._initDb('beams');
   }
 
   get _baseURL() {
@@ -92,23 +92,23 @@ export class Client {
 
     request.onupgradeneeded = function(event) {
       var db = event.target.result;
-      var objectStore = db.createObjectStore("beams", {
-        keyPath: "instance_id"
+      var objectStore = db.createObjectStore('beams', {
+        keyPath: 'instance_id',
       });
-      objectStore.createIndex("instance_id", "instance_id", { unique: true });
-      objectStore.createIndex("token", "token", { unique: true });
-      objectStore.createIndex("device_id", "device_id", { unique: true });
+      objectStore.createIndex('instance_id', 'instance_id', { unique: true });
+      objectStore.createIndex('token', 'token', { unique: true });
+      objectStore.createIndex('device_id', 'device_id', { unique: true });
     };
   }
 
   _save(instanceId, token, deviceId) {
     var request = db
-      .transaction("beams", "readwrite")
-      .objectStore("beams")
+      .transaction('beams', 'readwrite')
+      .objectStore('beams')
       .add({
         instance_id: instanceId,
         token: token,
-        device_id: deviceId
+        device_id: deviceId,
       });
 
     request.onsuccess = function(event) {
@@ -122,8 +122,8 @@ export class Client {
 
   _read(instanceId) {
     db
-      .transaction("beams")
-      .objectStore("beams")
+      .transaction('beams')
+      .objectStore('beams')
       .get(instanceId).onsuccess = function(event) {
       result = event.target.result;
     };
