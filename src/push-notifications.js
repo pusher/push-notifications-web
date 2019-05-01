@@ -80,7 +80,7 @@ export class Client {
   }
 
   _initDb(dbName) {
-    var request = indexedDB.open(dbName);
+    const request = indexedDB.open(dbName);
 
     request.onerror = function(event) {
       console.error(`Database error: ${event.target.errorCode}`);
@@ -102,7 +102,7 @@ export class Client {
   }
 
   _save(instanceId, token, deviceId) {
-    var request = db
+    const request = db
       .transaction('beams', 'readwrite')
       .objectStore('beams')
       .add({
