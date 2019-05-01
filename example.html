@@ -9,8 +9,8 @@
   <body>
     <script src="./dist/push-notifications.js"></script>
     <script>
-      var beamsClient = new PusherPushNotifications.PushNotifications({
-        instanceId: "deadc0de-2ce6-46e3-ad9a-5c02d0ab119b"
+      const beamsClient = new PusherPushNotifications.init({
+        instanceId: 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
       });
       beamsClient.start();
     </script>
