@@ -57,12 +57,17 @@ export class Client {
   }
 
   async start() {
-    const { token, deviceId } = this._read(this.instanceId);
-    if (token !== null && deviceId !== null) {
-      this.token = token;
-      this.deviceId = deviceId;
-      return;
-    }
+    beamsDatabaseExists().then(value => {
+      if (value) {
+        const { token, deviceId } = this._read(this.instanceId);
+        if (token !== null && deviceId !== null) {
+          this.token = token;
+          this.deviceId = deviceId;
+          return;
+        }
+      }
+    });
+
     const { vapidPublicKey: publicKey } = await this._getPublicKey();
 
     // register with pushManager, get endpoint etc
