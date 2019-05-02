@@ -4,16 +4,14 @@ let killServer = null;
 let chromeDriver = null;
 
 beforeAll(() => {
-  const serverProm = launchServer()
+  return launchServer()
     .then(killFunc => {
       killServer = killFunc;
     })
-  const driverProm = createChromeWebDriver()
+    .then(() => createChromeWebDriver())
     .then(driver => {
       chromeDriver = driver;
-    });
-
-  return Promise.all([serverProm, driverProm]);
+    })
 });
 
 
