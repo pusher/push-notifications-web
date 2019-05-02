@@ -49,23 +49,21 @@ export class Client {
   }
 
   async start() {
-    const data = this._read(this.instanceId);
-    if (typeof data !== 'undefined' && data.length > 0) {
-      this.token = data[0];
-      this.deviceId = data[1];
+    const { token, deviceId } = this._read(this.instanceId);
+    if (token !== null && deviceId !== null) {
+      this.token = token;
+      this.deviceId = deviceId;
       return;
-    } else {
-      const { vapidPublicKey: publicKey } = await this._getPublicKey();
-
-      // register with pushManager, get endpoint etc
-      const token = await this._getPushToken(publicKey);
-
-      // get device id from errol
-      const response = await this._registerDevice(token);
-      this.deviceId = response;
-
-      this._save(this.instanceId, token, this.deviceId);
     }
+    const { vapidPublicKey: publicKey } = await this._getPublicKey();
+
+    // register with pushManager, get endpoint etc
+    const token = await this._getPushToken(publicKey);
+
+    // get device id from errol
+    const deviceId = await this._registerDevice(token);
+
+    this._save(this.instanceId, token, deviceId);
   }
 
   async _getPublicKey() {
@@ -107,12 +105,12 @@ export class Client {
     };
 
     request.onsuccess = event => {
-      const db = event.target.result;
+      this.db = event.target.result;
     };
 
     request.onupgradeneeded = event => {
       const db = event.target.result;
-      var objectStore = db.createObjectStore('beams', {
+      const objectStore = db.createObjectStore('beams', {
         keyPath: 'instance_id',
       });
       objectStore.createIndex('instance_id', 'instance_id', { unique: true });
@@ -122,7 +120,7 @@ export class Client {
   }
 
   _save(instanceId, token, deviceId) {
-    const request = db
+    const request = this.db
       .transaction('beams', 'readwrite')
       .objectStore('beams')
       .add({
@@ -141,12 +139,12 @@ export class Client {
   }
 
   _read(instanceId) {
-    db
+    this.db
       .transaction('beams')
       .objectStore('beams')
       .get(instanceId).onsuccess = event => {
-      result = event.target.result;
-      return [result.token, result.device_id];
+      const result = event.target.result;
+      return { token: result.token, deviceId: result.device_id };
     };
   }
 }
