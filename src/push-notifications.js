@@ -23,16 +23,20 @@ export class Client {
 
     if (!window.indexedDB) {
       throw new Error(
-        "Browser doesn't support a stable version of IndexedDB which is required for the SDK to work."
+        'Pusher Beams does not support this browser version (IndexedDB not supported)'
       );
     }
 
     if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
-      throw new Error("Notifications aren't supported.");
+      throw new Error(
+        'Pusher Beams does not support this browser version (ServiceWorkerRegistration not supported)'
+      );
     }
 
     if (!('PushManager' in window)) {
-      throw new Error("Push messaging isn't supported.");
+      throw new Error(
+        'Pusher Beams does not support this browser version (PushManager not supported)'
+      );
     }
 
     this.instanceId = instanceId;
