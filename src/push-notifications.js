@@ -42,8 +42,8 @@ export class Client {
     this.instanceId = instanceId;
     this._endpoint = endpointOverride; // Internal only
 
-    beamsDatabaseExists().then(value => {
-      if (!value) {
+    beamsDatabaseExists().then(exists => {
+      if (!exists) {
         this._initDb('beams');
       }
     });
@@ -57,16 +57,15 @@ export class Client {
   }
 
   async start() {
-    beamsDatabaseExists().then(value => {
-      if (value) {
-        const { token, deviceId } = this._read(this.instanceId);
-        if (token !== null && deviceId !== null) {
-          this.token = token;
-          this.deviceId = deviceId;
-          return;
-        }
+    const exists = await beamsDatabaseExists();
+    if (exists) {
+      const { token = null, deviceId = null } = this._read(this.instanceId);
+      if (token !== null && deviceId !== null) {
+        this.token = token;
+        this.deviceId = deviceId;
+        return;
       }
-    });
+    }
 
     const { vapidPublicKey: publicKey } = await this._getPublicKey();
 
