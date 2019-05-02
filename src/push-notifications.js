@@ -42,7 +42,11 @@ export class Client {
     this.instanceId = instanceId;
     this._endpoint = endpointOverride; // Internal only
 
-    this._initDb('beams');
+    beamsDatabaseExists().then(value => {
+      if (!value) {
+        this._initDb('beams');
+      }
+    });
   }
 
   get _baseURL() {
@@ -160,4 +164,14 @@ function urlBase64ToUInt8Array(base64String) {
     .replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+async function beamsDatabaseExists() {
+  const databases = await indexedDB.databases().catch(error => {
+    throw new Error('Problem accessing database');
+  });
+
+  return databases.some(arrVal => {
+    return 'beams' === arrVal.name;
+  });
 }
