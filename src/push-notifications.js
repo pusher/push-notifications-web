@@ -151,13 +151,18 @@ export class Client {
   }
 
   _read(instanceId) {
-    this.db
-      .transaction('beams')
-      .objectStore('beams')
-      .get(instanceId).onsuccess = event => {
-      const result = event.target.result;
-      return { token: result.token, deviceId: result.device_id };
-    };
+    return new Promise((resolve, reject) => {
+      const request = this.db
+        .transaction('beams')
+        .objectStore('beams')
+        .get(instanceId);
+
+      request.onsuccess = event => {
+        const result = event.target.result;
+        resolve({ token: result.token, deviceId: result.device_id });
+      };
+      request.onerror = reject;
+    });
   }
 }
 
