@@ -4,18 +4,24 @@ node_js:
 sudo: required
 env: DISPLAY=':99.0'
 dist: trusty
-addons:
-  apt:
-    sources:
-      - google-chrome
-    packages:
-      - google-chrome-stable
-      - wget
-      - unzip
 
-before_script:
-  - wget https://chromedriver.storage.googleapis.com/74.0.3729.6/chromedriver_linux64.zip
-  - unzip chromedriver_linux64.zip
-  - sudo mv chromedriver /usr/local/bin
-  - sh -e /etc/init.d/xvfb start
-  - google-chrome --version
+jobs:
+  include:
+    - name: "Unit tests"
+      script: yarn test:unit
+
+    - name: "End to end tests"
+      script: yarn test:e2e
+      before_script:
+        - wget https://chromedriver.storage.googleapis.com/74.0.3729.6/chromedriver_linux64.zip
+        - unzip chromedriver_linux64.zip
+        - sudo mv chromedriver /usr/local/bin
+        - sh -e /etc/init.d/xvfb start
+      addons:
+        apt:
+          sources:
+            - google-chrome
+          packages:
+            - google-chrome-stable
+            - wget
+            - unzip

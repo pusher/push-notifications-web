@@ -4,9 +4,9 @@
   "description": "",
   "main": "src/push-notifications.js",
   "scripts": {
-    "test": "npm run unit-tests && npm run e2e-tests",
-    "unit-tests": "jest ./src/*",
-    "e2e-tests": "jest ./end-to-end-tests/*",
+    "test": "npm run test:unit",
+    "test:unit": "jest ./src/*",
+    "test:e2e": "jest ./end-to-end-tests/*",
     "prepublish": "rollup -c"
   },
   "keywords": [],
