@@ -8,20 +8,34 @@ export default function doRequest(method, path, body = null, headers = {}) {
     options.body = JSON.stringify(body);
   }
 
-  return fetch(path, options)
-    .then(response => response.text())
-    .then(text => {
-      if (text) {
-        return JSON.parse(text);
-      }
+  return fetch(path, options).then(async response => {
+    if (!response.ok) {
+      handleError(response);
+    }
+
+    try {
+      return await response.json();
+    } catch (_) {
       return null;
-    })
-    .catch(err => {
-      if (err.message.toLowerCase().includes('unexpected')) {
-        console.warn('Response body in unexpected format.');
-        return null;
-      } else {
-        throw err;
-      }
-    });
+    }
+  });
+}
+
+async function handleError(response) {
+  let errorMessage;
+  try {
+    const {
+      error = 'Unknown error',
+      description = 'No description',
+    } = await response.json();
+    errorMessage = `Unexpected status code ${
+      response.status
+    }: ${error}, ${description}`;
+  } catch (_) {
+    errorMessage = `Unexpected status code ${
+      response.status
+    }: Cannot parse error response`;
+  }
+
+  throw new Error(errorMessage);
 }

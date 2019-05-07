@@ -40,13 +40,22 @@ export class Client {
     }
 
     this.instanceId = instanceId;
+    this.deviceId = null;
+    this.token = null;
+    this._db = null;
+
     this._endpoint = endpointOverride; // Internal only
 
-    beamsDatabaseExists().then(exists => {
-      if (!exists) {
-        this._initDb('beams');
-      }
-    });
+    return this._initDb()
+      .then(db => (this._db = db))
+      .then(() => this._readSDKState())
+      .then(sdkState => {
+        if (sdkState !== null) {
+          this.token = sdkState.token;
+          this.deviceId = sdkState.device_id;
+        }
+      })
+      .then(() => this);
   }
 
   get _baseURL() {
@@ -57,14 +66,8 @@ export class Client {
   }
 
   async start() {
-    const exists = await beamsDatabaseExists();
-    if (exists) {
-      const { token = null, deviceId = null } = this._read(this.instanceId);
-      if (token !== null && deviceId !== null) {
-        this.token = token;
-        this.deviceId = deviceId;
-        return;
-      }
+    if (this.deviceId !== null) {
+      return;
     }
 
     const { vapidPublicKey: publicKey } = await this._getPublicKey();
@@ -75,30 +78,32 @@ export class Client {
     // get device id from errol
     const deviceId = await this._registerDevice(token);
 
-    this._save(this.instanceId, token, deviceId);
+    await this._writeSDKState(this.instanceId, token, deviceId);
+
+    this.token = token;
+    this.deviceId = deviceId;
   }
 
   async _getPublicKey() {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/web-vapid-public-key`;
+
     return doRequest('GET', path);
   }
 
   async _getPushToken(publicKey) {
-    let sub;
     try {
       window.navigator.serviceWorker.register('sw.js');
       const reg = await window.navigator.serviceWorker.ready;
-      sub = await reg.pushManager.subscribe({
+      const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUInt8Array(publicKey),
       });
+      return btoa(JSON.stringify(sub));
     } catch (e) {
       return Promise.reject(e);
     }
-
-    return btoa(JSON.stringify(sub));
   }
 
   async _registerDevice(token) {
@@ -106,62 +111,74 @@ export class Client {
       this.instanceId
     )}/devices/web`;
 
-    return doRequest('POST', path, { token });
+    const response = await doRequest('POST', path, { token });
+
+    return response.id;
   }
 
-  _initDb(dbName) {
-    const request = indexedDB.open(dbName);
+  _initDb() {
+    const dbName = `beams-${this.instanceId}`;
 
-    request.onerror = event => {
-      console.error(`Database error: ${event.target.errorCode}`);
-    };
-
-    request.onsuccess = event => {
-      this.db = event.target.result;
-    };
-
-    request.onupgradeneeded = event => {
-      const db = event.target.result;
-      const objectStore = db.createObjectStore('beams', {
-        keyPath: 'instance_id',
-      });
-      objectStore.createIndex('instance_id', 'instance_id', { unique: true });
-      objectStore.createIndex('token', 'token', { unique: true });
-      objectStore.createIndex('device_id', 'device_id', { unique: true });
-    };
-  }
-
-  _save(instanceId, token, deviceId) {
-    const request = this.db
-      .transaction('beams', 'readwrite')
-      .objectStore('beams')
-      .add({
-        instance_id: instanceId,
-        token: token,
-        device_id: deviceId,
-      });
-
-    request.onsuccess = event => {
-      // TODO
-    };
-
-    request.onerror = event => {
-      console.error(`Database error: ${event.target.errorCode}`);
-    };
-  }
-
-  _read(instanceId) {
     return new Promise((resolve, reject) => {
-      const request = this.db
-        .transaction('beams')
-        .objectStore('beams')
-        .get(instanceId);
+      const request = indexedDB.open(dbName);
+
+      request.onerror = event => {
+        const error = new Error(`Database error: ${event.target.errorCode}`);
+        reject(error);
+      };
 
       request.onsuccess = event => {
-        const result = event.target.result;
-        resolve({ token: result.token, deviceId: result.device_id });
+        const db = event.target.result;
+        resolve(db);
       };
-      request.onerror = reject;
+
+      request.onupgradeneeded = event => {
+        const db = event.target.result;
+        const objectStore = db.createObjectStore('beams', {
+          keyPath: 'instance_id',
+        });
+        objectStore.createIndex('instance_id', 'instance_id', { unique: true });
+        objectStore.createIndex('token', 'token', { unique: true });
+        objectStore.createIndex('device_id', 'device_id', { unique: true });
+      };
+    });
+  }
+
+  _writeSDKState(instanceId, token, deviceId) {
+    return new Promise((resolve, reject) => {
+      const request = this._db
+        .transaction('beams', 'readwrite')
+        .objectStore('beams')
+        .add({
+          instance_id: instanceId,
+          token: token,
+          device_id: deviceId,
+        });
+
+      request.onsuccess = event => {
+        resolve();
+      };
+
+      request.onerror = event => {
+        reject(event.target.error);
+      };
+    });
+  }
+
+  _readSDKState() {
+    return new Promise((resolve, reject) => {
+      const request = this._db
+        .transaction('beams')
+        .objectStore('beams')
+        .get(this.instanceId);
+
+      request.onsuccess = event => {
+        resolve(event.target.result || null);
+      };
+
+      request.onerror = event => {
+        reject(event.target.error);
+      };
     });
   }
 }
@@ -173,14 +190,4 @@ function urlBase64ToUInt8Array(base64String) {
     .replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
-}
-
-async function beamsDatabaseExists() {
-  const databases = await indexedDB.databases().catch(error => {
-    throw new Error('Problem accessing database');
-  });
-
-  return databases.some(arrVal => {
-    return 'beams' === arrVal.name;
-  });
 }

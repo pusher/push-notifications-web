@@ -9,10 +9,17 @@
   <body>
     <script src="./dist/push-notifications.js"></script>
     <script>
-      const beamsClient = new PusherPushNotifications.init({
+      let beamsClient;
+
+      PusherPushNotifications.init({
         instanceId: 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
-      });
-      beamsClient.start();
+      })
+        .then(c => {
+          beamsClient = c;
+          return beamsClient.start();
+        })
+        .then(() => console.log('started!!!'))
+        .catch(console.error);
     </script>
   </body>
 </html>
