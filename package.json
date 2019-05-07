@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/push-notifications.js",
   "scripts": {
-    "test": "jest",
+    "test": "npm run test:unit",
+    "test:unit": "jest ./src/*",
+    "test:e2e": "jest ./end-to-end-tests/*",
     "prepublish": "rollup -c"
   },
   "keywords": [],
@@ -14,11 +16,13 @@
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "babel-jest": "^24.7.1",
+    "express": "^4.16.4",
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
     "prettier": "1.17.0",
     "rollup": "^1.10.0",
     "rollup-plugin-commonjs": "^9.3.4",
-    "rollup-plugin-node-resolve": "^4.2.3"
+    "rollup-plugin-node-resolve": "^4.2.3",
+    "selenium-webdriver": "^4.0.0-alpha.1"
   }
 }

@@ -1,4 +1,27 @@
 language: node_js
 node_js:
   - "10"
-  
+sudo: required
+env: DISPLAY=':99.0'
+dist: trusty
+
+jobs:
+  include:
+    - name: "Unit tests"
+      script: npm run test:unit
+
+    - name: "End to end tests"
+      script: npm run test:e2e
+      before_script:
+        - wget https://chromedriver.storage.googleapis.com/74.0.3729.6/chromedriver_linux64.zip
+        - unzip chromedriver_linux64.zip
+        - sudo mv chromedriver /usr/local/bin
+        - sh -e /etc/init.d/xvfb start
+      addons:
+        apt:
+          sources:
+            - google-chrome
+          packages:
+            - google-chrome-stable
+            - wget
+            - unzip
