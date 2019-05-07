@@ -8,10 +8,10 @@ dist: trusty
 jobs:
   include:
     - name: "Unit tests"
-      script: yarn test:unit
+      script: npm run test:unit
 
     - name: "End to end tests"
-      script: yarn test:e2e
+      script: npm run test:e2e
       before_script:
         - wget https://chromedriver.storage.googleapis.com/74.0.3729.6/chromedriver_linux64.zip
         - unzip chromedriver_linux64.zip
