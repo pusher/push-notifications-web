@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Example</title>
+  </head>
+  <body>
+    <script src="./dist/push-notifications.js"></script>
+    <script>
+      let beamsClient;
+
+      PusherPushNotifications.init({
+        instanceId: 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
+      })
+        .then(c => {
+          beamsClient = c;
+          return beamsClient.start();
+        })
+        .then(() => console.log('started!!!'))
+        .catch(console.error);
+    </script>
+  </body>
+</html>
