@@ -21,7 +21,7 @@ test('SDK should register a device with errol', async () => {
   }, 2000);
 
   const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
-    var callback = arguments[arguments.length - 1];
+    const callback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     let beamsClient;
@@ -42,7 +42,7 @@ test('SDK should remember the device ID', async () => {
   }, 2000);
 
   const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
-    var callback = arguments[arguments.length - 1];
+    const callback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     let beamsClient;
@@ -59,7 +59,7 @@ test('SDK should remember the device ID', async () => {
   }, 2000);
 
   const reloadedDeviceId = await chromeDriver.executeAsyncScript(() => {
-    var callback = arguments[arguments.length - 1];
+    const callback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     let beamsClient;
