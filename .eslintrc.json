@@ -1,0 +1,29 @@
+{
+    "rules": {
+        "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+        "no-console": 0,
+        "indent": 2,
+        "quotes": [
+            2,
+            "single"
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "semi": [
+            2,
+            "always"
+        ]
+    },
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "env": {
+        "browser": true,
+        "es6": true,
+        "jest": true
+    },
+    "extends": ["eslint:recommended", "prettier"]
+}

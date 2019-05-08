@@ -7,6 +7,9 @@ dist: trusty
 
 jobs:
   include:
+    - name: "Linting"
+      script: npm run lint
+
     - name: "Unit tests"
       script: npm run test:unit
 

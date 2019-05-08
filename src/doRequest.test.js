@@ -1,17 +1,17 @@
 import doRequest from './doRequest';
 
 test('doRequest', () => {
-  expect(typeof doRequest).toBe('function');
+    expect(typeof doRequest).toBe('function');
 });
 
 test('Handles responses with no body', () => {
-  return doRequest('POST', 'http://fake-url.com').then(res =>
-    expect(res).toBeNull()
-  );
+    return doRequest('POST', 'http://fake-url.com').then(res =>
+        expect(res).toBeNull()
+    );
 });
 
 test('Handles HTML response body', () => {
-  fetch.mockResponseOnce(`<!DOCTYPE html>
+    fetch.mockResponseOnce(`<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -21,14 +21,14 @@ test('Handles HTML response body', () => {
 </head>
 <body></body>
 </html>`);
-  return doRequest('GET', 'http://fake-url.com').then(res => {
-    expect(res).toBeNull();
-  });
+    return doRequest('GET', 'http://fake-url.com').then(res => {
+        expect(res).toBeNull();
+    });
 });
 
 test('Handles bad JSON', () => {
-  fetch.mockResponseOnce('{"badjson": "very incorrect"');
-  return doRequest('GET', 'http://fake-url.com').then(res => {
-    expect(res).toBeNull();
-  });
+    fetch.mockResponseOnce('{"badjson": "very incorrect"');
+    return doRequest('GET', 'http://fake-url.com').then(res => {
+        expect(res).toBeNull();
+    });
 });
