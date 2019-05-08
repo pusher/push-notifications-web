@@ -137,9 +137,13 @@ export class Client {
         const objectStore = db.createObjectStore('beams', {
           keyPath: 'instance_id',
         });
-        objectStore.createIndex('instance_id', 'instance_id', { unique: true });
+        objectStore.createIndex('instance_id', 'instance_id', {
+          unique: true,
+        });
         objectStore.createIndex('token', 'token', { unique: true });
-        objectStore.createIndex('device_id', 'device_id', { unique: true });
+        objectStore.createIndex('device_id', 'device_id', {
+          unique: true,
+        });
       };
     });
   }
@@ -155,7 +159,7 @@ export class Client {
           device_id: deviceId,
         });
 
-      request.onsuccess = event => {
+      request.onsuccess = _ => {
         resolve();
       };
 
@@ -185,9 +189,7 @@ export class Client {
 
 function urlBase64ToUInt8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }

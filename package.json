@@ -4,6 +4,8 @@
   "description": "",
   "main": "src/push-notifications.js",
   "scripts": {
+    "format": "prettier ./src/**/*.js --write",
+    "lint": "eslint ./src/**/*.js && prettier ./src/**/*.js -l",
     "test": "npm run test:unit",
     "test:unit": "jest ./src/*",
     "test:e2e": "jest ./end-to-end-tests/*",
@@ -16,6 +18,8 @@
     "@babel/core": "^7.4.3",
     "@babel/preset-env": "^7.4.3",
     "babel-jest": "^24.7.1",
+    "eslint": "^4.14.0",
+    "eslint-config-prettier": "^4.0.0",
     "express": "^4.16.4",
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
