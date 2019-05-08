@@ -123,7 +123,7 @@ export class Client {
       const request = indexedDB.open(dbName);
 
       request.onerror = event => {
-        const error = new Error(`Database error: ${event.target.errorCode}`);
+        const error = new Error(`Database error: ${event.target.error}`);
         reject(error);
       };
 

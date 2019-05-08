@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const http = require('http');
+const path = require('path');
 const chrome = require('selenium-webdriver/chrome');
 const { Builder } = require('selenium-webdriver');
 
@@ -12,7 +13,7 @@ const TEST_SERVER_URL = 'http://localhost:3000';
 
 const CHROME_SCREEN_SIZE = {
   width: 640,
-  height: 480
+  height: 480,
 };
 const CHROME_CONFIG_TEMP_DIR = `${__dirname}/temp`;
 
@@ -26,27 +27,29 @@ export async function launchServer() {
   const testServer = spawn('node', [TEST_SERVER_ENTRYPOINT]);
   const killFunc = () => testServer.kill('SIGHUP');
 
-  return retryLoop(
-    () => httpPing(TEST_SERVER_URL),
-    MAX_TEST_SERVER_CHECKS,
-    TEST_SERVER_CHECK_SLEEP_MS,
-  )
-    // If we successfully launched the test server,
-    // return a function to kill it
-    .then(() => killFunc) 
-    // Otherwise, kill the server and raise an exception
-    .catch((e) => { 
-      killFunc()
-      throw e;
-    })
+  return (
+    retryLoop(
+      () => httpPing(TEST_SERVER_URL),
+      MAX_TEST_SERVER_CHECKS,
+      TEST_SERVER_CHECK_SLEEP_MS
+    )
+      // If we successfully launched the test server,
+      // return a function to kill it
+      .then(() => killFunc)
+      // Otherwise, kill the server and raise an exception
+      .catch(e => {
+        killFunc();
+        throw e;
+      })
+  );
 }
 
 async function retryLoop(func, maxChecks, sleepInterval) {
   for (let i = 0; i < maxChecks; i++) {
     const result = await func();
     if (result) {
-      return
-    } 
+      return;
+    }
 
     await sleep(sleepInterval);
   }
@@ -85,20 +88,24 @@ export async function createChromeWebDriver() {
   /**
    * Create a config file that has already accepted web push for localhost
    */
-  // Create temp directory
-  if (!fs.existsSync(CHROME_CONFIG_TEMP_DIR)){
-    fs.mkdirSync(CHROME_CONFIG_TEMP_DIR);
+
+  // Delete temp dir if it exists
+  if (fs.existsSync(CHROME_CONFIG_TEMP_DIR)) {
+    rimraf(CHROME_CONFIG_TEMP_DIR);
   }
+
+  // (Re)create temp directory
+  fs.mkdirSync(CHROME_CONFIG_TEMP_DIR);
 
   // Create preferences directory
   const prefsDir = `${CHROME_CONFIG_TEMP_DIR}/Default`;
-  if (!fs.existsSync(prefsDir)){
+  if (!fs.existsSync(prefsDir)) {
     fs.mkdirSync(prefsDir);
   }
 
   // Create preferences file
   const prefsFileName = `${prefsDir}/Preferences`;
-  const configFileObject = createTempBrowserPreferences('http://localhost:8080');
+  const configFileObject = createTempBrowserPreferences(TEST_SERVER_URL);
   const configFileString = JSON.stringify(configFileObject);
 
   fs.writeFileSync(prefsFileName, configFileString);
@@ -107,19 +114,19 @@ export async function createChromeWebDriver() {
    * Construct a new Chrome instance
    */
   const chromeOptions = new chrome.Options()
-    .headless()
     .windowSize(CHROME_SCREEN_SIZE)
+    // .headless() -- Cannot run in headless mode, this breaks web push
     .addArguments('--ignore-certificate-errors') // Allow web push over http
     .addArguments('--profile-directory=Default') // Override config
     .addArguments(`--user-data-dir=${CHROME_CONFIG_TEMP_DIR}`)
-    .addArguments('--disk-cache-dir=/dev/null');  // Disable cache
+    .addArguments('--disk-cache-dir=/dev/null'); // Disable cache
 
   const driver = await new Builder()
     .forBrowser('chrome')
     .setChromeOptions(chromeOptions)
     .build();
 
-  return driver
+  return driver;
 }
 
 function createTempBrowserPreferences(testSiteURL) {
@@ -131,12 +138,12 @@ function createTempBrowserPreferences(testSiteURL) {
           notifications: {
             [testSiteKey]: {
               setting: 1,
-            }
-          }
-        }
-      }
-    }
-  }
+            },
+          },
+        },
+      },
+    },
+  };
 }
 
 function sleep(ms) {
@@ -145,3 +152,21 @@ function sleep(ms) {
   });
 }
 
+/**
+ * Remove directory recursively
+ * @param {string} dir_path
+ * @see https://stackoverflow.com/a/42505874/3027390
+ */
+function rimraf(dir_path) {
+  if (fs.existsSync(dir_path)) {
+    fs.readdirSync(dir_path).forEach(function(entry) {
+      var entry_path = path.join(dir_path, entry);
+      if (fs.lstatSync(entry_path).isDirectory()) {
+        rimraf(entry_path);
+      } else {
+        fs.unlinkSync(entry_path);
+      }
+    });
+    fs.rmdirSync(dir_path);
+  }
+}
