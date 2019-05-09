@@ -91,7 +91,7 @@ export class Client {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/devices/web/${this.deviceId}/user`;
-    let response = await doRequest('PUT', path, null, {
+    await doRequest('PUT', path, null, {
       Authorization: `Bearer ${token}`,
     });
 
