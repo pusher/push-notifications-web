@@ -1,16 +1,17 @@
 export default function doRequest(method, path, body = null, headers = {}) {
   const options = {
     method,
-    headers: { 'Content-Type': 'application/json', ...headers },
+    headers,
   };
 
   if (body !== null) {
     options.body = JSON.stringify(body);
+    options.headers = { 'Content-Type': 'application/json', ...headers };
   }
 
   return fetch(path, options).then(async response => {
     if (!response.ok) {
-      handleError(response);
+      await handleError(response);
     }
 
     try {
@@ -28,7 +29,7 @@ async function handleError(response) {
       error = 'Unknown error',
       description = 'No description',
     } = await response.json();
-    errorMessage = `Unexpected status code ${
+    errorMessage = `Unexpeucted status code ${
       response.status
     }: ${error}, ${description}`;
   } catch (_) {

@@ -1,4 +1,5 @@
 import doRequest from './doRequest';
+import TokenProvider from './token-provider';
 
 export function init(config) {
   return new Client(config);
@@ -78,10 +79,28 @@ export class Client {
     // get device id from errol
     const deviceId = await this._registerDevice(token);
 
-    await this._writeSDKState(this.instanceId, token, deviceId);
+    await this._writeSDKState(this.instanceId, token, deviceId, null);
 
     this.token = token;
     this.deviceId = deviceId;
+  }
+
+  async setUserId(userId, tokenProvider) {
+    const { token } = await tokenProvider.fetchToken(userId);
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/user`;
+    let response = await doRequest('PUT', path, null, {
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this._writeSDKState(
+      this.instanceId,
+      this.token,
+      this.deviceId,
+      userId
+    );
   }
 
   async _getPublicKey() {
@@ -141,22 +160,22 @@ export class Client {
           unique: true,
         });
         objectStore.createIndex('token', 'token', { unique: true });
-        objectStore.createIndex('device_id', 'device_id', {
-          unique: true,
-        });
+        objectStore.createIndex('device_id', 'device_id', { unique: true });
+        objectStore.createIndex('user_id', 'user_id', { unique: true });
       };
     });
   }
 
-  _writeSDKState(instanceId, token, deviceId) {
+  _writeSDKState(instanceId, token, deviceId, userId) {
     return new Promise((resolve, reject) => {
       const request = this._db
         .transaction('beams', 'readwrite')
         .objectStore('beams')
-        .add({
+        .put({
           instance_id: instanceId,
           token: token,
           device_id: deviceId,
+          user_id: userId,
         });
 
       request.onsuccess = _ => {
@@ -193,3 +212,5 @@ function urlBase64ToUInt8Array(base64String) {
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
+
+export { TokenProvider };

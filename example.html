@@ -12,13 +12,25 @@
       let beamsClient;
 
       PusherPushNotifications.init({
-        instanceId: 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
+        instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
       })
         .then(c => {
           beamsClient = c;
           return beamsClient.start();
         })
-        .then(() => console.log('started!!!'))
+        .then(() => {
+          let tokenProvider = new PusherPushNotifications.TokenProvider({
+            url: 'https://beams-test-server.herokuapp.com/auth',
+          });
+          return beamsClient
+            .setUserId('Luka', tokenProvider)
+            .then(res => {
+              console.log('OK');
+            })
+            .catch(err => {
+              console.error(err);
+            });
+        })
         .catch(console.error);
     </script>
   </body>
