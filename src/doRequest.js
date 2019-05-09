@@ -29,7 +29,7 @@ async function handleError(response) {
       error = 'Unknown error',
       description = 'No description',
     } = await response.json();
-    errorMessage = `Unexpeucted status code ${
+    errorMessage = `Unexpected status code ${
       response.status
     }: ${error}, ${description}`;
   } catch (_) {
