@@ -173,7 +173,7 @@ export class Client {
         .objectStore('beams')
         .put({
           instance_id: instanceId,
-          token: token,
+          token,
           device_id: deviceId,
           user_id: userId,
         });
