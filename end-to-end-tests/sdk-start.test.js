@@ -21,15 +21,15 @@ test('SDK should register a device with errol', async () => {
   }, 2000);
 
   const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     let beamsClient;
     return PusherPushNotifications.init({ instanceId })
       .then(c => (beamsClient = c))
       .then(() => beamsClient.start())
-      .then(() => callback(beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   expect(initialDeviceId).toContain('web-');
@@ -42,15 +42,15 @@ test('SDK should remember the device ID', async () => {
   }, 2000);
 
   const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     let beamsClient;
     return PusherPushNotifications.init({ instanceId })
       .then(c => (beamsClient = c))
       .then(() => beamsClient.start())
-      .then(() => callback(beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   await chromeDriver.get('http://localhost:3000');
@@ -59,15 +59,15 @@ test('SDK should remember the device ID', async () => {
   }, 2000);
 
   const reloadedDeviceId = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     let beamsClient;
     return PusherPushNotifications.init({ instanceId })
       .then(c => (beamsClient = c))
       .then(() => beamsClient.start())
-      .then(() => callback(beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   expect(reloadedDeviceId).toBe(initialDeviceId);

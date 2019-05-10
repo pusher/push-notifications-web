@@ -4,11 +4,12 @@
   "description": "",
   "main": "src/push-notifications.js",
   "scripts": {
+    "build": "rollup -c",
     "format": "prettier ./src/**/*.js --write",
     "lint": "eslint ./src/**/*.js && prettier ./src/**/*.js -l",
     "test": "npm run test:unit",
     "test:unit": "jest ./src/*",
-    "test:e2e": "jest ./end-to-end-tests/*",
+    "test:e2e": "jest ./end-to-end-tests/* --runInBand",
     "prepublish": "rollup -c"
   },
   "keywords": [],
