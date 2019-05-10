@@ -16,8 +16,8 @@ export default function doRequest(method, path, body = null, headers = {}) {
 
     try {
       return await response.json();
-    } catch (error) {
-      console.error(error);
+    } catch (_) {
+      return null;
     }
   });
 }
