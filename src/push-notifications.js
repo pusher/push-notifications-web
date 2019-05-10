@@ -58,6 +58,10 @@ export class Client {
       .then(() => this);
   }
 
+  get _dbName() {
+    return `beams-${this.instanceId}`;
+  }
+
   get _baseURL() {
     if (this._endpoint !== null) {
       return this._endpoint;
@@ -82,6 +86,25 @@ export class Client {
 
     this.token = token;
     this.deviceId = deviceId;
+  }
+
+  async stop() {
+    // NOTE: Clearing the local persistent state first.
+    // Clearing local/remote state cannot be done atomically. Given that either
+    // could fail, it is better that the state is present locally & not remotely
+    // because this can be recovered by calling start, whereas the alternative
+    // cannot be fixed because the SDK will be convinced it is already registered.
+    await this._clearDb();
+
+    await this._deleteDevice();
+
+    this.deviceId = null;
+    this.token = null;
+  }
+
+  async clearAllState() {
+    await this.stop();
+    await this.start();
   }
 
   async _getPublicKey() {
@@ -112,15 +135,20 @@ export class Client {
     )}/devices/web`;
 
     const response = await doRequest('POST', path, { token });
-
     return response.id;
   }
 
-  _initDb() {
-    const dbName = `beams-${this.instanceId}`;
+  async _deleteDevice() {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${encodeURIComponent(this.deviceId)}`;
 
+    await doRequest('DELETE', path);
+  }
+
+  async _initDb() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName);
+      const request = indexedDB.open(this._dbName);
 
       request.onerror = event => {
         const error = new Error(`Database error: ${event.target.error}`);
@@ -144,6 +172,23 @@ export class Client {
         objectStore.createIndex('device_id', 'device_id', {
           unique: true,
         });
+      };
+    });
+  }
+
+  async _clearDb() {
+    return new Promise((resolve, reject) => {
+      const request = this._db
+        .transaction('beams', 'readwrite')
+        .objectStore('beams')
+        .clear();
+
+      request.onsuccess = _ => {
+        resolve();
+      };
+
+      request.onerror = event => {
+        reject(event.target.error);
       };
     });
   }
