@@ -28,15 +28,15 @@ test('Calling .stop should clear SDK state', async () => {
 
   // Register a new device
   const deviceIdBeforeStop = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
 
     return PusherPushNotifications.init({ instanceId })
       .then(c => (window.beamsClient = c))
       .then(() => window.beamsClient.start())
-      .then(() => callback(window.beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   // Assert that a device has been registered
@@ -44,11 +44,11 @@ test('Calling .stop should clear SDK state', async () => {
 
   // Call .stop
   const deviceIdAfterStop = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     return window.beamsClient.stop()
-      .then(() => callback(window.beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   // Assert that the SDK no longer has a device ID
@@ -56,15 +56,15 @@ test('Calling .stop should clear SDK state', async () => {
 
   // Assert that there is nothing stored in indexeddb
   const numDbRecords = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const getAllRequest = window.beamsClient._db
       .transaction('beams', 'readwrite')
       .objectStore('beams')
       .getAll();
 
-    getAllRequest.onsuccess = event => callback(event.target.result.length);
-    getAllRequest.onerror = event => callback(event.target.error);
+    getAllRequest.onsuccess = event => asyncScriptReturnCallback(event.target.result.length);
+    getAllRequest.onerror = event => asyncScriptReturnCallback(event.target.error);
   });
   expect(numDbRecords).toBe(0);
 
@@ -86,15 +86,15 @@ test('Calling .clearAllState should clear SDK state and create a new device', as
 
   // Register a new device
   const deviceIdBeforeClear = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
 
     return PusherPushNotifications.init({ instanceId })
       .then(c => (window.beamsClient = c))
       .then(() => window.beamsClient.start())
-      .then(() => callback(window.beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   // Assert that a device has been registered
@@ -102,11 +102,11 @@ test('Calling .clearAllState should clear SDK state and create a new device', as
 
   // Call .clearAllState
   const deviceIdAfterClear = await chromeDriver.executeAsyncScript(() => {
-    const callback = arguments[arguments.length - 1];
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     return window.beamsClient.clearAllState()
-      .then(() => callback(window.beamsClient.deviceId))
-      .catch(e => callback(e.message));
+      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+      .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   // Assert that the SDK has a device ID
