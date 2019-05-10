@@ -89,14 +89,9 @@ export class Client {
   }
 
   async stop() {
-    // NOTE: Clearing the local persistent state first.
-    // Clearing local/remote state cannot be done atomically. Given that either
-    // could fail, it is better that the state is present locally & not remotely
-    // because this can be recovered by calling start, whereas the alternative
-    // cannot be fixed because the SDK will be convinced it is already registered.
-    await this._clearDb();
-
     await this._deleteDevice();
+
+    await this._clearDb();
 
     this.deviceId = null;
     this.token = null;
