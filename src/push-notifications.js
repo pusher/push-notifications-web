@@ -93,7 +93,7 @@ export class Client {
 
   async setUserId(userId, tokenProvider) {
     if (this.userId !== null && this.userId !== userId) {
-      throw new Error("Changing the 'userId' is not allowed.");
+      throw new Error('Changing the `userId` is not allowed.');
     }
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
