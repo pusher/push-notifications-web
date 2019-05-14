@@ -30,6 +30,13 @@ beforeAll(() => {
         deleteDbRequest.onsuccess = asyncScriptReturnCallback;
         deleteDbRequest.onerror = asyncScriptReturnCallback;
       });
+    })
+    .then(async () => {
+      const errolClient = new ErrolTestClient(
+        '1b880590-6301-4bb5-b34f-45db1c5f5644'
+      );
+      const response = await errolClient.deleteUser('cucas');
+      expect(response.statusCode).toBe(200);
     });
 });
 
@@ -87,10 +94,6 @@ test('SDK should set user id with errol', async () => {
 });
 
 test('SDK should return an error if we try to reassign the user id', async () => {
-  const errolClient = new ErrolTestClient(
-    '1b880590-6301-4bb5-b34f-45db1c5f5644'
-  );
-
   await chromeDriver.get('http://localhost:3000');
   await chromeDriver.wait(() => {
     return chromeDriver.getTitle().then(title => title.includes('Test Page'));
@@ -135,9 +138,6 @@ test('SDK should return an error if we try to reassign the user id', async () =>
   });
 
   expect(setUserIdError).toBe("Changing the 'userId' is not allowed.");
-
-  const response = await errolClient.deleteUser('cucas');
-  expect(response.statusCode).toBe(200);
 });
 
 afterAll(() => {
