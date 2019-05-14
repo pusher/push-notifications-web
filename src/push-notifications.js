@@ -43,6 +43,7 @@ export class Client {
     this.instanceId = instanceId;
     this.deviceId = null;
     this.token = null;
+    this.userId = null;
     this._db = null;
 
     this._endpoint = endpointOverride; // Internal only
@@ -54,6 +55,7 @@ export class Client {
         if (sdkState !== null) {
           this.token = sdkState.token;
           this.deviceId = sdkState.device_id;
+          this.userId = sdkState.user_id;
         }
       })
       .then(() => this);
@@ -90,20 +92,25 @@ export class Client {
   }
 
   async setUserId(userId, tokenProvider) {
-    const { token } = await tokenProvider.fetchToken(userId);
+    if (this.userId !== null && this.userId !== userId) {
+      throw new Error("Changing the 'userId' is not allowed.");
+    }
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/devices/web/${this.deviceId}/user`;
+
+    const { token: beamsAuthToken } = tokenProvider.fetchToken();
     await doRequest('PUT', path, null, {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${beamsAuthToken}`,
     });
 
+    this.userId = userId;
     return this._writeSDKState(
       this.instanceId,
       this.token,
       this.deviceId,
-      userId
+      this.userId
     );
   }
 
