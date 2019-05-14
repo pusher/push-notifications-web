@@ -135,6 +135,9 @@ test('SDK should return an error if we try to reassign the user id', async () =>
   });
 
   expect(setUserIdError).toBe("Changing the 'userId' is not allowed.");
+
+  const response = await errolClient.deleteUser('cucas');
+  expect(response.statusCode).toBe(200);
 });
 
 afterAll(() => {
