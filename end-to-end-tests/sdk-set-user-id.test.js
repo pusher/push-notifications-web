@@ -137,7 +137,7 @@ test('SDK should return an error if we try to reassign the user id', async () =>
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(setUserIdError).toBe("Changing the 'userId' is not allowed.");
+  expect(setUserIdError).toBe('Changing the `userId` is not allowed.');
 });
 
 afterAll(() => {
