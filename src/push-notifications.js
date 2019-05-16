@@ -85,7 +85,8 @@ export class Client {
     // get device id from errol
     const deviceId = await this._registerDevice(token);
 
-    await this._writeSDKState(this.instanceId, token, deviceId, null);
+    const options = { instanceId: this.instanceId, token, deviceId };
+    await this._writeSDKState(options);
 
     this.token = token;
     this.deviceId = deviceId;
@@ -111,12 +112,12 @@ export class Client {
     await doRequest(options);
 
     this.userId = userId;
-    return this._writeSDKState(
-      this.instanceId,
-      this.token,
-      this.deviceId,
-      this.userId
-    );
+    return this._writeSDKState({
+      instanceId: this.instanceId,
+      token: this.token,
+      deviceId: this.deviceId,
+      userId: this.userId,
+    });
   }
 
   async stop() {
@@ -221,7 +222,7 @@ export class Client {
     });
   }
 
-  _writeSDKState(instanceId, token, deviceId, userId) {
+  _writeSDKState({ instanceId, token, deviceId, userId }) {
     return new Promise((resolve, reject) => {
       const request = this._db
         .transaction('beams', 'readwrite')
