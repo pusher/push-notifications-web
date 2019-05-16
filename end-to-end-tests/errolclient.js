@@ -57,7 +57,7 @@ class ErrolTestClient {
   async deleteUser(userId) {
     return this.customerApiRequest({
       method: 'DELETE',
-      path: `/users/${encodeURIComponent(userId)})`,
+      path: `/users/${encodeURIComponent(userId)}`,
     });
   }
 }
