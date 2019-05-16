@@ -32,7 +32,7 @@ class ErrolTestClient {
     });
   }
 
-  customerApiRequest({ headers, method, path, body }) {
+  customerApiRequest({ method, path, body }) {
     const qualifiedPath = `/customer_api/v1/instances/${
       this.instanceId
     }${path}`;
