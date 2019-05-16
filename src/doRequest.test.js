@@ -5,9 +5,8 @@ test('doRequest', () => {
 });
 
 test('Handles responses with no body', () => {
-  return doRequest('POST', 'http://fake-url.com').then(res =>
-    expect(res).toBeNull()
-  );
+  const options = { method: 'POST', path: 'http://fake-url.com' };
+  return doRequest(options).then(res => expect(res).toBeNull());
 });
 
 test('Handles HTML response body', () => {
@@ -21,14 +20,16 @@ test('Handles HTML response body', () => {
 </head>
 <body></body>
 </html>`);
-  return doRequest('GET', 'http://fake-url.com').then(res => {
+  const options = { method: 'GET', path: 'http://fake-url.com' };
+  return doRequest(options).then(res => {
     expect(res).toBeNull();
   });
 });
 
 test('Handles bad JSON', () => {
   fetch.mockResponseOnce('{"badjson": "very incorrect"');
-  return doRequest('GET', 'http://fake-url.com').then(res => {
+  const options = { method: 'GET', path: 'http://fake-url.com' };
+  return doRequest(options).then(res => {
     expect(res).toBeNull();
   });
 });

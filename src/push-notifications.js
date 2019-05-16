@@ -101,9 +101,14 @@ export class Client {
     )}/devices/web/${this.deviceId}/user`;
 
     const { token: beamsAuthToken } = tokenProvider.fetchToken();
-    await doRequest('PUT', path, null, {
-      Authorization: `Bearer ${beamsAuthToken}`,
-    });
+    const options = {
+      method: 'PUT',
+      path,
+      headers: {
+        Authorization: `Bearer ${beamsAuthToken}`,
+      },
+    };
+    await doRequest(options);
 
     this.userId = userId;
     return this._writeSDKState(
@@ -133,7 +138,8 @@ export class Client {
       this.instanceId
     )}/web-vapid-public-key`;
 
-    return doRequest('GET', path);
+    const options = { method: 'GET', path };
+    return doRequest(options);
   }
 
   async _getPushToken(publicKey) {
@@ -155,7 +161,8 @@ export class Client {
       this.instanceId
     )}/devices/web`;
 
-    const response = await doRequest('POST', path, { token });
+    const options = { method: 'POST', path, body: { token } };
+    const response = await doRequest(options);
     return response.id;
   }
 
@@ -164,7 +171,8 @@ export class Client {
       this.instanceId
     )}/devices/web/${encodeURIComponent(this.deviceId)}`;
 
-    await doRequest('DELETE', path);
+    const options = { method: 'DELETE', path };
+    await doRequest(options);
   }
 
   async _initDb() {

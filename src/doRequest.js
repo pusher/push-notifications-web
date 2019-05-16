@@ -1,4 +1,4 @@
-export default function doRequest(method, path, body = null, headers = {}) {
+export default function doRequest({ method, path, body = null, headers = {} }) {
   const options = {
     method,
     headers,

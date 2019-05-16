@@ -12,12 +12,12 @@ export default class TokenProvider {
     const encodedParams = Object.entries(queryParams)
       .map(kv => kv.map(encodeURIComponent).join('='))
       .join('&');
-    let response = await doRequest(
-      'GET',
-      `${this.url}?${encodedParams}`,
-      null,
-      this.headers
-    );
+    const options = {
+      method: 'GET',
+      path: `${this.url}?${encodedParams}`,
+      headers: this.headers,
+    };
+    let response = await doRequest(options);
     return response;
   }
 }
