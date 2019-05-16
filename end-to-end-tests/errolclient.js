@@ -5,8 +5,7 @@ class ErrolTestClient {
     this.instanceId = instanceId;
   }
 
-  apiRequest({ headers = {}, method = 'GET', path = '', body = undefined }) {
-    const reqHeaders = { ...headers, 'content-type': 'application/json' };
+  apiRequest({ headers = {}, method, path = '', body }) {
     const reqUrl = `https://${
       this.instanceId
     }.pushnotifications.pusher.com${path}`;
