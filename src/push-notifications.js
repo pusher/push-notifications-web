@@ -55,7 +55,9 @@ export class Client {
         if (sdkState !== null) {
           this.token = sdkState.token;
           this.deviceId = sdkState.device_id;
-          this.userId = sdkState.user_id;
+          if (sdkState.user_id !== undefined) {
+            this.userId = sdkState.user_id;
+          }
         }
       })
       .then(() => this);
