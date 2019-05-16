@@ -46,7 +46,7 @@ test('SDK should set user id with errol', async () => {
     return chromeDriver.getTitle().then(title => title.includes('Test Page'));
   }, 2000);
 
-  const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
+  const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     let beamsClient;
 
@@ -59,7 +59,7 @@ test('SDK should set user id with errol', async () => {
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(initialDeviceId).toContain('web-');
+  expect(deviceId).toContain('web-');
   const setUserIdError = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
@@ -86,7 +86,7 @@ test('SDK should set user id with errol', async () => {
     '1b880590-6301-4bb5-b34f-45db1c5f5644'
   );
 
-  const response = await errolClient.getWebDevice(initialDeviceId);
+  const response = await errolClient.getWebDevice(deviceId);
   expect(response.statusCode).toBe(200);
   expect(JSON.parse(response.body).userId).toBe('cucas');
 });
@@ -97,7 +97,7 @@ test('SDK should return an error if we try to reassign the user id', async () =>
     return chromeDriver.getTitle().then(title => title.includes('Test Page'));
   }, 2000);
 
-  const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
+  const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     let beamsClient;
@@ -110,7 +110,7 @@ test('SDK should return an error if we try to reassign the user id', async () =>
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(initialDeviceId).toContain('web-');
+  expect(deviceId).toContain('web-');
 
   const setUserIdError = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
