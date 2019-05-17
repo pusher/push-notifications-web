@@ -1,4 +1,5 @@
 import doRequest from './doRequest';
+import TokenProvider from './token-provider';
 
 export function init(config) {
   return new Client(config);
@@ -42,6 +43,7 @@ export class Client {
     this.instanceId = instanceId;
     this.deviceId = null;
     this.token = null;
+    this.userId = null;
     this._db = null;
 
     this._endpoint = endpointOverride; // Internal only
@@ -53,6 +55,9 @@ export class Client {
         if (sdkState !== null) {
           this.token = sdkState.token;
           this.deviceId = sdkState.device_id;
+          if (sdkState.user_id !== undefined) {
+            this.userId = sdkState.user_id;
+          }
         }
       })
       .then(() => this);
@@ -82,10 +87,39 @@ export class Client {
     // get device id from errol
     const deviceId = await this._registerDevice(token);
 
-    await this._writeSDKState(this.instanceId, token, deviceId);
+    const options = { instanceId: this.instanceId, token, deviceId };
+    await this._writeSDKState(options);
 
     this.token = token;
     this.deviceId = deviceId;
+  }
+
+  async setUserId(userId, tokenProvider) {
+    if (this.userId !== null && this.userId !== userId) {
+      throw new Error('Changing the `userId` is not allowed.');
+    }
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/user`;
+
+    const { token: beamsAuthToken } = await tokenProvider.fetchToken();
+    const options = {
+      method: 'PUT',
+      path,
+      headers: {
+        Authorization: `Bearer ${beamsAuthToken}`,
+      },
+    };
+    await doRequest(options);
+
+    this.userId = userId;
+    return this._writeSDKState({
+      instanceId: this.instanceId,
+      token: this.token,
+      deviceId: this.deviceId,
+      userId: this.userId,
+    });
   }
 
   async stop() {
@@ -107,7 +141,8 @@ export class Client {
       this.instanceId
     )}/web-vapid-public-key`;
 
-    return doRequest('GET', path);
+    const options = { method: 'GET', path };
+    return doRequest(options);
   }
 
   async _getPushToken(publicKey) {
@@ -129,7 +164,8 @@ export class Client {
       this.instanceId
     )}/devices/web`;
 
-    const response = await doRequest('POST', path, { token });
+    const options = { method: 'POST', path, body: { token } };
+    const response = await doRequest(options);
     return response.id;
   }
 
@@ -138,7 +174,8 @@ export class Client {
       this.instanceId
     )}/devices/web/${encodeURIComponent(this.deviceId)}`;
 
-    await doRequest('DELETE', path);
+    const options = { method: 'DELETE', path };
+    await doRequest(options);
   }
 
   async _initDb() {
@@ -164,9 +201,8 @@ export class Client {
           unique: true,
         });
         objectStore.createIndex('token', 'token', { unique: true });
-        objectStore.createIndex('device_id', 'device_id', {
-          unique: true,
-        });
+        objectStore.createIndex('device_id', 'device_id', { unique: true });
+        objectStore.createIndex('user_id', 'user_id', { unique: true });
       };
     });
   }
@@ -188,15 +224,16 @@ export class Client {
     });
   }
 
-  _writeSDKState(instanceId, token, deviceId) {
+  _writeSDKState({ instanceId, token, deviceId, userId }) {
     return new Promise((resolve, reject) => {
       const request = this._db
         .transaction('beams', 'readwrite')
         .objectStore('beams')
-        .add({
+        .put({
           instance_id: instanceId,
-          token: token,
+          token,
           device_id: deviceId,
+          user_id: userId,
         });
 
       request.onsuccess = _ => {
@@ -233,3 +270,5 @@ function urlBase64ToUInt8Array(base64String) {
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
+
+export { TokenProvider };
