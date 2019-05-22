@@ -1,6 +1,5 @@
 export default class DeviceStateStore {
   constructor(instanceId) {
-    this.userId = null;
     this._instanceId = instanceId;
     this._dbConn = null;
   }
