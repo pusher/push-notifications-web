@@ -1,70 +1,74 @@
 import doRequest from './doRequest';
 import TokenProvider from './token-provider';
+import DeviceStateStore from './DeviceStateStore';
 
-export function init(config) {
-  return new Client(config);
-}
+export async function init(config) {
+  if (!config) {
+    throw new Error('Config object required');
+  }
+  const { instanceId, endpointOverride = null } = config;
 
-export class Client {
-  constructor(config) {
-    if (!config) {
-      throw new Error('Config object required');
-    }
-    const { instanceId, endpointOverride = null } = config;
-
-    if (instanceId === undefined) {
-      throw new Error('Instance ID is required');
-    }
-    if (typeof instanceId !== 'string') {
-      throw new Error('Instance ID must be a string');
-    }
-    if (instanceId.length === 0) {
-      throw new Error('Instance ID cannot be empty');
-    }
-
-    if (!window.indexedDB) {
-      throw new Error(
-        'Pusher Beams does not support this browser version (IndexedDB not supported)'
-      );
-    }
-
-    if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
-      throw new Error(
-        'Pusher Beams does not support this browser version (ServiceWorkerRegistration not supported)'
-      );
-    }
-
-    if (!('PushManager' in window)) {
-      throw new Error(
-        'Pusher Beams does not support this browser version (PushManager not supported)'
-      );
-    }
-
-    this.instanceId = instanceId;
-    this.deviceId = null;
-    this.token = null;
-    this.userId = null;
-    this._db = null;
-
-    this._endpoint = endpointOverride; // Internal only
-
-    return this._initDb()
-      .then(db => (this._db = db))
-      .then(() => this._readSDKState())
-      .then(sdkState => {
-        if (sdkState !== null) {
-          this.token = sdkState.token;
-          this.deviceId = sdkState.device_id;
-          if (sdkState.user_id !== undefined) {
-            this.userId = sdkState.user_id;
-          }
-        }
-      })
-      .then(() => this);
+  if (instanceId === undefined) {
+    throw new Error('Instance ID is required');
+  }
+  if (typeof instanceId !== 'string') {
+    throw new Error('Instance ID must be a string');
+  }
+  if (instanceId.length === 0) {
+    throw new Error('Instance ID cannot be empty');
   }
 
-  get _dbName() {
-    return `beams-${this.instanceId}`;
+  if (!window.indexedDB) {
+    throw new Error(
+      'Pusher Beams does not support this browser version (IndexedDB not supported)'
+    );
+  }
+
+  if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
+    throw new Error(
+      'Pusher Beams does not support this browser version (ServiceWorkerRegistration not supported)'
+    );
+  }
+
+  if (!('PushManager' in window)) {
+    throw new Error(
+      'Pusher Beams does not support this browser version (PushManager not supported)'
+    );
+  }
+
+  const deviceStateStore = new DeviceStateStore(instanceId);
+  await deviceStateStore.connect();
+
+  const deviceId = await deviceStateStore.getDeviceId();
+  const token = await deviceStateStore.getToken();
+  const userId = await deviceStateStore.getUserId();
+
+  return new PushNotificationsInstance({
+    instanceId,
+    deviceId,
+    token,
+    userId,
+    deviceStateStore,
+    endpointOverride,
+  });
+}
+
+class PushNotificationsInstance {
+  constructor({
+    instanceId,
+    deviceId,
+    token,
+    userId,
+    deviceStateStore,
+    endpointOverride = null,
+  }) {
+    this.instanceId = instanceId;
+    this.deviceId = deviceId;
+    this.token = token;
+    this.userId = userId;
+    this._deviceStateStore = deviceStateStore;
+
+    this._endpoint = endpointOverride; // Internal only
   }
 
   get _baseURL() {
@@ -87,8 +91,8 @@ export class Client {
     // get device id from errol
     const deviceId = await this._registerDevice(token);
 
-    const options = { instanceId: this.instanceId, token, deviceId };
-    await this._writeSDKState(options);
+    await this._deviceStateStore.setToken(token);
+    await this._deviceStateStore.setDeviceId(deviceId);
 
     this.token = token;
     this.deviceId = deviceId;
@@ -114,21 +118,17 @@ export class Client {
     await doRequest(options);
 
     this.userId = userId;
-    return this._writeSDKState({
-      instanceId: this.instanceId,
-      token: this.token,
-      deviceId: this.deviceId,
-      userId: this.userId,
-    });
+    return this._deviceStateStore.setUserId(userId);
   }
 
   async stop() {
     await this._deleteDevice();
 
-    await this._clearDb();
+    await this._deviceStateStore.clear();
 
     this.deviceId = null;
     this.token = null;
+    this.userId = null;
   }
 
   async clearAllState() {
@@ -176,91 +176,6 @@ export class Client {
 
     const options = { method: 'DELETE', path };
     await doRequest(options);
-  }
-
-  async _initDb() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this._dbName);
-
-      request.onerror = event => {
-        const error = new Error(`Database error: ${event.target.error}`);
-        reject(error);
-      };
-
-      request.onsuccess = event => {
-        const db = event.target.result;
-        resolve(db);
-      };
-
-      request.onupgradeneeded = event => {
-        const db = event.target.result;
-        const objectStore = db.createObjectStore('beams', {
-          keyPath: 'instance_id',
-        });
-        objectStore.createIndex('instance_id', 'instance_id', {
-          unique: true,
-        });
-        objectStore.createIndex('token', 'token', { unique: true });
-        objectStore.createIndex('device_id', 'device_id', { unique: true });
-        objectStore.createIndex('user_id', 'user_id', { unique: true });
-      };
-    });
-  }
-
-  async _clearDb() {
-    return new Promise((resolve, reject) => {
-      const request = this._db
-        .transaction('beams', 'readwrite')
-        .objectStore('beams')
-        .clear();
-
-      request.onsuccess = _ => {
-        resolve();
-      };
-
-      request.onerror = event => {
-        reject(event.target.error);
-      };
-    });
-  }
-
-  _writeSDKState({ instanceId, token, deviceId, userId }) {
-    return new Promise((resolve, reject) => {
-      const request = this._db
-        .transaction('beams', 'readwrite')
-        .objectStore('beams')
-        .put({
-          instance_id: instanceId,
-          token,
-          device_id: deviceId,
-          user_id: userId,
-        });
-
-      request.onsuccess = _ => {
-        resolve();
-      };
-
-      request.onerror = event => {
-        reject(event.target.error);
-      };
-    });
-  }
-
-  _readSDKState() {
-    return new Promise((resolve, reject) => {
-      const request = this._db
-        .transaction('beams')
-        .objectStore('beams')
-        .get(this.instanceId);
-
-      request.onsuccess = event => {
-        resolve(event.target.result || null);
-      };
-
-      request.onerror = event => {
-        reject(event.target.error);
-      };
-    });
   }
 }
 

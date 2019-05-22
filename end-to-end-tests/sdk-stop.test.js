@@ -17,7 +17,7 @@ beforeAll(() => {
 
 test('Calling .stop should clear SDK state', async () => {
   const errolClient = new ErrolTestClient(
-    'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
+    'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b'
   );
 
   // Load test application
@@ -43,30 +43,35 @@ test('Calling .stop should clear SDK state', async () => {
   expect(deviceIdBeforeStop).toContain('web-');
 
   // Call .stop
+  const stopError = await chromeDriver.executeAsyncScript(() => {
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
+
+    return window.beamsClient
+      .stop()
+      .then(() => asyncScriptReturnCallback(''))
+      .catch(e => asyncScriptReturnCallback(e.message));
+  });
+  expect(stopError).toBe('');
+
+  // Reload the page
+  await chromeDriver.get('http://localhost:3000');
+  await chromeDriver.wait(() => {
+    return chromeDriver.getTitle().then(title => title.includes('Test Page'));
+  }, 2000);
+
   const deviceIdAfterStop = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return window.beamsClient.stop()
+    const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
+
+    return PusherPushNotifications.init({ instanceId })
+      .then(c => (window.beamsClient = c))
       .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
   // Assert that the SDK no longer has a device ID
   expect(deviceIdAfterStop).toBe(null);
-
-  // Assert that there is nothing stored in indexeddb
-  const numDbRecords = await chromeDriver.executeAsyncScript(() => {
-    const asyncScriptReturnCallback = arguments[arguments.length - 1];
-
-    const getAllRequest = window.beamsClient._db
-      .transaction('beams', 'readwrite')
-      .objectStore('beams')
-      .getAll();
-
-    getAllRequest.onsuccess = event => asyncScriptReturnCallback(event.target.result.length);
-    getAllRequest.onerror = event => asyncScriptReturnCallback(event.target.error);
-  });
-  expect(numDbRecords).toBe(0);
 
   // Assert that the device no longer exists on the server
   const response = await errolClient.getWebDevice(deviceIdBeforeStop);
@@ -75,7 +80,7 @@ test('Calling .stop should clear SDK state', async () => {
 
 test('Calling .clearAllState should clear SDK state and create a new device', async () => {
   const errolClient = new ErrolTestClient(
-    'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
+    'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b'
   );
 
   // Load test application
@@ -104,7 +109,8 @@ test('Calling .clearAllState should clear SDK state and create a new device', as
   const deviceIdAfterClear = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return window.beamsClient.clearAllState()
+    return window.beamsClient
+      .clearAllState()
       .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
