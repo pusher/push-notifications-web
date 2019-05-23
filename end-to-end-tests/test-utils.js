@@ -24,7 +24,7 @@ beforeAll(() => {
 /**
  * Helper for launching a test application server
  * @async
- * @return {promise<function>} - Call this function to shutdown the launched
+ * @return {Promise<function>} - Call this function to shutdown the launched
  *                               server
  */
 export async function launchServer() {
@@ -78,7 +78,7 @@ function httpPing(url) {
 /**
  * Helper for instantiating a new Selenium webdriver instance (Chrome only)
  * @async
- * @return {ChomeDriver} - Selenium webdriver instance (Chrome)
+ * @return {ChromeDriver} - Selenium webdriver instance (Chrome)
  */
 export async function createChromeWebDriver() {
   // This is tricky for a few reasons:
