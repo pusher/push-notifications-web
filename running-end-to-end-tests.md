@@ -5,5 +5,5 @@ Then end-to-end tests depend on ChromeDriver, the web driver for Chrome.  [You c
 After that, you can run the end-to-end tests with
 
 ```bash
-yarn test:e2e
+npm run test:e2e
 ```
