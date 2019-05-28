@@ -2,11 +2,17 @@ import doRequest from './doRequest';
 import TokenProvider from './token-provider';
 import DeviceStateStore from './DeviceStateStore';
 
+const DEFAULT_SERVICE_WORKER_URL = '/service-worker.js';
+
 export async function init(config) {
   if (!config) {
     throw new Error('Config object required');
   }
-  const { instanceId, endpointOverride = null } = config;
+  const {
+    instanceId,
+    endpointOverride = null,
+    serviceWorkerURL = DEFAULT_SERVICE_WORKER_URL,
+  } = config;
 
   if (instanceId === undefined) {
     throw new Error('Instance ID is required');
@@ -48,6 +54,7 @@ export async function init(config) {
     deviceId,
     token,
     userId,
+    serviceWorkerURL,
     deviceStateStore,
     endpointOverride,
   });
@@ -59,6 +66,7 @@ class PushNotificationsInstance {
     deviceId,
     token,
     userId,
+    serviceWorkerURL,
     deviceStateStore,
     endpointOverride = null,
   }) {
@@ -66,6 +74,7 @@ class PushNotificationsInstance {
     this.deviceId = deviceId;
     this.token = token;
     this.userId = userId;
+    this._serviceWorkerUrl = serviceWorkerURL;
     this._deviceStateStore = deviceStateStore;
 
     this._endpoint = endpointOverride; // Internal only
@@ -147,7 +156,7 @@ class PushNotificationsInstance {
 
   async _getPushToken(publicKey) {
     try {
-      window.navigator.serviceWorker.register('sw.js');
+      window.navigator.serviceWorker.register(this._serviceWorkerUrl);
       const reg = await window.navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,

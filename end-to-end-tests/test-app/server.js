@@ -1,7 +1,7 @@
-const express = require('express')
+const express = require('express');
 const path = require('path');
-const app = express()
-const port = 3000
+const app = express();
+const port = 3000;
 
 app.get('/', (req, res) => {
   res.send(`
@@ -15,16 +15,16 @@ app.get('/', (req, res) => {
       <script src="push-notifications.js"></script>
     </body>
   </html>
-  `)
-})
+  `);
+});
 
 app.get('/push-notifications.js', (req, res) => {
   res.sendFile(path.resolve('./dist/push-notifications.js'));
-})
+});
 
-app.get('/sw.js', (req, res) => {
+app.get('/service-worker.js', (req, res) => {
   res.set('Content-Type', 'text/javascript');
   res.send('');
-})
+});
 
-app.listen(port, () => console.log(`Listening on port ${port}...`))
+app.listen(port, () => console.log(`Listening on port ${port}...`));
