@@ -8,26 +8,20 @@ export default class DeviceStateStore {
     return `beams-${this._instanceId}`;
   }
 
+  get isConnected() {
+    return this._dbConn !== null;
+  }
+
   connect() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this._dbName);
 
-      request.onerror = event => {
-        const error = new Error(`Database error: ${event.target.error}`);
-        reject(error);
-      };
-
       request.onsuccess = event => {
         const db = event.target.result;
         this._dbConn = db;
+
         this._readState()
-          .then(state => {
-            if (state === null) {
-              this.clear();
-            } else {
-              return Promise.resolve();
-            }
-          })
+          .then(state => (state === null ? this.clear() : Promise.resolve()))
           .then(resolve);
       };
 
@@ -37,11 +31,12 @@ export default class DeviceStateStore {
           keyPath: 'instance_id',
         });
       };
-    });
-  }
 
-  get isConnected() {
-    return this._dbConn !== null;
+      request.onerror = event => {
+        const error = new Error(`Database error: ${event.target.error}`);
+        reject(error);
+      };
+    });
   }
 
   clear() {
