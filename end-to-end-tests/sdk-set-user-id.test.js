@@ -65,7 +65,7 @@ test('SDK should set user id with errol', async () => {
 
     // Fake local TokenProvider that just returns a token signed for
     // the user 'cucas' with a long expiry. Since the hardcoded token
-    // is signed for 'cucas' we through an exception if another user ID
+    // is signed for 'cucas' we throw an exception if another user ID
     // is requested.
     let tokenProvider = {
       fetchToken: userId => {
