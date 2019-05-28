@@ -107,7 +107,7 @@ class PushNotificationsInstance {
       this.instanceId
     )}/devices/web/${this.deviceId}/user`;
 
-    const { token: beamsAuthToken } = await tokenProvider.fetchToken();
+    const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
     const options = {
       method: 'PUT',
       path,
