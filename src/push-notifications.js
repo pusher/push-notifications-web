@@ -2,7 +2,7 @@ import doRequest from './doRequest';
 import TokenProvider from './token-provider';
 import DeviceStateStore from './DeviceStateStore';
 
-const DEFAULT_SERVICE_WORKER_URL = '/sw.js';
+const DEFAULT_SERVICE_WORKER_URL = '/service-worker.js';
 
 export async function init(config) {
   if (!config) {
