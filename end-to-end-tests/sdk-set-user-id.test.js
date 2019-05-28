@@ -63,11 +63,25 @@ test('SDK should set user id with errol', async () => {
   const setUserIdError = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
+    // Fake local TokenProvider that just returns a token signed for
+    // the user 'cucas' with a long expiry. Since the hardcoded token
+    // is signed for 'cucas' we through an exception if another user ID
+    // is requested.
     let tokenProvider = {
-      fetchToken: () => ({
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ3MDc5OTIzMDIsImlzcyI6Imh0dHBzOi8vMWI4ODA1OTAtNjMwMS00YmI1LWIzNGYtNDVkYjFjNWY1NjQ0LnB1c2hub3RpZmljYXRpb25zLnB1c2hlci5jb20iLCJzdWIiOiJjdWNhcyJ9.CTtrDXh7vae3rSSKBKf5X0y4RQpFg7YvIlirmBQqJn4',
-      }),
+      fetchToken: userId => {
+        if (userId !== 'cucas') {
+          throw new Error(
+            'Unexpected user ID ' +
+              userId +
+              ', this token provider is hardcoded to "cucas"'
+          );
+        } else {
+          return {
+            token:
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjQ3MDc5OTIzMDIsImlzcyI6Imh0dHBzOi8vMWI4ODA1OTAtNjMwMS00YmI1LWIzNGYtNDVkYjFjNWY1NjQ0LnB1c2hub3RpZmljYXRpb25zLnB1c2hlci5jb20iLCJzdWIiOiJjdWNhcyJ9.CTtrDXh7vae3rSSKBKf5X0y4RQpFg7YvIlirmBQqJn4',
+          };
+        }
+      },
     };
 
     let beamsClient;
