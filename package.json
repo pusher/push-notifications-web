@@ -1,23 +1,26 @@
 {
-  "name": "push-notifications-web",
+  "name": "@pusher/push-notifications-web",
   "version": "1.6.0",
   "description": "",
-  "main": "src/push-notifications.js",
+  "main": "dist/push-notifications-esm.js",
   "scripts": {
-    "build": "rollup -c",
+    "build:esm": "rollup -c ./rollup/esm.js",
+    "build:cdn": "rollup -c ./rollup/cdn.js",
     "format": "prettier ./src/**/*.js --write",
     "lint": "eslint ./src/**/*.js && prettier ./src/**/*.js -l",
     "test": "npm run test:unit",
     "test:unit": "jest ./src/*",
     "test:e2e": "jest ./end-to-end-tests/* --runInBand",
-    "prepublish": "rollup -c"
+    "prepublish": "npm run build:cdn"
   },
   "keywords": [],
   "author": "minaorangina",
   "license": "ISC",
   "devDependencies": {
     "@babel/core": "^7.4.3",
+    "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.4.3",
+    "@babel/runtime": "^7.4.5",
     "babel-jest": "^24.7.1",
     "eslint": "^4.14.0",
     "eslint-config-prettier": "^4.0.0",
@@ -26,8 +29,10 @@
     "jest-fetch-mock": "^2.1.2",
     "prettier": "1.17.0",
     "rollup": "^1.10.0",
+    "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^4.2.3",
     "selenium-webdriver": "^4.0.0-alpha.1"
-  }
+  },
+  "dependencies": {}
 }
