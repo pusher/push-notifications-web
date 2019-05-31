@@ -12,14 +12,14 @@ app.get('/', (req, res) => {
       <title>Push Notifications Web - Test Page</title>
     </head>
     <body>
-      <script src="push-notifications.js"></script>
+      <script src="push-notifications-cdn.js"></script>
     </body>
   </html>
   `);
 });
 
-app.get('/push-notifications.js', (req, res) => {
-  res.sendFile(path.resolve('./dist/push-notifications.js'));
+app.get('/push-notifications-cdn.js', (req, res) => {
+  res.sendFile(path.resolve('./dist/push-notifications-cdn.js'));
 });
 
 app.get('/service-worker.js', (req, res) => {
