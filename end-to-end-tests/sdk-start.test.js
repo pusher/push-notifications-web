@@ -24,11 +24,9 @@ test('SDK should register a device with errol', async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    let beamsClient;
     return PusherPushNotifications.init({ instanceId })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.start())
-      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .then(beamsClient => beamsClient.start())
+      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -45,11 +43,9 @@ test('SDK should remember the device ID', async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    let beamsClient;
     return PusherPushNotifications.init({ instanceId })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.start())
-      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .then(beamsClient => beamsClient.start())
+      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -62,11 +58,9 @@ test('SDK should remember the device ID', async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    let beamsClient;
     return PusherPushNotifications.init({ instanceId })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.start())
-      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .then(beamsClient => beamsClient.start())
+      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
