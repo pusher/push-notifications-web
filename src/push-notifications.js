@@ -89,7 +89,7 @@ class PushNotificationsInstance {
 
   async start() {
     if (this.deviceId !== null) {
-      return;
+      return this;
     }
 
     const { vapidPublicKey: publicKey } = await this._getPublicKey();
@@ -105,6 +105,7 @@ class PushNotificationsInstance {
 
     this.token = token;
     this.deviceId = deviceId;
+    return this;
   }
 
   async setUserId(userId, tokenProvider) {

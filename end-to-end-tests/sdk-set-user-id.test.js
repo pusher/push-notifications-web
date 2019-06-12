@@ -48,14 +48,12 @@ test('SDK should set user id with errol', async () => {
 
   const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
-    let beamsClient;
 
     return PusherPushNotifications.init({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
     })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.start())
-      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .then(beamsClient => beamsClient.start())
+      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -84,12 +82,10 @@ test('SDK should set user id with errol', async () => {
       },
     };
 
-    let beamsClient;
     return PusherPushNotifications.init({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
     })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.setUserId('cucas', tokenProvider))
+      .then(beamsClient => beamsClient.setUserId('cucas', tokenProvider))
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -114,13 +110,11 @@ test('SDK should return an error if we try to reassign the user id', async () =>
   const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    let beamsClient;
     return PusherPushNotifications.init({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
     })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.start())
-      .then(() => asyncScriptReturnCallback(beamsClient.deviceId))
+      .then(beamsClient => beamsClient.start())
+      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
