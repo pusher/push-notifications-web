@@ -1,8 +1,9 @@
 import doRequest from './doRequest';
 import TokenProvider from './token-provider';
 import DeviceStateStore from './DeviceStateStore';
+import { version as sdkVersion } from 'package.json';
 
-const SERVICE_WORKER_URL = '/service-worker.js';
+const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
 export async function init(config) {
   if (!config) {
