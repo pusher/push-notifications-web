@@ -85,12 +85,12 @@ test('SDK should register a device with errol without registering the service wo
     deleteDbRequest.onsuccess = asyncScriptReturnCallback;
     deleteDbRequest.onerror = asyncScriptReturnCallback;
   });
-  const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
+  const initialDeviceId = await chromeDriver.executeAsyncScript(async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return PusherPushNotifications.init({
-      serviceWorkerRegistration: window.navigator.serviceWorker.register('/service-worker.js'),
+      serviceWorkerRegistration: await window.navigator.serviceWorker.register('/service-worker.js'),
       instanceId,
     })
       .then(beamsClient => beamsClient.start())
