@@ -1,8 +1,9 @@
 import doRequest from './doRequest';
 import TokenProvider from './token-provider';
 import DeviceStateStore from './DeviceStateStore';
+import { version as sdkVersion } from '../package.json';
 
-const DEFAULT_SERVICE_WORKER_URL = '/service-worker.js';
+const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
 export async function init(config) {
   if (!config) {
@@ -11,7 +12,7 @@ export async function init(config) {
   const {
     instanceId,
     endpointOverride = null,
-    serviceWorkerURL = DEFAULT_SERVICE_WORKER_URL,
+    serviceWorkerRegistration = null,
   } = config;
 
   if (instanceId === undefined) {
@@ -54,7 +55,7 @@ export async function init(config) {
     deviceId,
     token,
     userId,
-    serviceWorkerURL,
+    serviceWorkerRegistration,
     deviceStateStore,
     endpointOverride,
   });
@@ -66,7 +67,7 @@ class PushNotificationsInstance {
     deviceId,
     token,
     userId,
-    serviceWorkerURL,
+    serviceWorkerRegistration,
     deviceStateStore,
     endpointOverride = null,
   }) {
@@ -74,7 +75,7 @@ class PushNotificationsInstance {
     this.deviceId = deviceId;
     this.token = token;
     this.userId = userId;
-    this._serviceWorkerUrl = serviceWorkerURL;
+    this._serviceWorkerRegistration = serviceWorkerRegistration;
     this._deviceStateStore = deviceStateStore;
 
     this._endpoint = endpointOverride; // Internal only
@@ -157,7 +158,16 @@ class PushNotificationsInstance {
 
   async _getPushToken(publicKey) {
     try {
-      window.navigator.serviceWorker.register(this._serviceWorkerUrl);
+      if (this._serviceWorkerRegistration) {
+        // TODO: Call update only when we detect an SDK change
+      } else {
+        window.navigator.serviceWorker.register(SERVICE_WORKER_URL, {
+          // explicitly opting out of `importScripts` caching just in case our
+          // customers decides to host and serve the imported scripts and
+          // accidentally set `Cache-Control` to something other than `max-age=0`
+          updateViaCache: 'none',
+        });
+      }
       const reg = await window.navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
