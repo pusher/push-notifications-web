@@ -161,6 +161,14 @@ class PushNotificationsInstance {
       if (this._serviceWorkerRegistration) {
         // TODO: Call update only when we detect an SDK change
       } else {
+        // Check that service worker file exists
+        const { status: getSWStatusCode } = await fetch(SERVICE_WORKER_URL);
+        if (getSWStatusCode != 200) {
+          throw new Error(
+            'Cannot start SDK, service worker missing: No file found at /service-worker.js'
+          );
+        }
+
         window.navigator.serviceWorker.register(SERVICE_WORKER_URL, {
           // explicitly opting out of `importScripts` caching just in case our
           // customers decides to host and serve the imported scripts and

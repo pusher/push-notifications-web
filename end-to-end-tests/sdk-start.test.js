@@ -67,6 +67,56 @@ test('SDK should remember the device ID', async () => {
   expect(reloadedDeviceId).toBe(initialDeviceId);
 });
 
+describe('When service worker is missing', () => {
+  // Need a new test server that is configured to return 404 when asked
+  // for the service worker
+  let killTestServer;
+  beforeAll(() => {
+    return launchServer({
+      port: 3210,
+      serviceWorkerMissing: true,
+    }).then(killFunc => {
+      killTestServer = killFunc;
+    });
+  });
+
+  test('SDK should return the proper exception if service worker cannot be found', async () => {
+    await chromeDriver.get('http://localhost:3210');
+    await chromeDriver.wait(() => {
+      return chromeDriver.getTitle().then(title => title.includes('Test Page'));
+    }, 2000);
+
+    // make sure there device isn't there
+    await chromeDriver.executeAsyncScript(() => {
+      const asyncScriptReturnCallback = arguments[arguments.length - 1];
+
+      let deleteDbRequest = window.indexedDB.deleteDatabase(
+        'beams-deadc0de-2ce6-46e3-ad9a-5c02d0ab119b'
+      );
+      deleteDbRequest.onsuccess = asyncScriptReturnCallback;
+      deleteDbRequest.onerror = asyncScriptReturnCallback;
+    });
+
+    const startResult = await chromeDriver.executeAsyncScript(async () => {
+      const asyncScriptReturnCallback = arguments[arguments.length - 1];
+
+      const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
+      return PusherPushNotifications.init({
+        instanceId,
+      })
+        .then(beamsClient => beamsClient.start())
+        .then(beamsClient => asyncScriptReturnCallback('start succeeded'))
+        .catch(e => asyncScriptReturnCallback(e.message));
+    });
+
+    expect(startResult).not.toContain('succeeded');
+    expect(startResult).toContain('service worker missing');
+  });
+
+  afterAll(() => {
+    killTestServer();
+  });
+});
 
 test('SDK should register a device with errol without registering the service worker itself', async () => {
   // this is the case where customers want to manage the service worker themselves
@@ -90,7 +140,9 @@ test('SDK should register a device with errol without registering the service wo
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return PusherPushNotifications.init({
-      serviceWorkerRegistration: await window.navigator.serviceWorker.register('/service-worker.js'),
+      serviceWorkerRegistration: await window.navigator.serviceWorker.register(
+        '/service-worker.js'
+      ),
       instanceId,
     })
       .then(beamsClient => beamsClient.start())

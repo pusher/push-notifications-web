@@ -9,7 +9,7 @@ const MAX_TEST_SERVER_CHECKS = 10;
 const TEST_SERVER_CHECK_SLEEP_MS = 200;
 
 const TEST_SERVER_ENTRYPOINT = './end-to-end-tests/test-app/server.js';
-const TEST_SERVER_URL = 'http://localhost:3000';
+const TEST_SERVER_URL = 'http://localhost';
 
 const CHROME_SCREEN_SIZE = {
   width: 640,
@@ -27,13 +27,21 @@ beforeAll(() => {
  * @return {Promise<function>} - Call this function to shutdown the launched
  *                               server
  */
-export async function launchServer() {
-  const testServer = spawn('node', [TEST_SERVER_ENTRYPOINT]);
+export async function launchServer(config = {}) {
+  const { port = 3000, serviceWorkerMissing = 'false' } = config;
+
+  const testServer = spawn('node', [TEST_SERVER_ENTRYPOINT], {
+    env: {
+      ...process.env,
+      PORT: port,
+      SERVICE_WORKER_MISSING: serviceWorkerMissing,
+    },
+  });
   const killFunc = () => testServer.kill('SIGHUP');
 
   return (
     retryLoop(
-      () => httpPing(TEST_SERVER_URL),
+      () => httpPing(`${TEST_SERVER_URL}:${port}`),
       MAX_TEST_SERVER_CHECKS,
       TEST_SERVER_CHECK_SLEEP_MS
     )
