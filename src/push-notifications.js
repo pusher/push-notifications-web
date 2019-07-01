@@ -1,6 +1,6 @@
-import doRequest from './doRequest';
+import doRequest from './do-request';
 import TokenProvider from './token-provider';
-import DeviceStateStore from './DeviceStateStore';
+import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;

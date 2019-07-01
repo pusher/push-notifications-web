@@ -1,4 +1,4 @@
-import { ErrolTestClient } from './errolclient';
+import { ErrolTestClient } from './errol-client';
 import { launchServer, createChromeWebDriver } from './test-utils';
 
 let killServer = null;

@@ -1,4 +1,4 @@
-import doRequest from './doRequest';
+import doRequest from './do-request';
 
 test('doRequest', () => {
   expect(typeof doRequest).toBe('function');
