@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('path');
 const app = express();
-const port = 3000;
+
+const PORT = process.env.PORT || 3000;
+const SERVICE_WORKER_PRESENT = process.env.SERVICE_WORKER_PRESENT || 'true';
 
 app.get('/', (req, res) => {
   res.send(`
@@ -23,8 +25,12 @@ app.get('/push-notifications-cdn.js', (req, res) => {
 });
 
 app.get('/service-worker.js', (req, res) => {
-  res.set('Content-Type', 'text/javascript');
-  res.send('');
+  if (SERVICE_WORKER_PRESENT === 'true') {
+    res.set('Content-Type', 'text/javascript');
+    res.send('');
+  } else {
+    res.status(404).send('Not found');
+  }
 });
 
-app.listen(port, () => console.log(`Listening on port ${port}...`));
+app.listen(PORT, () => console.log(`Listening on port ${PORT}...`));
