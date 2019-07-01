@@ -126,6 +126,11 @@ class PushNotificationsInstance {
       return;
     }
 
+    if (this.deviceId == null) {
+      const error = new Error('.start must be called before .setUserId');
+      return Promise.reject(error);
+    }
+
     if (this.userId !== null && this.userId !== userId) {
       throw new Error('Changing the `userId` is not allowed.');
     }
@@ -154,6 +159,10 @@ class PushNotificationsInstance {
       console.warn(
         'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
       );
+      return;
+    }
+
+    if (this.deviceId == null) {
       return;
     }
 

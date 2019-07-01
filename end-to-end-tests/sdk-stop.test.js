@@ -15,9 +15,28 @@ beforeAll(() => {
     });
 });
 
+beforeEach(() => {
+  return (async () => {
+    await chromeDriver.get('http://localhost:3000');
+    await chromeDriver.wait(() => {
+      return chromeDriver.getTitle().then(title => title.includes('Test Page'));
+    }, 2000);
+
+    return chromeDriver.executeAsyncScript(() => {
+      const asyncScriptReturnCallback = arguments[arguments.length - 1];
+
+      let deleteDbRequest = window.indexedDB.deleteDatabase(
+        'beams-1b880590-6301-4bb5-b34f-45db1c5f5644'
+      );
+      deleteDbRequest.onsuccess = asyncScriptReturnCallback;
+      deleteDbRequest.onerror = asyncScriptReturnCallback;
+    });
+  })();
+});
+
 test('Calling .stop should clear SDK state', async () => {
   const errolClient = new ErrolTestClient(
-    'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b'
+    '1b880590-6301-4bb5-b34f-45db1c5f5644'
   );
 
   // Load test application
@@ -30,7 +49,7 @@ test('Calling .stop should clear SDK state', async () => {
   const deviceIdBeforeStop = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
+    const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
     return PusherPushNotifications.init({ instanceId })
       .then(c => (window.beamsClient = c))
@@ -62,7 +81,7 @@ test('Calling .stop should clear SDK state', async () => {
   const deviceIdAfterStop = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
+    const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
     return PusherPushNotifications.init({ instanceId })
       .then(c => (window.beamsClient = c))
@@ -78,9 +97,34 @@ test('Calling .stop should clear SDK state', async () => {
   expect(response.statusCode).toBe(404);
 });
 
+test('Calling .stop before .start should do nothing', async () => {
+  const errolClient = new ErrolTestClient(
+    '1b880590-6301-4bb5-b34f-45db1c5f5644'
+  );
+
+  // Load test application
+  await chromeDriver.get('http://localhost:3000');
+  await chromeDriver.wait(() => {
+    return chromeDriver.getTitle().then(title => title.includes('Test Page'));
+  }, 2000);
+
+  // Call .stop
+  const stopError = await chromeDriver.executeAsyncScript(() => {
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
+
+    const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
+
+    return PusherPushNotifications.init({ instanceId })
+      .then(beamsClient => beamsClient.stop())
+      .then(() => asyncScriptReturnCallback(''))
+      .catch(e => asyncScriptReturnCallback(e.message));
+  });
+  expect(stopError).toBe('');
+});
+
 test('Calling .clearAllState should clear SDK state and create a new device', async () => {
   const errolClient = new ErrolTestClient(
-    'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b'
+    '1b880590-6301-4bb5-b34f-45db1c5f5644'
   );
 
   // Load test application
@@ -93,7 +137,7 @@ test('Calling .clearAllState should clear SDK state and create a new device', as
   const deviceIdBeforeClear = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
+    const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
     return PusherPushNotifications.init({ instanceId })
       .then(c => (window.beamsClient = c))
