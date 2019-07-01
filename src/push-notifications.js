@@ -90,7 +90,7 @@ class PushNotificationsInstance {
 
   async start() {
     // Temporary whilst we only support Chrome in Beta release
-    if (!isChrome()) {
+    if (!isSupportedBrowser()) {
       console.warn(
         'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
       );
@@ -119,7 +119,7 @@ class PushNotificationsInstance {
 
   async setUserId(userId, tokenProvider) {
     // Temporary whilst we only support Chrome in Beta release
-    if (!isChrome()) {
+    if (!isSupportedBrowser()) {
       console.warn(
         'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
       );
@@ -150,7 +150,7 @@ class PushNotificationsInstance {
 
   async stop() {
     // Temporary whilst we only support Chrome in Beta release
-    if (!isChrome()) {
+    if (!isSupportedBrowser()) {
       console.warn(
         'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
       );
@@ -168,7 +168,7 @@ class PushNotificationsInstance {
 
   async clearAllState() {
     // Temporary whilst we only support Chrome in Beta release
-    if (!isChrome()) {
+    if (!isSupportedBrowser()) {
       console.warn(
         'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
       );
@@ -239,23 +239,21 @@ function urlBase64ToUInt8Array(base64String) {
 }
 
 /**
- * Temporary whilst we only support Chrome in the Beta release.
  * Modified from https://stackoverflow.com/questions/4565112
  */
-function isChrome() {
-  const isChromium = window.chrome;
+function isSupportedBrowser() {
   const winNav = window.navigator;
   const vendorName = winNav.vendor;
-  const isOpera = typeof window.opr !== 'undefined';
+
+  const isChromium =
+    window.chrome !== null && typeof window.chrome !== 'undefined';
+  const isOpera = winNav.userAgent.indexOf('OPR') > -1;
   const isIEedge = winNav.userAgent.indexOf('Edge') > -1;
 
-  return (
-    isChromium !== null &&
-    typeof isChromium !== 'undefined' &&
-    vendorName === 'Google Inc.' &&
-    isOpera === false &&
-    isIEedge === false
-  );
+  const isChrome =
+    isChromium && vendorName === 'Google Inc.' && !isIEedge && !isOpera;
+
+  return isChrome || isOpera;
 }
 
 export { TokenProvider };
