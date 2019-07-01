@@ -126,7 +126,7 @@ class PushNotificationsInstance {
       return;
     }
 
-    if (this.deviceId == null) {
+    if (this.deviceId === null) {
       const error = new Error('.start must be called before .setUserId');
       return Promise.reject(error);
     }
@@ -162,7 +162,7 @@ class PushNotificationsInstance {
       return;
     }
 
-    if (this.deviceId == null) {
+    if (this.deviceId === null) {
       return;
     }
 
