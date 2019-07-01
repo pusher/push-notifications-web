@@ -162,8 +162,8 @@ class PushNotificationsInstance {
         // TODO: Call update only when we detect an SDK change
       } else {
         // Check that service worker file exists
-        const { status: getSWStatusCode } = await fetch(SERVICE_WORKER_URL);
-        if (getSWStatusCode != 200) {
+        const { status: swStatusCode } = await fetch(SERVICE_WORKER_URL);
+        if (swStatusCode !== 200) {
           throw new Error(
             'Cannot start SDK, service worker missing: No file found at /service-worker.js'
           );

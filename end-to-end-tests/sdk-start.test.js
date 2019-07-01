@@ -74,7 +74,7 @@ describe('When service worker is missing', () => {
   beforeAll(() => {
     return launchServer({
       port: 3210,
-      serviceWorkerMissing: true,
+      serviceWorkerPresent: false,
     }).then(killFunc => {
       killTestServer = killFunc;
     });
@@ -86,7 +86,7 @@ describe('When service worker is missing', () => {
       return chromeDriver.getTitle().then(title => title.includes('Test Page'));
     }, 2000);
 
-    // make sure there device isn't there
+    // make sure device isn't there
     await chromeDriver.executeAsyncScript(() => {
       const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
@@ -125,7 +125,7 @@ test('SDK should register a device with errol without registering the service wo
     return chromeDriver.getTitle().then(title => title.includes('Test Page'));
   }, 2000);
 
-  // make sure there device isn't there
+  // make sure device isn't there
   await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 

@@ -28,13 +28,13 @@ beforeAll(() => {
  *                               server
  */
 export async function launchServer(config = {}) {
-  const { port = 3000, serviceWorkerMissing = 'false' } = config;
+  const { port = 3000, serviceWorkerPresent = 'true' } = config;
 
   const testServer = spawn('node', [TEST_SERVER_ENTRYPOINT], {
     env: {
       ...process.env,
       PORT: port,
-      SERVICE_WORKER_MISSING: serviceWorkerMissing,
+      SERVICE_WORKER_PRESENT: serviceWorkerPresent,
     },
   });
   const killFunc = () => testServer.kill('SIGHUP');

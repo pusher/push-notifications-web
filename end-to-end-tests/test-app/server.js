@@ -3,7 +3,7 @@ const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const SERVICE_WORKER_MISSING = process.env.SERVICE_WORKER_MISSING || 'false';
+const SERVICE_WORKER_PRESENT = process.env.SERVICE_WORKER_PRESENT || 'true';
 
 app.get('/', (req, res) => {
   res.send(`
@@ -25,11 +25,11 @@ app.get('/push-notifications-cdn.js', (req, res) => {
 });
 
 app.get('/service-worker.js', (req, res) => {
-  if (SERVICE_WORKER_MISSING === 'true') {
-    res.status(404).send('Not found');
-  } else {
+  if (SERVICE_WORKER_PRESENT === 'true') {
     res.set('Content-Type', 'text/javascript');
     res.send('');
+  } else {
+    res.status(404).send('Not found');
   }
 });
 
