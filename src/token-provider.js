@@ -1,4 +1,4 @@
-import doRequest from './doRequest';
+import doRequest from './do-request';
 
 export default class TokenProvider {
   constructor({ url, queryParams, headers } = {}) {
