@@ -130,7 +130,12 @@ class PushNotificationsInstance {
       const error = new Error('.start must be called before .setUserId');
       return Promise.reject(error);
     }
-
+    if (typeof userId !== 'string') {
+      throw new Error(`User ID must be a string (was ${userId})`);
+    }
+    if (userId === '') {
+      throw new Error('User ID cannot be the empty string');
+    }
     if (this.userId !== null && this.userId !== userId) {
       throw new Error('Changing the `userId` is not allowed.');
     }
