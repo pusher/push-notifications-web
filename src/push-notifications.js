@@ -89,6 +89,14 @@ class PushNotificationsInstance {
   }
 
   async start() {
+    // Temporary whilst we only support Chrome in Beta release
+    if (!isSupportedBrowser()) {
+      console.warn(
+        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
+      );
+      return this;
+    }
+
     if (this.deviceId !== null) {
       return this;
     }
@@ -110,6 +118,14 @@ class PushNotificationsInstance {
   }
 
   async setUserId(userId, tokenProvider) {
+    // Temporary whilst we only support Chrome in Beta release
+    if (!isSupportedBrowser()) {
+      console.warn(
+        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
+      );
+      return;
+    }
+
     if (this.userId !== null && this.userId !== userId) {
       throw new Error('Changing the `userId` is not allowed.');
     }
@@ -133,6 +149,14 @@ class PushNotificationsInstance {
   }
 
   async stop() {
+    // Temporary whilst we only support Chrome in Beta release
+    if (!isSupportedBrowser()) {
+      console.warn(
+        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
+      );
+      return;
+    }
+
     await this._deleteDevice();
 
     await this._deviceStateStore.clear();
@@ -143,6 +167,14 @@ class PushNotificationsInstance {
   }
 
   async clearAllState() {
+    // Temporary whilst we only support Chrome in Beta release
+    if (!isSupportedBrowser()) {
+      console.warn(
+        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
+      );
+      return;
+    }
+
     await this.stop();
     await this.start();
   }
@@ -212,6 +244,24 @@ function urlBase64ToUInt8Array(base64String) {
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+/**
+ * Modified from https://stackoverflow.com/questions/4565112
+ */
+function isSupportedBrowser() {
+  const winNav = window.navigator;
+  const vendorName = winNav.vendor;
+
+  const isChromium =
+    window.chrome !== null && typeof window.chrome !== 'undefined';
+  const isOpera = winNav.userAgent.indexOf('OPR') > -1;
+  const isIEedge = winNav.userAgent.indexOf('Edge') > -1;
+
+  const isChrome =
+    isChromium && vendorName === 'Google Inc.' && !isIEedge && !isOpera;
+
+  return isChrome || isOpera;
 }
 
 export { TokenProvider };
