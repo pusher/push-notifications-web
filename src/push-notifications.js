@@ -50,7 +50,7 @@ export async function init(config) {
   const token = await deviceStateStore.getToken();
   const userId = await deviceStateStore.getUserId();
 
-  return new PushNotificationsInstance({
+  const instance = new PushNotificationsInstance({
     instanceId,
     deviceId,
     token,
@@ -59,6 +59,13 @@ export async function init(config) {
     deviceStateStore,
     endpointOverride,
   });
+
+  const deviceExists = deviceId !== null;
+  if (deviceExists) {
+    await instance._updateDeviceMetadata();
+  }
+
+  return instance;
 }
 
 class PushNotificationsInstance {
@@ -233,7 +240,14 @@ class PushNotificationsInstance {
       this.instanceId
     )}/devices/web`;
 
-    const options = { method: 'POST', path, body: { token } };
+    const device = {
+      token,
+      metadata: {
+        sdkVersion,
+      },
+    };
+
+    const options = { method: 'POST', path, body: device };
     const response = await doRequest(options);
     return response.id;
   }
@@ -244,6 +258,19 @@ class PushNotificationsInstance {
     )}/devices/web/${encodeURIComponent(this.deviceId)}`;
 
     const options = { method: 'DELETE', path };
+    await doRequest(options);
+  }
+
+  async _updateDeviceMetadata() {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/metadata`;
+
+    const metadata = {
+      sdkVersion,
+    };
+
+    const options = { method: 'PUT', path, body: metadata };
     await doRequest(options);
   }
 }
