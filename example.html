@@ -9,25 +9,16 @@
   <body>
     <script src="./dist/push-notifications-cdn.js"></script>
     <script>
+      let tokenProvider = new PusherPushNotifications.TokenProvider({
+        url: 'https://deadc0de-beams-test-server.herokuapp.com/auth',
+      });
+
+      let beamsClient;
       PusherPushNotifications.init({
         instanceId: 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
       })
-        .then(beamsClient => {
-          return beamsClient.start().then(() => beamsClient);
-        })
-        .then(beamsClient => {
-          let tokenProvider = new PusherPushNotifications.TokenProvider({
-            url: 'https://beams-test-server.herokuapp.com/auth',
-          });
-          return beamsClient
-            .setUserId('user-001', tokenProvider)
-            .then(() => beamsClient);
-        })
-        .then(beamsClient => {
-          console.log('SDK started.');
-          console.log(
-            `Device ID: ${beamsClient.deviceId}, User ID: ${beamsClient.userId}`
-          );
+        .then(c => {
+          beamsClient = c;
         })
         .catch(console.error);
     </script>
