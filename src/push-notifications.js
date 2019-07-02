@@ -62,7 +62,11 @@ export async function init(config) {
 
   const deviceExists = deviceId !== null;
   if (deviceExists) {
-    await instance._updateDeviceMetadata();
+    try {
+      await instance._updateDeviceMetadata();
+    } catch (_) {
+      // Best effort, do nothing if this fails.
+    }
   }
 
   return instance;
@@ -118,6 +122,7 @@ class PushNotificationsInstance {
 
     await this._deviceStateStore.setToken(token);
     await this._deviceStateStore.setDeviceId(deviceId);
+    await this._deviceStateStore.setSdkVersion(sdkVersion);
 
     this.token = token;
     this.deviceId = deviceId;
@@ -262,6 +267,12 @@ class PushNotificationsInstance {
   }
 
   async _updateDeviceMetadata() {
+    const storedSdkVersion = await this._deviceStateStore.getSdkVersion();
+    if (sdkVersion === storedSdkVersion) {
+      // Nothing to do
+      return;
+    }
+
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/devices/web/${this.deviceId}/metadata`;
@@ -272,6 +283,8 @@ class PushNotificationsInstance {
 
     const options = { method: 'PUT', path, body: metadata };
     await doRequest(options);
+
+    await this._deviceStateStore.setSdkVersion(sdkVersion);
   }
 }
 

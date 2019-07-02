@@ -135,4 +135,12 @@ export default class DeviceStateStore {
   setUserId(userId) {
     return this._writeProperty('user_id', userId);
   }
+
+  getSdkVersion() {
+    return this._readProperty('sdk_version');
+  }
+
+  setSdkVersion(sdkVersion) {
+    return this._writeProperty('sdk_version', sdkVersion);
+  }
 }
