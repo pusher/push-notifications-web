@@ -15,8 +15,8 @@
     "publish-please": "publish-please"
   },
   "keywords": [],
-  "author": "minaorangina",
-  "license": "ISC",
+  "author": "Pusher",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/plugin-transform-runtime": "^7.4.4",
