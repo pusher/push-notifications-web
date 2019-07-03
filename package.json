@@ -11,7 +11,8 @@
     "test": "npm run test:unit",
     "test:unit": "jest ./src/*",
     "test:e2e": "jest ./end-to-end-tests/* --runInBand",
-    "prepublish": "npm run build:cdn"
+    "prepublish": "publish-please guard",
+    "publish-please": "publish-please"
   },
   "keywords": [],
   "author": "minaorangina",
@@ -28,6 +29,7 @@
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
     "prettier": "1.17.0",
+    "publish-please": "^5.5.0",
     "rollup": "^1.10.0",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.3.4",
