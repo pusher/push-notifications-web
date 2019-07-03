@@ -50,7 +50,7 @@ export async function init(config) {
   const token = await deviceStateStore.getToken();
   const userId = await deviceStateStore.getUserId();
 
-  return new PushNotificationsInstance({
+  const instance = new PushNotificationsInstance({
     instanceId,
     deviceId,
     token,
@@ -59,6 +59,17 @@ export async function init(config) {
     deviceStateStore,
     endpointOverride,
   });
+
+  const deviceExists = deviceId !== null;
+  if (deviceExists) {
+    try {
+      await instance._updateDeviceMetadata();
+    } catch (_) {
+      // Best effort, do nothing if this fails.
+    }
+  }
+
+  return instance;
 }
 
 class PushNotificationsInstance {
@@ -111,6 +122,10 @@ class PushNotificationsInstance {
 
     await this._deviceStateStore.setToken(token);
     await this._deviceStateStore.setDeviceId(deviceId);
+    await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
+    await this._deviceStateStore.setLastSeenUserAgent(
+      window.navigator.userAgent
+    );
 
     this.token = token;
     this.deviceId = deviceId;
@@ -238,7 +253,14 @@ class PushNotificationsInstance {
       this.instanceId
     )}/devices/web`;
 
-    const options = { method: 'POST', path, body: { token } };
+    const device = {
+      token,
+      metadata: {
+        sdkVersion,
+      },
+    };
+
+    const options = { method: 'POST', path, body: device };
     const response = await doRequest(options);
     return response.id;
   }
@@ -250,6 +272,34 @@ class PushNotificationsInstance {
 
     const options = { method: 'DELETE', path };
     await doRequest(options);
+  }
+
+  /**
+   * Submit SDK version and browser details (via the user agent) to Pusher Beams.
+   */
+  async _updateDeviceMetadata() {
+    const userAgent = window.navigator.userAgent;
+    const storedUserAgent = await this._deviceStateStore.getLastSeenUserAgent();
+    const storedSdkVersion = await this._deviceStateStore.getLastSeenSdkVersion();
+
+    if (userAgent === storedUserAgent && sdkVersion === storedSdkVersion) {
+      // Nothing to do
+      return;
+    }
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/metadata`;
+
+    const metadata = {
+      sdkVersion,
+    };
+
+    const options = { method: 'PUT', path, body: metadata };
+    await doRequest(options);
+
+    await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
+    await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
 }
 

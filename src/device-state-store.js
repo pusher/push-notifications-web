@@ -135,4 +135,20 @@ export default class DeviceStateStore {
   setUserId(userId) {
     return this._writeProperty('user_id', userId);
   }
+
+  getLastSeenSdkVersion() {
+    return this._readProperty('last_seen_sdk_version');
+  }
+
+  setLastSeenSdkVersion(sdkVersion) {
+    return this._writeProperty('last_seen_sdk_version', sdkVersion);
+  }
+
+  getLastSeenUserAgent() {
+    return this._readProperty('last_seen_user_agent');
+  }
+
+  setLastSeenUserAgent(userAgent) {
+    return this._writeProperty('last_seen_user_agent', userAgent);
+  }
 }
