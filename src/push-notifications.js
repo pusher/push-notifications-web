@@ -122,7 +122,10 @@ class PushNotificationsInstance {
 
     await this._deviceStateStore.setToken(token);
     await this._deviceStateStore.setDeviceId(deviceId);
-    await this._deviceStateStore.setSdkVersion(sdkVersion);
+    await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
+    await this._deviceStateStore.setLastSeenUserAgent(
+      window.navigator.userAgent
+    );
 
     this.token = token;
     this.deviceId = deviceId;
@@ -266,9 +269,15 @@ class PushNotificationsInstance {
     await doRequest(options);
   }
 
+  /**
+   * Submit SDK version and browser details (via the user agent) to Pusher Beams.
+   */
   async _updateDeviceMetadata() {
-    const storedSdkVersion = await this._deviceStateStore.getSdkVersion();
-    if (sdkVersion === storedSdkVersion) {
+    const userAgent = window.navigator.userAgent;
+    const storedUserAgent = await this._deviceStateStore.getLastSeenUserAgent();
+    const storedSdkVersion = await this._deviceStateStore.getLastSeenSdkVersion();
+
+    if (userAgent === storedUserAgent && sdkVersion === storedSdkVersion) {
       // Nothing to do
       return;
     }
@@ -284,7 +293,8 @@ class PushNotificationsInstance {
     const options = { method: 'PUT', path, body: metadata };
     await doRequest(options);
 
-    await this._deviceStateStore.setSdkVersion(sdkVersion);
+    await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
+    await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
 }
 

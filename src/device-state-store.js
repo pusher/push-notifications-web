@@ -136,11 +136,19 @@ export default class DeviceStateStore {
     return this._writeProperty('user_id', userId);
   }
 
-  getSdkVersion() {
-    return this._readProperty('sdk_version');
+  getLastSeenSdkVersion() {
+    return this._readProperty('last_seen_sdk_version');
   }
 
-  setSdkVersion(sdkVersion) {
-    return this._writeProperty('sdk_version', sdkVersion);
+  setLastSeenSdkVersion(sdkVersion) {
+    return this._writeProperty('last_seen_sdk_version', sdkVersion);
+  }
+
+  getLastSeenUserAgent() {
+    return this._readProperty('last_seen_user_agent');
+  }
+
+  setLastSeenUserAgent(userAgent) {
+    return this._writeProperty('last_seen_user_agent', userAgent);
   }
 }
