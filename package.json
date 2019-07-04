@@ -38,7 +38,6 @@
     "rollup-plugin-node-resolve": "^4.2.3",
     "selenium-webdriver": "^4.0.0-alpha.3"
   },
-  "dependencies": {},
   "browserify": {
     "transform": [
       [
