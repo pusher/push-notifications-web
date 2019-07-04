@@ -11,11 +11,13 @@
     "test": "npm run test:unit",
     "test:unit": "jest ./src/*",
     "test:e2e": "jest ./end-to-end-tests/* --runInBand",
-    "prepublish": "npm run build:cdn"
+    "prepublishchecks": "npm run lint && npm run test:unit && npm run build:cdn && npm run build:esm && npm run test:e2e",
+    "prepublishOnly": "publish-please guard",
+    "publish-please": "publish-please"
   },
   "keywords": [],
-  "author": "minaorangina",
-  "license": "ISC",
+  "author": "Pusher",
+  "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.4.3",
     "@babel/plugin-transform-runtime": "^7.4.4",
@@ -28,6 +30,7 @@
     "jest": "^24.7.1",
     "jest-fetch-mock": "^2.1.2",
     "prettier": "1.17.0",
+    "publish-please": "^5.5.0",
     "rollup": "^1.10.0",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.3.4",
@@ -35,7 +38,6 @@
     "rollup-plugin-node-resolve": "^4.2.3",
     "selenium-webdriver": "^4.0.0-alpha.3"
   },
-  "dependencies": {},
   "browserify": {
     "transform": [
       [
