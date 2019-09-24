@@ -33,4 +33,10 @@ app.get('/service-worker.js', (req, res) => {
   }
 });
 
+// Service worker in unusual location
+app.get('/not-the-root/service-worker.js', (req, res) => {
+  res.set('Content-Type', 'text/javascript');
+  res.send('');
+});
+
 app.listen(PORT, () => console.log(`Listening on port ${PORT}...`));
