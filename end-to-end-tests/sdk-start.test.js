@@ -153,6 +153,32 @@ test('SDK should register a device with errol without registering the service wo
   expect(initialDeviceId).toContain('web-');
 });
 
+test('SDK should fail if provided service worker is in wrong scope', async () => {
+  await chromeDriver.get('http://localhost:3000');
+  await chromeDriver.wait(() => {
+    return chromeDriver.getTitle().then(title => title.includes('Test Page'));
+  }, 2000);
+
+  const errorMessage = await chromeDriver.executeAsyncScript(() => {
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
+
+    const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
+    return window.navigator.serviceWorker
+      .register('/not-the-root/service-worker.js')
+      .then(registration =>
+        PusherPushNotifications.init({
+          instanceId,
+          serviceWorkerRegistration: registration,
+        })
+      )
+      .catch(e => asyncScriptReturnCallback(e.message));
+  });
+
+  expect(errorMessage).toContain(
+    'current page not in serviceWorkerRegistration scope'
+  );
+});
+
 afterAll(() => {
   if (killServer) {
     killServer();

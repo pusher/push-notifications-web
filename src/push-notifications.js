@@ -86,10 +86,21 @@ class PushNotificationsInstance {
     this.deviceId = deviceId;
     this.token = token;
     this.userId = userId;
-    this._serviceWorkerRegistration = serviceWorkerRegistration;
     this._deviceStateStore = deviceStateStore;
 
     this._endpoint = endpointOverride; // Internal only
+
+    if (serviceWorkerRegistration) {
+      const serviceWorkerScope = serviceWorkerRegistration.scope;
+      const currentURL = window.location.href;
+      const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
+      if (!scopeMatchesCurrentPage) {
+        throw new Error(
+          `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+        );
+      }
+    }
+    this._serviceWorkerRegistration = serviceWorkerRegistration;
   }
 
   get _baseURL() {
@@ -219,7 +230,10 @@ class PushNotificationsInstance {
 
   async _getPushToken(publicKey) {
     try {
+      let reg;
+
       if (this._serviceWorkerRegistration) {
+        reg = this._serviceWorkerRegistration;
         // TODO: Call update only when we detect an SDK change
       } else {
         // Check that service worker file exists
@@ -236,8 +250,9 @@ class PushNotificationsInstance {
           // accidentally set `Cache-Control` to something other than `max-age=0`
           updateViaCache: 'none',
         });
+        reg = await window.navigator.serviceWorker.ready;
       }
-      const reg = await window.navigator.serviceWorker.ready;
+
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUInt8Array(publicKey),
