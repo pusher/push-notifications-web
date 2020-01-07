@@ -18,7 +18,8 @@ jobs:
         - npm run build:cdn
         - npm run test:e2e
       before_script:
-        - wget https://chromedriver.storage.googleapis.com/77.0.3865.40/chromedriver_linux64.zip
+        - LATEST_CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"`
+        - curl "https://chromedriver.storage.googleapis.com/${LATEST_CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O
         - unzip chromedriver_linux64.zip
         - sudo mv chromedriver /usr/local/bin
         - sh -e /etc/init.d/xvfb start
@@ -28,5 +29,5 @@ jobs:
             - google-chrome
           packages:
             - google-chrome-stable
-            - wget
+            - curl
             - unzip
