@@ -15,7 +15,9 @@ export default [
       resolve(),
       commonjs(),
       babel({
-        plugins: ['@babel/proposal-object-rest-spread'],
+        runtimeHelpers: true,
+        presets: ['@babel/preset-env'],
+        plugins: ['@babel/plugin-transform-runtime'],
         exclude: ['node_modules/**'],
       }),
     ],
