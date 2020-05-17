@@ -184,6 +184,48 @@ class PushNotificationsInstance {
     return this._deviceStateStore.setUserId(userId);
   }
 
+  async addDeviceInterest(interestName) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests/${interestName}`;
+
+    const options = { method: 'POST', path };
+    return doRequest(options);
+  }
+
+  async removeDeviceInterest(interestName) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests/${interestName}`;
+
+    const options = { method: 'DELETE', path };
+    return doRequest(options);
+  }
+
+  async getDeviceInterests() {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests`;
+
+    const options = { method: 'GET', path };
+    return doRequest(options).then(res => res.interests);
+  }
+
+  async setDeviceInterests(interests) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests`;
+
+    const body = { interests };
+
+    const options = { method: 'PUT', path, body };
+    return doRequest(options);
+  }
+
+  async clearDeviceInterests() {
+    return this.setDeviceInterests([]);
+  }
+
   async stop() {
     // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
