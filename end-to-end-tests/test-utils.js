@@ -18,7 +18,7 @@ const CHROME_SCREEN_SIZE = {
 const CHROME_CONFIG_TEMP_DIR = `${__dirname}/temp`;
 
 beforeAll(() => {
-  jest.setTimeout(30000);
+  jest.setTimeout(60000);
 });
 
 /**
