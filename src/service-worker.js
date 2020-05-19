@@ -12,7 +12,7 @@ self.addEventListener('push', e => {
     return; // Not a pusher notification
   }
 
-  if (!payload.data.pusher) {
+  if (!payload.data || !payload.data.pusher) {
     return; // Not a pusher notification
   }
 
