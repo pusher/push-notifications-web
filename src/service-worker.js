@@ -34,7 +34,7 @@ self.addEventListener('push', e => {
       title,
       body,
       icon,
-      data: { payload },
+      data: { pusherPayload: payload },
     };
 
     e.waitUntil(self.registration.showNotification(title, options));
@@ -51,7 +51,7 @@ self.addEventListener('push', e => {
 });
 
 self.addEventListener('notificationclick', event => {
-  const { payload } = event.notification.data;
+  const { pusherPayload: payload } = event.notification.data;
 
   const isPusherNotification = payload !== undefined;
   if (isPusherNotification) {
