@@ -1,6 +1,5 @@
 /* eslint-env serviceworker */
-
-const PusherPushNotifications = {
+self.PusherPushNotifications = {
   onNotificationReceived: null,
 };
 
