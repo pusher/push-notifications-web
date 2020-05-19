@@ -29,7 +29,7 @@ describe('SW should ignore notification when', () => {
     ['payload has no data field', '{"key": "value"}'],
     ['payload has no pusher field', '{"data": {}}'],
   ])('%s', (_, payload) => {
-    const sw = require('./service-worker.js');
+    require('./service-worker.js');
     const PusherPushNotifications = global.PusherPushNotifications;
 
     // Given an onNotificationReceived had been set
@@ -54,7 +54,7 @@ describe('SW should ignore notification when', () => {
 });
 
 test('SW should show notification when it comes from Pusher', () => {
-  const sw = require('./service-worker.js');
+  require('./service-worker.js');
 
   // Given a push event that comes from Pusher
   const pushEvent = makePushEvent(`

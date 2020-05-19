@@ -38,8 +38,8 @@ self.addEventListener('push', e => {
     e.waitUntil(self.registration.showNotification(title, options));
   };
 
-  if (PusherPushNotifications.onNotificationReceived) {
-    PusherPushNotifications.onNotificationReceived({
+  if (self.PusherPushNotifications.onNotificationReceived) {
+    self.PusherPushNotifications.onNotificationReceived({
       payload: customerPayload,
       handleNotification,
     });
