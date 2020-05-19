@@ -103,3 +103,43 @@ test('SW should show notification when it comes from Pusher', () => {
     },
   });
 });
+
+test('SW should NOT show notification if onNotificationReceived handler is set', () => {
+  require('./service-worker.js');
+  const PusherPushNotifications = global.PusherPushNotifications;
+
+  // Given a push event that comes from Pusher
+  const pushEvent = makePushEvent(`
+      {
+        "notification": {
+          "title": "Hi!",
+          "body": "This is a notification!",
+          "icon": "my-icon.png"
+        },
+        "data": {
+          "pusher": {
+            "publishId": "some-publish-id"
+          }
+        }
+      }
+    `);
+
+  // And an onNotificationReceived had been set
+  let onNotificationReceivedCalled = false;
+  PusherPushNotifications.onNotificationReceived = () => {
+    onNotificationReceivedCalled = true;
+  };
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  // Then a notification should NOT be shown
+  expect(shownNotifications).toHaveLength(0);
+
+  // And the onNotificationReceived handler should be called
+  expect(onNotificationReceivedCalled).toBe(true);
+});
