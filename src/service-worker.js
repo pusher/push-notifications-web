@@ -1,33 +1,63 @@
 /* eslint-env serviceworker */
 
-self.addEventListener('push', function(e) {
-  const payload = e.data.json();
+const PusherPushNotifications = {
+  onNotificationReceived: null,
+};
 
-  const title = payload.notification.title || '';
-  const body = payload.notification.body || '';
-  const icon = payload.notification.icon;
-  const data = payload.data || {};
-
-  if (payload.notification.deep_link) {
-    // Copying the deep_link into the data payload so that it can
-    // be accessed in the notificationclick handler.
-    data.pusher.deep_link = payload.notification.deep_link;
+self.addEventListener('push', e => {
+  let payload;
+  try {
+    payload = e.data.json();
+  } catch (_) {
+    return; // Not a pusher notification
   }
 
-  const options = {
-    title,
-    body,
-    icon,
-    data,
+  if (!payload.data.pusher) {
+    return; // Not a pusher notification
+  }
+
+  const customerPayload = { ...payload };
+  const customerData = {};
+  Object.keys(customerPayload.data || {}).forEach(key => {
+    if (key !== 'pusher') {
+      customerData[key] = customerPayload.data[key];
+    }
+  });
+  customerPayload.data = customerData;
+
+  const handleNotification = payload => {
+    const title = payload.notification.title || '';
+    const body = payload.notification.body || '';
+    const icon = payload.notification.icon;
+
+    const options = {
+      title,
+      body,
+      icon,
+      data: { payload },
+    };
+
+    e.waitUntil(self.registration.showNotification(title, options));
   };
 
-  e.waitUntil(self.registration.showNotification(title, options));
+  if (PusherPushNotifications.onNotificationReceived) {
+    PusherPushNotifications.onNotificationReceived({
+      payload: customerPayload,
+      handleNotification,
+    });
+  } else {
+    handleNotification(payload);
+  }
 });
 
-self.addEventListener('notificationclick', function(event) {
-  const deep_link = event.notification.data.pusher.deep_link;
-  if (deep_link) {
-    event.waitUntil(clients.openWindow(deep_link));
+self.addEventListener('notificationclick', event => {
+  const { payload } = event.notification.data;
+
+  const isPusherNotification = payload !== undefined;
+  if (isPusherNotification) {
+    if (payload.notification.deep_link) {
+      event.waitUntil(clients.openWindow(payload.notification.deep_link));
+    }
+    event.notification.close();
   }
-  event.notification.close();
 });
