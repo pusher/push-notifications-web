@@ -30,7 +30,6 @@ self.addEventListener('push', e => {
     const icon = payload.notification.icon;
 
     const options = {
-      title,
       body,
       icon,
       data: { pusherPayload: payload },

@@ -1,20 +1,23 @@
 const makePushEvent = payload => ({
+  waitUntil: () => {},
   data: {
     json: () => JSON.parse(payload),
   },
 });
 
 let listeners = {};
-let sentNotifications = [];
+let shownNotifications = [];
 
 beforeEach(() => {
   listeners = {};
+  shownNotifications = [];
+
   global.addEventListener = (name, func) => {
     listeners[name] = func;
   };
   global.registration = {
     showNotification: (title, options) =>
-      sentNotifications.append({ title, options }),
+      shownNotifications.push({ title, options }),
   };
 
   jest.resetModules();
@@ -43,9 +46,60 @@ describe('SW should ignore notification when', () => {
     pushListener(makePushEvent(payload));
 
     // Then a notification should NOT be shown
-    expect(sentNotifications).toHaveLength(0);
+    expect(shownNotifications).toHaveLength(0);
 
     // And the onNotificationReceived handler should NOT be called
     expect(onNotificationReceivedCalled).toBe(false);
+  });
+});
+
+test('SW should show notification when it comes from Pusher', () => {
+  const sw = require('./service-worker.js');
+
+  // Given a push event that comes from Pusher
+  const pushEvent = makePushEvent(`
+      {
+        "notification": {
+          "title": "Hi!",
+          "body": "This is a notification!",
+          "icon": "my-icon.png"
+        },
+        "data": {
+          "pusher": {
+            "publishId": "some-publish-id"
+          }
+        }
+      }
+    `);
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  // Then a notification should be shown
+  expect(shownNotifications).toHaveLength(1);
+  expect(shownNotifications[0]).toEqual({
+    title: 'Hi!',
+    options: {
+      icon: 'my-icon.png',
+      body: 'This is a notification!',
+      data: {
+        pusherPayload: {
+          notification: {
+            title: 'Hi!',
+            body: 'This is a notification!',
+            icon: 'my-icon.png',
+          },
+          data: {
+            pusher: {
+              publishId: 'some-publish-id',
+            },
+          },
+        },
+      },
+    },
   });
 });
