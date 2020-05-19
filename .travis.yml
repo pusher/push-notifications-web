@@ -3,7 +3,7 @@ node_js:
   - "10"
 sudo: required
 env: DISPLAY=':99.0'
-dist: trusty
+dist: bionic
 
 jobs:
   include:
@@ -18,16 +18,17 @@ jobs:
         - npm run build:cdn
         - npm run test:e2e
       before_script:
-        - LATEST_CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"`
+        - CHROME_VERSION=`google-chrome --version | cut -d ' ' -f 3 | rev | cut -d '.' -f2- | rev`
+        - echo $CHROME_VERSION
+        - LATEST_CHROMEDRIVER_VERSION=`curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION"`
+        - echo $LATEST_CHROMEDRIVER_VERSION
         - curl "https://chromedriver.storage.googleapis.com/${LATEST_CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" -O
         - unzip chromedriver_linux64.zip
         - sudo mv chromedriver /usr/local/bin
-        - sh -e /etc/init.d/xvfb start
+        - sudo service xvfb start
       addons:
+        chrome: stable
         apt:
-          sources:
-            - google-chrome
           packages:
-            - google-chrome-stable
             - curl
             - unzip
