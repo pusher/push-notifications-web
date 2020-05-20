@@ -142,6 +142,50 @@ test('SW should NOT show notification if onNotificationReceived handler is set',
   expect(onNotificationReceivedCalled).toBe(true);
 });
 
+test('SW should show correct notification if handleNotification is called', () => {
+  require('./service-worker.js');
+  const PusherPushNotifications = global.PusherPushNotifications;
+
+  // Given a push event that comes from Pusher
+  const pushEvent = makePushEvent(`
+      {
+        "notification": {
+          "title": "Hi!",
+          "body": "This is a notification!",
+          "icon": "my-icon.png"
+        },
+        "data": {
+          "pusher": {
+            "publishId": "some-publish-id"
+          }
+        }
+      }
+    `);
+
+  // And an onNotificationReceived had been set
+  PusherPushNotifications.onNotificationReceived = ({
+    payload,
+    handleNotification,
+  }) => {
+    payload.notification.body = 'Body has been changed';
+    handleNotification(payload);
+  };
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  // Then a notification should be shown
+  expect(shownNotifications).toHaveLength(1);
+
+  // And should have the correct payload
+  const notification = shownNotifications[0];
+  expect(notification.options.body).toEqual('Body has been changed');
+});
+
 test('SW should open deep link in click handler if one is provided', () => {
   require('./service-worker.js');
 
