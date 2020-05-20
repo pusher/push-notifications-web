@@ -1,16 +1,11 @@
-const makePushEvent = payload => ({
-  waitUntil: () => {},
-  data: {
-    json: () => JSON.parse(payload),
-  },
-});
-
 let listeners = {};
 let shownNotifications = [];
+let openedWindows = [];
 
 beforeEach(() => {
   listeners = {};
   shownNotifications = [];
+  openedWindows = [];
 
   global.addEventListener = (name, func) => {
     listeners[name] = func;
@@ -18,6 +13,9 @@ beforeEach(() => {
   global.registration = {
     showNotification: (title, options) =>
       shownNotifications.push({ title, options }),
+  };
+  global.clients = {
+    openWindow: url => openedWindows.push(url),
   };
 
   jest.resetModules();
@@ -143,3 +141,84 @@ test('SW should NOT show notification if onNotificationReceived handler is set',
   // And the onNotificationReceived handler should be called
   expect(onNotificationReceivedCalled).toBe(true);
 });
+
+test('SW should open deep link in click handler if one is provided', () => {
+  require('./service-worker.js');
+
+  // Given a notification click event with a deep link
+  const clickEvent = makeClickEvent({
+    data: {
+      pusherPayload: {
+        notification: {
+          title: 'Hi!',
+          body: 'This is a notification!',
+          deep_link: 'https://pusher.com',
+        },
+        data: {
+          pusher: {
+            publishId: 'some-publish-id',
+          },
+        },
+      },
+    },
+  });
+
+  // When the notificationclick listener is called
+  const clickListener = listeners['notificationclick'];
+  if (!clickListener) {
+    throw new Error('No click listener has been set');
+  }
+  clickListener(clickEvent);
+
+  // Then the deep link should be opened in a new tab
+  expect(openedWindows).toHaveLength(1);
+  expect(openedWindows[0]).toEqual('https://pusher.com');
+
+  // And the notification should be closed
+  expect(clickEvent._isOpen()).toEqual(false);
+});
+
+test('SW should do nothing on click if notification is not from Pusher', () => {
+  require('./service-worker.js');
+
+  // Given a notification click event with a deep link
+  const clickEvent = makeClickEvent({
+    data: {},
+  });
+
+  // When the notificationclick listener is called
+  const clickListener = listeners['notificationclick'];
+  if (!clickListener) {
+    throw new Error('No click listener has been set');
+  }
+  clickListener(clickEvent);
+
+  // Then no new tabs should be opened
+  expect(openedWindows).toHaveLength(0);
+
+  // And the notification should NOT be closed
+  expect(clickEvent._isOpen()).toEqual(true);
+});
+
+const makePushEvent = payload => ({
+  waitUntil: () => {},
+  data: {
+    json: () => JSON.parse(payload),
+  },
+});
+
+const makeClickEvent = ({ data }) => {
+  let isOpen = true;
+
+  return {
+    _isOpen: () => isOpen,
+
+    waitUntil: () => {},
+    notification: {
+      data,
+      close: () => {
+        isOpen = false;
+      },
+    },
+  };
+};
