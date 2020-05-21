@@ -41,6 +41,7 @@ self.addEventListener('push', e => {
   if (self.PusherPushNotifications.onNotificationReceived) {
     self.PusherPushNotifications.onNotificationReceived({
       payload: customerPayload,
+      pushEvent: e,
       handleNotification,
     });
   } else {
@@ -48,14 +49,14 @@ self.addEventListener('push', e => {
   }
 });
 
-self.addEventListener('notificationclick', event => {
-  const { pusherPayload: payload } = event.notification.data;
+self.addEventListener('notificationclick', e => {
+  const { pusherPayload: payload } = e.notification.data;
 
   const isPusherNotification = payload !== undefined;
   if (isPusherNotification) {
     if (payload.notification.deep_link) {
-      event.waitUntil(clients.openWindow(payload.notification.deep_link));
+      e.waitUntil(clients.openWindow(payload.notification.deep_link));
     }
-    event.notification.close();
+    e.notification.close();
   }
 });

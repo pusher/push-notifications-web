@@ -142,6 +142,54 @@ test('SW should NOT show notification if onNotificationReceived handler is set',
   expect(onNotificationReceivedCalled).toBe(true);
 });
 
+test('SW should pass correct params to onNotificationReceived', () => {
+  require('./service-worker.js');
+  const PusherPushNotifications = global.PusherPushNotifications;
+
+  // Given a push event that comes from Pusher
+  const pushEvent = makePushEvent(`
+      {
+        "notification": {
+          "title": "Hi!",
+          "body": "This is a notification!",
+          "icon": "my-icon.png"
+        },
+        "data": {
+          "pusher": {
+            "publishId": "some-publish-id"
+          }
+        }
+      }
+    `);
+
+  // And an onNotificationReceived had been set
+  let onNotificationReceivedParams;
+  PusherPushNotifications.onNotificationReceived = params => {
+    onNotificationReceivedParams = params;
+  };
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  // Then onNotificationReceivedCalled should get the expected params
+  expect(onNotificationReceivedParams.payload).toEqual({
+    notification: {
+      title: 'Hi!',
+      body: 'This is a notification!',
+      icon: 'my-icon.png',
+    },
+    data: {}, // Pusher namespace should be stripped
+  });
+  expect(onNotificationReceivedParams.pushEvent).toBe(pushEvent);
+  expect(typeof onNotificationReceivedParams.handleNotification).toEqual(
+    'function'
+  );
+});
+
 test('SW should show correct notification if handleNotification is called', () => {
   require('./service-worker.js');
   const PusherPushNotifications = global.PusherPushNotifications;
