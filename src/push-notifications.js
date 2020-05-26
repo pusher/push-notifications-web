@@ -1,5 +1,6 @@
 import doRequest from './do-request';
-import TokenProvider from './token-provider';
+import BeamsTokenProvider from './beams-token-provider';
+import AuthData from './auth-data';
 import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 
@@ -343,4 +344,4 @@ function isSupportedBrowser() {
   return isChrome || isOpera;
 }
 
-export { TokenProvider };
+export { BeamsTokenProvider, AuthData };
