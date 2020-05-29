@@ -35,7 +35,7 @@ self.addEventListener('push', e => {
       data: { pusherPayload: payload },
     };
 
-    e.waitUntil(self.registration.showNotification(title, options));
+    return self.registration.showNotification(title, options);
   };
 
   if (self.PusherPushNotifications.onNotificationReceived) {
@@ -45,7 +45,7 @@ self.addEventListener('push', e => {
       handleNotification,
     });
   } else {
-    handleNotification(payload);
+    e.waitUntil(handleNotification(payload));
   }
 });
 
