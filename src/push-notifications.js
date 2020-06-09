@@ -25,21 +25,21 @@ export async function init(config) {
     throw new Error('Instance ID cannot be empty');
   }
 
-  if (!window.indexedDB) {
+  if (!('indexedDB' in window)) {
     throw new Error(
       'Pusher Beams does not support this browser version (IndexedDB not supported)'
     );
   }
 
-  if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
+  if (!('serviceWorker' in navigator)) {
     throw new Error(
-      'Pusher Beams does not support this browser version (ServiceWorkerRegistration not supported)'
+      'Pusher Beams does not support this browser version (Service Workers not supported)'
     );
   }
 
   if (!('PushManager' in window)) {
     throw new Error(
-      'Pusher Beams does not support this browser version (PushManager not supported)'
+      'Pusher Beams does not support this browser version (Web Push not supported)'
     );
   }
 
