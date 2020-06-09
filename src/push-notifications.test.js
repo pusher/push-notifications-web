@@ -111,6 +111,18 @@ describe('.addDeviceInterests', () => {
       );
     });
   });
+
+  test('should fail if interests array is not passed', () => {
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    return PusherPushNotifications.init({
+      instanceId,
+    }).then(beamsClient => {
+      const interests = 'not-an-array';
+      expect(beamsClient.addDeviceInterests(interests)).rejects.toThrow(
+        'Interests argument must be an array'
+      );
+    });
+  });
 });
 
 const setUpGlobals = ({

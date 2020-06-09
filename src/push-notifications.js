@@ -147,6 +147,9 @@ class PushNotificationsInstance {
     if (interests === undefined || interests === null) {
       throw new Error('Interests array is required');
     }
+    if (typeof interests !== 'array') {
+      throw new Error('Interests argument must be an array');
+    }
   }
 
   async setUserId(userId, tokenProvider) {
