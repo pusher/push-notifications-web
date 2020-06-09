@@ -143,6 +143,12 @@ class PushNotificationsInstance {
     return this;
   }
 
+  async addDeviceInterests(interests) {
+    if (interests === undefined || interests === null) {
+      throw new Error('Interests array is required');
+    }
+  }
+
   async setUserId(userId, tokenProvider) {
     // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {

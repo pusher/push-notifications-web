@@ -1,28 +1,6 @@
 import * as PusherPushNotifications from './push-notifications';
 
 describe('Constructor', () => {
-  const setUpGlobals = ({
-    indexedDBSupport = true,
-    serviceWorkerSupport = true,
-    webPushSupport = true,
-  }) => {
-    if (indexedDBSupport) {
-      global.window.indexedDB = {};
-    }
-    if (serviceWorkerSupport) {
-      global.navigator.serviceWorker = {};
-    }
-    if (webPushSupport) {
-      global.window.PushManager = {};
-    }
-  };
-
-  const tearDownGlobals = () => {
-    delete global.window.indexedDB;
-    delete global.window.PushManager;
-    delete global.navigator.serviceWorker;
-  };
-
   afterEach(() => {
     jest.resetModules();
     tearDownGlobals();
@@ -105,6 +83,57 @@ describe('Constructor', () => {
     });
   });
 });
+
+describe('.addDeviceInterests', () => {
+  const PusherPushNotifications = require('./push-notifications');
+  const devicestatestore = require('./device-state-store');
+
+  beforeEach(() => {
+    devicestatestore.default = makeDeviceStateStore({
+      deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
+      token: 'some-token',
+      userId: 'alice',
+    });
+    setUpGlobals({});
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  test('should fail if interests array is not passed', () => {
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    return PusherPushNotifications.init({
+      instanceId,
+    }).then(beamsClient => {
+      expect(beamsClient.addDeviceInterests()).rejects.toThrow(
+        'Interests array is required'
+      );
+    });
+  });
+});
+
+const setUpGlobals = ({
+  indexedDBSupport = true,
+  serviceWorkerSupport = true,
+  webPushSupport = true,
+}) => {
+  if (indexedDBSupport) {
+    global.window.indexedDB = {};
+  }
+  if (serviceWorkerSupport) {
+    global.navigator.serviceWorker = {};
+  }
+  if (webPushSupport) {
+    global.window.PushManager = {};
+  }
+};
+
+const tearDownGlobals = () => {
+  delete global.window.indexedDB;
+  delete global.window.PushManager;
+  delete global.navigator.serviceWorker;
+};
 
 const makeDeviceStateStore = ({ deviceId, token, userId }) => {
   class FakeDeviceStateStore {
