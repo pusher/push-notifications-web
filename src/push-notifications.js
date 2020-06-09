@@ -147,8 +147,13 @@ class PushNotificationsInstance {
     if (interests === undefined || interests === null) {
       throw new Error('Interests array is required');
     }
-    if (typeof interests !== 'array') {
+    if (!Array.isArray(interests)) {
       throw new Error('Interests argument must be an array');
+    }
+    for (let interest of interests) {
+      if (typeof interest !== 'string') {
+        throw new Error(`Interest ${interest} is not a string`);
+      }
     }
   }
 

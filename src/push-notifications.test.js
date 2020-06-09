@@ -123,6 +123,18 @@ describe('.addDeviceInterests', () => {
       );
     });
   });
+
+  test('should fail if a given interest is not a string', () => {
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    return PusherPushNotifications.init({
+      instanceId,
+    }).then(beamsClient => {
+      const interests = ['some-interest', false];
+      expect(beamsClient.addDeviceInterests(interests)).rejects.toThrow(
+        'Interest false is not a string'
+      );
+    });
+  });
 });
 
 const setUpGlobals = ({
