@@ -1,5 +1,8 @@
 import * as PusherPushNotifications from './push-notifications';
 
+const DUMMY_PUSH_SUBSCRIPTION = { foo: 'bar' };
+const ENCODED_DUMMY_PUSH_SUBSCRIPTION = 'eyJmb28iOiJiYXIifQ==';
+
 describe('Constructor', () => {
   afterEach(() => {
     jest.resetModules();
@@ -68,7 +71,7 @@ describe('Constructor', () => {
 
     devicestatestore.default = makeDeviceStateStore({
       deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
-      token: 'some-token',
+      token: ENCODED_DUMMY_PUSH_SUBSCRIPTION,
       userId: 'alice',
     });
 
@@ -78,20 +81,20 @@ describe('Constructor', () => {
       expect(beamsClient.deviceId).toEqual(
         'web-1db66b8a-f51f-49de-b225-72591535c855'
       );
-      expect(beamsClient.token).toEqual('some-token');
+      expect(beamsClient.token).toEqual(ENCODED_DUMMY_PUSH_SUBSCRIPTION);
       expect(beamsClient.userId).toEqual('alice');
     });
   });
 });
 
 describe('.addDeviceInterests', () => {
-  const PusherPushNotifications = require('./push-notifications');
-  const devicestatestore = require('./device-state-store');
+  let PusherPushNotifications = require('./push-notifications');
+  let devicestatestore = require('./device-state-store');
 
   beforeEach(() => {
     devicestatestore.default = makeDeviceStateStore({
       deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
-      token: 'some-token',
+      token: ENCODED_DUMMY_PUSH_SUBSCRIPTION,
       userId: 'alice',
     });
     setUpGlobals({});
@@ -99,6 +102,8 @@ describe('.addDeviceInterests', () => {
 
   afterEach(() => {
     jest.resetModules();
+    PusherPushNotifications = require('./push-notifications');
+    devicestatestore = require('./device-state-store');
   });
 
   test('should fail if interest name is not passed', () => {
@@ -147,6 +152,12 @@ const setUpGlobals = ({
   }
   if (serviceWorkerSupport) {
     global.navigator.serviceWorker = {};
+    global.navigator.serviceWorker.register = () => {};
+    global.navigator.serviceWorker.ready = Promise.resolve({
+      pushManager: {
+        getSubscription: () => Promise.resolve(DUMMY_PUSH_SUBSCRIPTION),
+      },
+    });
   }
   if (webPushSupport) {
     global.window.PushManager = {};
@@ -172,6 +183,12 @@ const makeDeviceStateStore = ({ deviceId, token, userId }) => {
       this._deviceId = deviceId || null;
       this._token = token || null;
       this._userId = userId || null;
+    }
+
+    async clear() {
+      this._deviceId = null;
+      this._token = null;
+      this._userId = null;
     }
 
     async getDeviceId() {

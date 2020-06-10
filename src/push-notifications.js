@@ -46,6 +46,14 @@ export async function init(config) {
 
   let swReg;
   if (serviceWorkerRegistration) {
+    const serviceWorkerScope = serviceWorkerRegistration.scope;
+    const currentURL = window.location.href;
+    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
+    if (!scopeMatchesCurrentPage) {
+      throw new Error(
+        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+      );
+    }
     swReg = serviceWorkerRegistration;
   } else {
     swReg = await getServiceWorkerRegistration();
@@ -109,19 +117,9 @@ class PushNotificationsInstance {
     this.deviceId = deviceId;
     this.token = token;
     this.userId = userId;
-    this._deviceStateStore = deviceStateStore;
-
-    this._endpoint = endpointOverride; // Internal only
-
-    const serviceWorkerScope = serviceWorkerRegistration.scope;
-    const currentURL = window.location.href;
-    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
-    if (!scopeMatchesCurrentPage) {
-      throw new Error(
-        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
-      );
-    }
     this._serviceWorkerRegistration = serviceWorkerRegistration;
+    this._deviceStateStore = deviceStateStore;
+    this._endpoint = endpointOverride; // Internal only
   }
 
   get _baseURL() {
