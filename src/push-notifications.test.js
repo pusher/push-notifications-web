@@ -101,48 +101,36 @@ describe('.addDeviceInterests', () => {
     jest.resetModules();
   });
 
-  test('should fail if interests array is not passed', () => {
+  test('should fail if interest name is not passed', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
     return PusherPushNotifications.init({
       instanceId,
     }).then(beamsClient => {
-      expect(beamsClient.addDeviceInterests()).rejects.toThrow(
-        'Interests array is required'
+      expect(beamsClient.addDeviceInterest()).rejects.toThrow(
+        'Interest name is required'
       );
     });
   });
 
-  test('should fail if interests array is not passed', () => {
+  test('should fail if a interest name is not a string', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
     return PusherPushNotifications.init({
       instanceId,
     }).then(beamsClient => {
-      const interests = 'not-an-array';
-      expect(beamsClient.addDeviceInterests(interests)).rejects.toThrow(
-        'Interests argument must be an array'
-      );
-    });
-  });
-
-  test('should fail if a given interest is not a string', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return PusherPushNotifications.init({
-      instanceId,
-    }).then(beamsClient => {
-      const interests = ['some-interest', false];
-      expect(beamsClient.addDeviceInterests(interests)).rejects.toThrow(
+      const interest = false;
+      expect(beamsClient.addDeviceInterest(interest)).rejects.toThrow(
         'Interest false is not a string'
       );
     });
   });
 
-  test('should fail if a given interest contains invalid characters', () => {
+  test('should fail if interest name contains invalid characters', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
     return PusherPushNotifications.init({
       instanceId,
     }).then(beamsClient => {
-      const interests = ['good-interest', 'bad|interest'];
-      expect(beamsClient.addDeviceInterests(interests)).rejects.toThrow(
+      const interest = 'bad|interest';
+      expect(beamsClient.addDeviceInterest(interest)).rejects.toThrow(
         'contains a forbidden character'
       );
     });

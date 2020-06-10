@@ -144,24 +144,19 @@ class PushNotificationsInstance {
     return this;
   }
 
-  async addDeviceInterests(interests) {
-    if (interests === undefined || interests === null) {
-      throw new Error('Interests array is required');
+  async addDeviceInterest(interest) {
+    if (interest === undefined || interest === null) {
+      throw new Error('Interest name is required');
     }
-    if (!Array.isArray(interests)) {
-      throw new Error('Interests argument must be an array');
+    if (typeof interest !== 'string') {
+      throw new Error(`Interest ${interest} is not a string`);
     }
-    for (let interest of interests) {
-      if (typeof interest !== 'string') {
-        throw new Error(`Interest ${interest} is not a string`);
-      }
-      if (!INTERESTS_REGEX.test(interest)) {
-        throw new Error(
-          `interest "${interest}" contains a forbidden character. ` +
-            'Allowed characters are: ASCII upper/lower-case letters, ' +
-            'numbers or one of _-=@,.;'
-        );
-      }
+    if (!INTERESTS_REGEX.test(interest)) {
+      throw new Error(
+        `interest "${interest}" contains a forbidden character. ` +
+          'Allowed characters are: ASCII upper/lower-case letters, ' +
+          'numbers or one of _-=@,.;'
+      );
     }
   }
 
