@@ -44,8 +44,30 @@ export async function init(config) {
     );
   }
 
+  let swReg;
+  if (serviceWorkerRegistration) {
+    swReg = serviceWorkerRegistration;
+  } else {
+    swReg = await getServiceWorkerRegistration();
+  }
+
   const deviceStateStore = new DeviceStateStore(instanceId);
   await deviceStateStore.connect();
+
+  const storedToken = await deviceStateStore.getToken();
+  const actualToken = await getWebPushToken(swReg);
+
+  const pushTokenHasChanged = storedToken !== actualToken;
+
+  if (pushTokenHasChanged) {
+    // The web push subscription has changed out from underneath us.
+    // This can happen when the user disables the web push permission
+    // (potentially also renabling it, thereby changing the token)
+    //
+    // This means the SDK has effectively been stopped, so we should update
+    // the SDK state to reflect that.
+    await deviceStateStore.clear();
+  }
 
   const deviceId = await deviceStateStore.getDeviceId();
   const token = await deviceStateStore.getToken();
@@ -56,7 +78,7 @@ export async function init(config) {
     deviceId,
     token,
     userId,
-    serviceWorkerRegistration,
+    serviceWorkerRegistration: swReg,
     deviceStateStore,
     endpointOverride,
   });
@@ -91,15 +113,13 @@ class PushNotificationsInstance {
 
     this._endpoint = endpointOverride; // Internal only
 
-    if (serviceWorkerRegistration) {
-      const serviceWorkerScope = serviceWorkerRegistration.scope;
-      const currentURL = window.location.href;
-      const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
-      if (!scopeMatchesCurrentPage) {
-        throw new Error(
-          `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
-        );
-      }
+    const serviceWorkerScope = serviceWorkerRegistration.scope;
+    const currentURL = window.location.href;
+    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
+    if (!scopeMatchesCurrentPage) {
+      throw new Error(
+        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+      );
     }
     this._serviceWorkerRegistration = serviceWorkerRegistration;
   }
@@ -247,30 +267,7 @@ class PushNotificationsInstance {
 
   async _getPushToken(publicKey) {
     try {
-      let reg;
-
-      if (this._serviceWorkerRegistration) {
-        reg = this._serviceWorkerRegistration;
-        // TODO: Call update only when we detect an SDK change
-      } else {
-        // Check that service worker file exists
-        const { status: swStatusCode } = await fetch(SERVICE_WORKER_URL);
-        if (swStatusCode !== 200) {
-          throw new Error(
-            'Cannot start SDK, service worker missing: No file found at /service-worker.js'
-          );
-        }
-
-        window.navigator.serviceWorker.register(SERVICE_WORKER_URL, {
-          // explicitly opting out of `importScripts` caching just in case our
-          // customers decides to host and serve the imported scripts and
-          // accidentally set `Cache-Control` to something other than `max-age=0`
-          updateViaCache: 'none',
-        });
-        reg = await window.navigator.serviceWorker.ready;
-      }
-
-      const sub = await reg.pushManager.subscribe({
+      const sub = await this._serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUInt8Array(publicKey),
       });
@@ -333,6 +330,34 @@ class PushNotificationsInstance {
     await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
     await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
+}
+
+async function getServiceWorkerRegistration() {
+  // Check that service worker file exists
+  const { status: swStatusCode } = await fetch(SERVICE_WORKER_URL);
+  if (swStatusCode !== 200) {
+    throw new Error(
+      'Cannot start SDK, service worker missing: No file found at /service-worker.js'
+    );
+  }
+
+  window.navigator.serviceWorker.register(SERVICE_WORKER_URL, {
+    // explicitly opting out of `importScripts` caching just in case our
+    // customers decides to host and serve the imported scripts and
+    // accidentally set `Cache-Control` to something other than `max-age=0`
+    updateViaCache: 'none',
+  });
+  return window.navigator.serviceWorker.ready;
+}
+
+function getWebPushToken(swReg) {
+  return swReg.pushManager
+    .getSubscription()
+    .then(sub => (!sub ? null : encodeSubscription(sub)));
+}
+
+function encodeSubscription(sub) {
+  return btoa(JSON.stringify(sub));
 }
 
 function urlBase64ToUInt8Array(base64String) {

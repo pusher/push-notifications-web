@@ -5,6 +5,8 @@ const path = require('path');
 const chrome = require('selenium-webdriver/chrome');
 const { Builder } = require('selenium-webdriver');
 
+const SCRIPT_TIMEOUT_MS = 60000;
+
 const MAX_TEST_SERVER_CHECKS = 10;
 const TEST_SERVER_CHECK_SLEEP_MS = 200;
 
@@ -18,7 +20,7 @@ const CHROME_SCREEN_SIZE = {
 const CHROME_CONFIG_TEMP_DIR = `${__dirname}/temp`;
 
 beforeAll(() => {
-  jest.setTimeout(60000);
+  jest.setTimeout(SCRIPT_TIMEOUT_MS);
 });
 
 /**
@@ -137,6 +139,8 @@ export async function createChromeWebDriver() {
     .forBrowser('chrome')
     .setChromeOptions(chromeOptions)
     .build();
+
+  await driver.manage().setTimeouts({ script: SCRIPT_TIMEOUT_MS });
 
   return driver;
 }
