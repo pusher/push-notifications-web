@@ -182,6 +182,15 @@ class PushNotificationsInstance {
         `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
       );
     }
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
+    const options = {
+      method: 'POST',
+      path,
+    };
+    await doRequest(options);
   }
 
   async setUserId(userId, tokenProvider) {
