@@ -14,27 +14,27 @@ describe('Constructor', () => {
   });
 
   test('will throw if there is no config object given', () => {
-    expect(PusherPushNotifications.init()).rejects.toThrow(
+    return expect(PusherPushNotifications.init()).rejects.toThrow(
       'Config object required'
     );
   });
 
   test('will throw if there is no instance ID specified', () => {
-    expect(PusherPushNotifications.init({})).rejects.toThrow(
+    return expect(PusherPushNotifications.init({})).rejects.toThrow(
       'Instance ID is required'
     );
   });
 
   test('will throw if instance ID is not a string', () => {
     const instanceId = null;
-    expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
       'Instance ID must be a string'
     );
   });
 
   test('will throw if the instance id is the empty string', () => {
     const instanceId = '';
-    expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
       'Instance ID cannot be empty'
     );
   });
@@ -42,7 +42,7 @@ describe('Constructor', () => {
   test('will throw if indexedDB is not available', () => {
     setUpGlobals({ indexedDBSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
       'IndexedDB not supported'
     );
   });
@@ -50,7 +50,7 @@ describe('Constructor', () => {
   test('will throw if ServiceWorkerRegistration not supported', () => {
     setUpGlobals({ serviceWorkerSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
       'Service Workers not supported'
     );
   });
@@ -58,7 +58,7 @@ describe('Constructor', () => {
   test('will throw if Web Push not supported', () => {
     setUpGlobals({ webPushSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
       'Web Push not supported'
     );
   });
@@ -108,37 +108,31 @@ describe('.addDeviceInterests', () => {
 
   test('should fail if interest name is not passed', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return PusherPushNotifications.init({
-      instanceId,
-    }).then(beamsClient => {
-      expect(beamsClient.addDeviceInterest()).rejects.toThrow(
-        'Interest name is required'
-      );
-    });
+    return expect(
+      PusherPushNotifications.init({
+        instanceId,
+      }).then(beamsClient => beamsClient.addDeviceInterest())
+    ).rejects.toThrow('Interest name is required');
   });
 
   test('should fail if a interest name is not a string', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return PusherPushNotifications.init({
-      instanceId,
-    }).then(beamsClient => {
-      const interest = false;
-      expect(beamsClient.addDeviceInterest(interest)).rejects.toThrow(
-        'Interest false is not a string'
-      );
-    });
+    const interest = false;
+    return expect(
+      PusherPushNotifications.init({
+        instanceId,
+      }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+    ).rejects.toThrow('Interest false is not a string');
   });
 
   test('should fail if interest name contains invalid characters', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return PusherPushNotifications.init({
-      instanceId,
-    }).then(beamsClient => {
-      const interest = 'bad|interest';
-      expect(beamsClient.addDeviceInterest(interest)).rejects.toThrow(
-        'contains a forbidden character'
-      );
-    });
+    const interest = 'bad|interest';
+    return expect(
+      PusherPushNotifications.init({
+        instanceId,
+      }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+    ).rejects.toThrow('contains a forbidden character');
   });
 });
 
