@@ -87,7 +87,7 @@ describe('Constructor', () => {
   });
 });
 
-describe('.addDeviceInterest', () => {
+describe('interest methods', () => {
   let PusherPushNotifications = require('./push-notifications');
   let devicestatestore = require('./device-state-store');
   let dorequest = require('./do-request');
@@ -108,179 +108,141 @@ describe('.addDeviceInterest', () => {
     dorequest = require('./do-request');
   });
 
-  test('should make correct request given valid arguments', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    const interest = 'donuts';
+  describe('.addDeviceInterest', () => {
+    test('should make correct request given valid arguments', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interest = 'donuts';
 
-    const mockDoRequest = jest.fn();
-    mockDoRequest.mockReturnValueOnce(Promise.resolve('ok'));
+      const mockDoRequest = jest.fn();
+      mockDoRequest.mockReturnValueOnce(Promise.resolve('ok'));
 
-    dorequest.default = mockDoRequest;
+      dorequest.default = mockDoRequest;
 
-    return PusherPushNotifications.init({
-      instanceId,
-    })
-      .then(beamsClient => beamsClient.addDeviceInterest(interest))
-      .then(() => {
-        expect(mockDoRequest.mock.calls.length).toBe(1);
-        expect(mockDoRequest.mock.calls[0].length).toBe(1);
-        expect(mockDoRequest.mock.calls[0][0]).toEqual({
-          method: 'POST',
-          path: [
-            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-            '/interests/donuts',
-          ].join(''),
-        });
-      });
-  });
-
-  test('should fail if interest name is not passed', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(
-      PusherPushNotifications.init({
+      return PusherPushNotifications.init({
         instanceId,
-      }).then(beamsClient => beamsClient.addDeviceInterest())
-    ).rejects.toThrow('Interest name is required');
-  });
-
-  test('should fail if a interest name is not a string', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    const interest = false;
-    return expect(
-      PusherPushNotifications.init({
-        instanceId,
-      }).then(beamsClient => beamsClient.addDeviceInterest(interest))
-    ).rejects.toThrow('Interest false is not a string');
-  });
-
-  test('should fail if a interest name is too long', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    let interest = '';
-    for (let i = 0; i < 165; i++) {
-      interest += 'A';
-    }
-    return expect(
-      PusherPushNotifications.init({
-        instanceId,
-      }).then(beamsClient => beamsClient.addDeviceInterest(interest))
-    ).rejects.toThrow('Interest is longer than the maximum of 164 chars');
-  });
-
-  test('should fail if interest name contains invalid characters', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    const interest = 'bad|interest';
-    return expect(
-      PusherPushNotifications.init({
-        instanceId,
-      }).then(beamsClient => beamsClient.addDeviceInterest(interest))
-    ).rejects.toThrow('contains a forbidden character');
-  });
-});
-
-describe('.removeDeviceInterest', () => {
-  let PusherPushNotifications = require('./push-notifications');
-  let devicestatestore = require('./device-state-store');
-  let dorequest = require('./do-request');
-
-  beforeEach(() => {
-    devicestatestore.default = makeDeviceStateStore({
-      deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
-      token: ENCODED_DUMMY_PUSH_SUBSCRIPTION,
-      userId: 'alice',
-    });
-    setUpGlobals({});
-  });
-
-  afterEach(() => {
-    jest.resetModules();
-    PusherPushNotifications = require('./push-notifications');
-    devicestatestore = require('./device-state-store');
-    dorequest = require('./do-request');
-  });
-
-  test('should make correct DELETE request', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    const interest = 'donuts';
-
-    const mockDoRequest = jest.fn();
-    mockDoRequest.mockReturnValueOnce(Promise.resolve('ok'));
-
-    dorequest.default = mockDoRequest;
-
-    return PusherPushNotifications.init({
-      instanceId,
-    })
-      .then(beamsClient => beamsClient.removeDeviceInterest(interest))
-      .then(() => {
-        expect(mockDoRequest.mock.calls.length).toBe(1);
-        expect(mockDoRequest.mock.calls[0].length).toBe(1);
-        expect(mockDoRequest.mock.calls[0][0]).toEqual({
-          method: 'DELETE',
-          path: [
-            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-            '/interests/donuts',
-          ].join(''),
-        });
-      });
-  });
-});
-
-describe('.getDeviceInterests', () => {
-  let PusherPushNotifications = require('./push-notifications');
-  let devicestatestore = require('./device-state-store');
-  let dorequest = require('./do-request');
-
-  beforeEach(() => {
-    devicestatestore.default = makeDeviceStateStore({
-      deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
-      token: ENCODED_DUMMY_PUSH_SUBSCRIPTION,
-      userId: 'alice',
-    });
-    setUpGlobals({});
-  });
-
-  afterEach(() => {
-    jest.resetModules();
-    PusherPushNotifications = require('./push-notifications');
-    devicestatestore = require('./device-state-store');
-    dorequest = require('./do-request');
-  });
-
-  test('should make correct request and return the interests', () => {
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-
-    const mockDoRequest = jest.fn();
-    mockDoRequest.mockReturnValueOnce(
-      Promise.resolve({
-        interests: ['donuts'],
-        responseMetadata: {},
       })
-    );
-
-    dorequest.default = mockDoRequest;
-
-    return PusherPushNotifications.init({
-      instanceId,
-    })
-      .then(beamsClient => beamsClient.getDeviceInterests())
-      .then(interests => {
-        expect(mockDoRequest.mock.calls.length).toBe(1);
-        expect(mockDoRequest.mock.calls[0].length).toBe(1);
-        expect(mockDoRequest.mock.calls[0][0]).toEqual({
-          method: 'GET',
-          path: [
-            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-            '/interests',
-          ].join(''),
+        .then(beamsClient => beamsClient.addDeviceInterest(interest))
+        .then(() => {
+          expect(mockDoRequest.mock.calls.length).toBe(1);
+          expect(mockDoRequest.mock.calls[0].length).toBe(1);
+          expect(mockDoRequest.mock.calls[0][0]).toEqual({
+            method: 'POST',
+            path: [
+              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+              '/interests/donuts',
+            ].join(''),
+          });
         });
-        expect(interests).toEqual(['donuts']);
-      });
+    });
+
+    test('should fail if interest name is not passed', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.addDeviceInterest())
+      ).rejects.toThrow('Interest name is required');
+    });
+
+    test('should fail if a interest name is not a string', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interest = false;
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+      ).rejects.toThrow('Interest false is not a string');
+    });
+
+    test('should fail if a interest name is too long', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      let interest = '';
+      for (let i = 0; i < 165; i++) {
+        interest += 'A';
+      }
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+      ).rejects.toThrow('Interest is longer than the maximum of 164 chars');
+    });
+
+    test('should fail if interest name contains invalid characters', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interest = 'bad|interest';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+      ).rejects.toThrow('contains a forbidden character');
+    });
+  });
+
+  describe('.removeDeviceInterest', () => {
+    test('should make correct DELETE request', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interest = 'donuts';
+
+      const mockDoRequest = jest.fn();
+      mockDoRequest.mockReturnValueOnce(Promise.resolve('ok'));
+
+      dorequest.default = mockDoRequest;
+
+      return PusherPushNotifications.init({
+        instanceId,
+      })
+        .then(beamsClient => beamsClient.removeDeviceInterest(interest))
+        .then(() => {
+          expect(mockDoRequest.mock.calls.length).toBe(1);
+          expect(mockDoRequest.mock.calls[0].length).toBe(1);
+          expect(mockDoRequest.mock.calls[0][0]).toEqual({
+            method: 'DELETE',
+            path: [
+              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+              '/interests/donuts',
+            ].join(''),
+          });
+        });
+    });
+  });
+
+  describe('.getDeviceInterests', () => {
+    test('should make correct request and return the interests', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+
+      const mockDoRequest = jest.fn();
+      mockDoRequest.mockReturnValueOnce(
+        Promise.resolve({
+          interests: ['donuts'],
+          responseMetadata: {},
+        })
+      );
+
+      dorequest.default = mockDoRequest;
+
+      return PusherPushNotifications.init({
+        instanceId,
+      })
+        .then(beamsClient => beamsClient.getDeviceInterests())
+        .then(interests => {
+          expect(mockDoRequest.mock.calls.length).toBe(1);
+          expect(mockDoRequest.mock.calls[0].length).toBe(1);
+          expect(mockDoRequest.mock.calls[0][0]).toEqual({
+            method: 'GET',
+            path: [
+              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+              '/interests',
+            ].join(''),
+          });
+          expect(interests).toEqual(['donuts']);
+        });
+    });
   });
 });
 
