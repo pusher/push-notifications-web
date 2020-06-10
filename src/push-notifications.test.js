@@ -125,6 +125,19 @@ describe('.addDeviceInterests', () => {
     ).rejects.toThrow('Interest false is not a string');
   });
 
+  test('should fail if a interest name is too long', () => {
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    let interest = '';
+    for (let i = 0; i < 165; i++) {
+      interest += 'A';
+    }
+    return expect(
+      PusherPushNotifications.init({
+        instanceId,
+      }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+    ).rejects.toThrow('Interest is longer than the maximum of 164 chars');
+  });
+
   test('should fail if interest name contains invalid characters', () => {
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
     const interest = 'bad|interest';

@@ -4,6 +4,7 @@ import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 
 const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
+const MAX_INTEREST_LENGTH = 164;
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
 export async function init(config) {
@@ -174,6 +175,11 @@ class PushNotificationsInstance {
         `interest "${interest}" contains a forbidden character. ` +
           'Allowed characters are: ASCII upper/lower-case letters, ' +
           'numbers or one of _-=@,.;'
+      );
+    }
+    if (interest.length > MAX_INTEREST_LENGTH) {
+      throw new Error(
+        `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
       );
     }
   }
