@@ -193,6 +193,17 @@ class PushNotificationsInstance {
     await doRequest(options);
   }
 
+  async removeDeviceInterest(interest) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
+    const options = {
+      method: 'DELETE',
+      path,
+    };
+    await doRequest(options);
+  }
+
   async setUserId(userId, tokenProvider) {
     // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
