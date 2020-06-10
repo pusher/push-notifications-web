@@ -112,15 +112,13 @@ class PushNotificationsInstance {
 
     this._endpoint = endpointOverride; // Internal only
 
-    if (serviceWorkerRegistration) {
-      const serviceWorkerScope = serviceWorkerRegistration.scope;
-      const currentURL = window.location.href;
-      const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
-      if (!scopeMatchesCurrentPage) {
-        throw new Error(
-          `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
-        );
-      }
+    const serviceWorkerScope = serviceWorkerRegistration.scope;
+    const currentURL = window.location.href;
+    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
+    if (!scopeMatchesCurrentPage) {
+      throw new Error(
+        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+      );
     }
     this._serviceWorkerRegistration = serviceWorkerRegistration;
   }
