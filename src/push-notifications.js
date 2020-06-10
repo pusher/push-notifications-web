@@ -3,6 +3,7 @@ import TokenProvider from './token-provider';
 import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 
+const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
 export async function init(config) {
@@ -153,6 +154,13 @@ class PushNotificationsInstance {
     for (let interest of interests) {
       if (typeof interest !== 'string') {
         throw new Error(`Interest ${interest} is not a string`);
+      }
+      if (!INTERESTS_REGEX.test(interest)) {
+        throw new Error(
+          `interest "${interest}" contains a forbidden character. ` +
+            'Allowed characters are: ASCII upper/lower-case letters, ' +
+            'numbers or one of _-=@,.;'
+        );
       }
     }
   }

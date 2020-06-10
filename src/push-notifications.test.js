@@ -135,6 +135,18 @@ describe('.addDeviceInterests', () => {
       );
     });
   });
+
+  test('should fail if a given interest contains invalid characters', () => {
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    return PusherPushNotifications.init({
+      instanceId,
+    }).then(beamsClient => {
+      const interests = ['good-interest', 'bad|interest'];
+      expect(beamsClient.addDeviceInterests(interests)).rejects.toThrow(
+        'contains a forbidden character'
+      );
+    });
+  });
 });
 
 const setUpGlobals = ({
