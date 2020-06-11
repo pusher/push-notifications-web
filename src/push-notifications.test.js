@@ -328,6 +328,24 @@ describe('interest methods', () => {
         }).then(beamsClient => beamsClient.setDeviceInterests(interests))
       ).rejects.toThrow('interests argument must be an array');
     });
+
+    test('should fail if too many interests are passed', () => {
+      const maxInterests = 5000;
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interests = [];
+      for (let i = 0; i < maxInterests + 1; i++) {
+        interests.push('' + i);
+      }
+
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+      ).rejects.toThrow(
+        `Number of interests (${maxInterests +
+          1}) exceeds maximum of ${maxInterests}`
+      );
+    });
   });
 });
 

@@ -5,6 +5,8 @@ import { version as sdkVersion } from '../package.json';
 
 const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
 const MAX_INTEREST_LENGTH = 164;
+const MAX_INTERESTS_NUM = 5000;
+
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
 export async function init(config) {
@@ -221,6 +223,13 @@ class PushNotificationsInstance {
     }
     if (!Array.isArray(interests)) {
       throw new Error('interests argument must be an array');
+    }
+    if (interests.length > MAX_INTERESTS_NUM) {
+      throw new Error(
+        `Number of interests (${
+          interests.length
+        }) exceeds maximum of ${MAX_INTERESTS_NUM}`
+      );
     }
 
     const uniqueInterests = Array.from(new Set(interests));
