@@ -357,6 +357,20 @@ describe('interest methods', () => {
         }).then(beamsClient => beamsClient.setDeviceInterests(interests))
       ).rejects.toThrow('interest false is not a string');
     });
+
+    test('should fail if a given interest is too long', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interests = ['right-length', ''];
+      for (let i = 0; i < 165; i++) {
+        interests[1] += 'A';
+      }
+
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+      ).rejects.toThrow('longer than the maximum of 164 chars');
+    });
   });
 });
 

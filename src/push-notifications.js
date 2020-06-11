@@ -235,6 +235,11 @@ class PushNotificationsInstance {
       if (typeof interest !== 'string') {
         throw new Error(`interest ${interest} is not a string`);
       }
+      if (interest.length > MAX_INTEREST_LENGTH) {
+        throw new Error(
+          `interests cannot be longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
+        );
+      }
     }
 
     const uniqueInterests = Array.from(new Set(interests));
