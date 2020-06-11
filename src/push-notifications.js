@@ -231,6 +231,11 @@ class PushNotificationsInstance {
         }) exceeds maximum of ${MAX_INTERESTS_NUM}`
       );
     }
+    for (let interest of interests) {
+      if (typeof interest !== 'string') {
+        throw new Error(`interest ${interest} is not a string`);
+      }
+    }
 
     const uniqueInterests = Array.from(new Set(interests));
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
