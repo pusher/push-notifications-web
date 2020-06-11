@@ -240,6 +240,13 @@ class PushNotificationsInstance {
           `interests cannot be longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
         );
       }
+      if (!INTERESTS_REGEX.test(interest)) {
+        throw new Error(
+          `interest "${interest}" contains a forbidden character. ` +
+            'Allowed characters are: ASCII upper/lower-case letters, ' +
+            'numbers or one of _-=@,.;'
+        );
+      }
     }
 
     const uniqueInterests = Array.from(new Set(interests));

@@ -371,6 +371,19 @@ describe('interest methods', () => {
         }).then(beamsClient => beamsClient.setDeviceInterests(interests))
       ).rejects.toThrow('longer than the maximum of 164 chars');
     });
+
+    test('should fail if a given interest contains a forbidden character', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interests = ['good-interest', 'bad|interest'];
+
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+      ).rejects.toThrow(
+        'interest "bad|interest" contains a forbidden character'
+      );
+    });
   });
 });
 
