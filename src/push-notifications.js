@@ -263,6 +263,10 @@ class PushNotificationsInstance {
     await doRequest(options);
   }
 
+  async clearDeviceInterests() {
+    await this.setDeviceInterests([]);
+  }
+
   async setUserId(userId, tokenProvider) {
     // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
