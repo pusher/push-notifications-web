@@ -219,6 +219,9 @@ class PushNotificationsInstance {
     if (interests === undefined || interests === null) {
       throw new Error('interests argument is required');
     }
+    if (!Array.isArray(interests)) {
+      throw new Error('interests argument must be an array');
+    }
 
     const uniqueInterests = Array.from(new Set(interests));
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
