@@ -215,6 +215,25 @@ class PushNotificationsInstance {
     return (await doRequest(options))['interests'] || [];
   }
 
+  async setDeviceInterests(interests) {
+    if (interests === undefined || interests === null) {
+      throw new Error('interests argument is required');
+    }
+
+    const uniqueInterests = Array.from(new Set(interests));
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests`;
+    const options = {
+      method: 'PUT',
+      path,
+      body: {
+        interests: uniqueInterests,
+      },
+    };
+    await doRequest(options);
+  }
+
   async setUserId(userId, tokenProvider) {
     // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
