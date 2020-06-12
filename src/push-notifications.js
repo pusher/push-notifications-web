@@ -196,6 +196,25 @@ class PushNotificationsInstance {
   }
 
   async removeDeviceInterest(interest) {
+    if (interest === undefined || interest === null) {
+      throw new Error('Interest name is required');
+    }
+    if (typeof interest !== 'string') {
+      throw new Error(`Interest ${interest} is not a string`);
+    }
+    if (!INTERESTS_REGEX.test(interest)) {
+      throw new Error(
+        `interest "${interest}" contains a forbidden character. ` +
+          'Allowed characters are: ASCII upper/lower-case letters, ' +
+          'numbers or one of _-=@,.;'
+      );
+    }
+    if (interest.length > MAX_INTEREST_LENGTH) {
+      throw new Error(
+        `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
+      );
+    }
+
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
