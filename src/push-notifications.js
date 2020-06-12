@@ -166,24 +166,7 @@ class PushNotificationsInstance {
   }
 
   async addDeviceInterest(interest) {
-    if (interest === undefined || interest === null) {
-      throw new Error('Interest name is required');
-    }
-    if (typeof interest !== 'string') {
-      throw new Error(`Interest ${interest} is not a string`);
-    }
-    if (!INTERESTS_REGEX.test(interest)) {
-      throw new Error(
-        `interest "${interest}" contains a forbidden character. ` +
-          'Allowed characters are: ASCII upper/lower-case letters, ' +
-          'numbers or one of _-=@,.;'
-      );
-    }
-    if (interest.length > MAX_INTEREST_LENGTH) {
-      throw new Error(
-        `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
-      );
-    }
+    validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
@@ -196,24 +179,7 @@ class PushNotificationsInstance {
   }
 
   async removeDeviceInterest(interest) {
-    if (interest === undefined || interest === null) {
-      throw new Error('Interest name is required');
-    }
-    if (typeof interest !== 'string') {
-      throw new Error(`Interest ${interest} is not a string`);
-    }
-    if (!INTERESTS_REGEX.test(interest)) {
-      throw new Error(
-        `interest "${interest}" contains a forbidden character. ` +
-          'Allowed characters are: ASCII upper/lower-case letters, ' +
-          'numbers or one of _-=@,.;'
-      );
-    }
-    if (interest.length > MAX_INTEREST_LENGTH) {
-      throw new Error(
-        `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
-      );
-    }
+    validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
@@ -251,21 +217,7 @@ class PushNotificationsInstance {
       );
     }
     for (let interest of interests) {
-      if (typeof interest !== 'string') {
-        throw new Error(`interest ${interest} is not a string`);
-      }
-      if (interest.length > MAX_INTEREST_LENGTH) {
-        throw new Error(
-          `interests cannot be longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
-        );
-      }
-      if (!INTERESTS_REGEX.test(interest)) {
-        throw new Error(
-          `interest "${interest}" contains a forbidden character. ` +
-            'Allowed characters are: ASCII upper/lower-case letters, ' +
-            'numbers or one of _-=@,.;'
-        );
-      }
+      validateInterestName(interest);
     }
 
     const uniqueInterests = Array.from(new Set(interests));
@@ -437,6 +389,27 @@ class PushNotificationsInstance {
     await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
 }
+
+const validateInterestName = interest => {
+  if (interest === undefined || interest === null) {
+    throw new Error('Interest name is required');
+  }
+  if (typeof interest !== 'string') {
+    throw new Error(`Interest ${interest} is not a string`);
+  }
+  if (!INTERESTS_REGEX.test(interest)) {
+    throw new Error(
+      `interest "${interest}" contains a forbidden character. ` +
+        'Allowed characters are: ASCII upper/lower-case letters, ' +
+        'numbers or one of _-=@,.;'
+    );
+  }
+  if (interest.length > MAX_INTEREST_LENGTH) {
+    throw new Error(
+      `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
+    );
+  }
+};
 
 async function getServiceWorkerRegistration() {
   // Check that service worker file exists

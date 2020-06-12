@@ -397,7 +397,7 @@ describe('interest methods', () => {
         PusherPushNotifications.init({
           instanceId,
         }).then(beamsClient => beamsClient.setDeviceInterests(interests))
-      ).rejects.toThrow('interest false is not a string');
+      ).rejects.toThrow('Interest false is not a string');
     });
 
     test('should fail if a given interest is too long', () => {
