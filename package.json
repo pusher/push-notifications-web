@@ -1,6 +1,6 @@
 {
   "name": "@pusher/push-notifications-web",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "description": "",
   "main": "dist/push-notifications-esm.js",
   "scripts": {
