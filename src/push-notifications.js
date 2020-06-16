@@ -3,6 +3,10 @@ import TokenProvider from './token-provider';
 import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 
+const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
+const MAX_INTEREST_LENGTH = 164;
+const MAX_INTERESTS_NUM = 5000;
+
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
 export async function init(config) {
@@ -25,26 +29,34 @@ export async function init(config) {
     throw new Error('Instance ID cannot be empty');
   }
 
-  if (!window.indexedDB) {
+  if (!('indexedDB' in window)) {
     throw new Error(
       'Pusher Beams does not support this browser version (IndexedDB not supported)'
     );
   }
 
-  if (!('showNotification' in ServiceWorkerRegistration.prototype)) {
+  if (!('serviceWorker' in navigator)) {
     throw new Error(
-      'Pusher Beams does not support this browser version (ServiceWorkerRegistration not supported)'
+      'Pusher Beams does not support this browser version (Service Workers not supported)'
     );
   }
 
   if (!('PushManager' in window)) {
     throw new Error(
-      'Pusher Beams does not support this browser version (PushManager not supported)'
+      'Pusher Beams does not support this browser version (Web Push not supported)'
     );
   }
 
   let swReg;
   if (serviceWorkerRegistration) {
+    const serviceWorkerScope = serviceWorkerRegistration.scope;
+    const currentURL = window.location.href;
+    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
+    if (!scopeMatchesCurrentPage) {
+      throw new Error(
+        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+      );
+    }
     swReg = serviceWorkerRegistration;
   } else {
     swReg = await getServiceWorkerRegistration();
@@ -108,19 +120,9 @@ class PushNotificationsInstance {
     this.deviceId = deviceId;
     this.token = token;
     this.userId = userId;
-    this._deviceStateStore = deviceStateStore;
-
-    this._endpoint = endpointOverride; // Internal only
-
-    const serviceWorkerScope = serviceWorkerRegistration.scope;
-    const currentURL = window.location.href;
-    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
-    if (!scopeMatchesCurrentPage) {
-      throw new Error(
-        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
-      );
-    }
     this._serviceWorkerRegistration = serviceWorkerRegistration;
+    this._deviceStateStore = deviceStateStore;
+    this._endpoint = endpointOverride; // Internal only
   }
 
   get _baseURL() {
@@ -161,6 +163,79 @@ class PushNotificationsInstance {
     this.token = token;
     this.deviceId = deviceId;
     return this;
+  }
+
+  async addDeviceInterest(interest) {
+    validateInterestName(interest);
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
+    const options = {
+      method: 'POST',
+      path,
+    };
+    await doRequest(options);
+  }
+
+  async removeDeviceInterest(interest) {
+    validateInterestName(interest);
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
+    const options = {
+      method: 'DELETE',
+      path,
+    };
+    await doRequest(options);
+  }
+
+  async getDeviceInterests() {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests`;
+    const options = {
+      method: 'GET',
+      path,
+    };
+    return (await doRequest(options))['interests'] || [];
+  }
+
+  async setDeviceInterests(interests) {
+    if (interests === undefined || interests === null) {
+      throw new Error('interests argument is required');
+    }
+    if (!Array.isArray(interests)) {
+      throw new Error('interests argument must be an array');
+    }
+    if (interests.length > MAX_INTERESTS_NUM) {
+      throw new Error(
+        `Number of interests (${
+          interests.length
+        }) exceeds maximum of ${MAX_INTERESTS_NUM}`
+      );
+    }
+    for (let interest of interests) {
+      validateInterestName(interest);
+    }
+
+    const uniqueInterests = Array.from(new Set(interests));
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this.deviceId}/interests`;
+    const options = {
+      method: 'PUT',
+      path,
+      body: {
+        interests: uniqueInterests,
+      },
+    };
+    await doRequest(options);
+  }
+
+  async clearDeviceInterests() {
+    await this.setDeviceInterests([]);
   }
 
   async setUserId(userId, tokenProvider) {
@@ -314,6 +389,27 @@ class PushNotificationsInstance {
     await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
 }
+
+const validateInterestName = interest => {
+  if (interest === undefined || interest === null) {
+    throw new Error('Interest name is required');
+  }
+  if (typeof interest !== 'string') {
+    throw new Error(`Interest ${interest} is not a string`);
+  }
+  if (!INTERESTS_REGEX.test(interest)) {
+    throw new Error(
+      `interest "${interest}" contains a forbidden character. ` +
+        'Allowed characters are: ASCII upper/lower-case letters, ' +
+        'numbers or one of _-=@,.;'
+    );
+  }
+  if (interest.length > MAX_INTEREST_LENGTH) {
+    throw new Error(
+      `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
+    );
+  }
+};
 
 async function getServiceWorkerRegistration() {
   // Check that service worker file exists
