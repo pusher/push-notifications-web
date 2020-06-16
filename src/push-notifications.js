@@ -293,8 +293,8 @@ class PushNotificationsInstance {
     }
 
     await this._deleteDevice();
-
     await this._deviceStateStore.clear();
+    this._clearPushToken().catch(() => {}); // Not awaiting this, best effort.
 
     this.deviceId = null;
     this.token = null;
@@ -325,6 +325,9 @@ class PushNotificationsInstance {
 
   async _getPushToken(publicKey) {
     try {
+      // The browser might already have a push subscription to different key.
+      // Lets clear it out first.
+      await this._clearPushToken();
       const sub = await this._serviceWorkerRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUInt8Array(publicKey),
@@ -333,6 +336,14 @@ class PushNotificationsInstance {
     } catch (e) {
       return Promise.reject(e);
     }
+  }
+
+  async _clearPushToken() {
+    return navigator.serviceWorker.ready
+      .then(reg => reg.pushManager.getSubscription())
+      .then(sub => {
+        if (sub) sub.unsubscribe();
+      });
   }
 
   async _registerDevice(token) {
