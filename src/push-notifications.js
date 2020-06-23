@@ -133,11 +133,7 @@ class PushNotificationsInstance {
   }
 
   async start() {
-    // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
-      console.warn(
-        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
-      );
       return this;
     }
 
@@ -239,11 +235,7 @@ class PushNotificationsInstance {
   }
 
   async setUserId(userId, tokenProvider) {
-    // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
-      console.warn(
-        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
-      );
       return;
     }
 
@@ -280,11 +272,7 @@ class PushNotificationsInstance {
   }
 
   async stop() {
-    // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
-      console.warn(
-        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
-      );
       return;
     }
 
@@ -302,11 +290,7 @@ class PushNotificationsInstance {
   }
 
   async clearAllState() {
-    // Temporary whilst we only support Chrome in Beta release
     if (!isSupportedBrowser()) {
-      console.warn(
-        'Pusher Web Push Notifications only supports Google Chrome (whilst in Beta)'
-      );
       return;
     }
 
@@ -467,12 +451,20 @@ function isSupportedBrowser() {
   const isChromium =
     window.chrome !== null && typeof window.chrome !== 'undefined';
   const isOpera = winNav.userAgent.indexOf('OPR') > -1;
-  const isIEedge = winNav.userAgent.indexOf('Edge') > -1;
+  const isIEedge = winNav.userAgent.indexOf('Edg') > -1;
+  const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
 
   const isChrome =
     isChromium && vendorName === 'Google Inc.' && !isIEedge && !isOpera;
 
-  return isChrome || isOpera;
+  const isSupported = isChrome || isOpera || isFirefox;
+
+  if (!isSupported) {
+    console.warn(
+      'Whilst in Beta, Pusher Web Push Notifications only supports Chrome, Firefox and Opera.'
+    );
+  }
+  return isSupported;
 }
 
 export { TokenProvider };
