@@ -178,6 +178,23 @@ describe('interest methods', () => {
         }).then(beamsClient => beamsClient.addDeviceInterest(interest))
       ).rejects.toThrow('contains a forbidden character');
     });
+
+    test('should fail if SDK is not started', () => {
+      // Emulate a fresh SDK, where start has not been called
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: null,
+        token: null,
+        userId: null,
+      });
+
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interest = 'some-interest';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+      ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
+    });
   });
 
   describe('.removeDeviceInterest', () => {
@@ -250,6 +267,23 @@ describe('interest methods', () => {
         }).then(beamsClient => beamsClient.removeDeviceInterest(interest))
       ).rejects.toThrow('contains a forbidden character');
     });
+
+    test('should fail if SDK is not started', () => {
+      // Emulate a fresh SDK, where start has not been called
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: null,
+        token: null,
+        userId: null,
+      });
+
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      const interest = 'some-interest';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.removeDeviceInterest(interest))
+      ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
+    });
   });
 
   describe('.getDeviceInterests', () => {
@@ -284,6 +318,22 @@ describe('interest methods', () => {
           });
           expect(interests).toEqual(['donuts']);
         });
+    });
+
+    test('should fail if SDK is not started', () => {
+      // Emulate a fresh SDK, where start has not been called
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: null,
+        token: null,
+        userId: null,
+      });
+
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.getDeviceInterests())
+      ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
 
@@ -426,6 +476,22 @@ describe('interest methods', () => {
         'interest "bad|interest" contains a forbidden character'
       );
     });
+
+    test('should fail if SDK is not started', () => {
+      // Emulate a fresh SDK, where start has not been called
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: null,
+        token: null,
+        userId: null,
+      });
+
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.setDeviceInterests([]))
+      ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
+    });
   });
 
   describe('.clearDeviceInterests', () => {
@@ -455,6 +521,22 @@ describe('interest methods', () => {
             body: { interests: [] },
           });
         });
+    });
+
+    test('should fail if SDK is not started', () => {
+      // Emulate a fresh SDK, where start has not been called
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: null,
+        token: null,
+        userId: null,
+      });
+
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+      return expect(
+        PusherPushNotifications.init({
+          instanceId,
+        }).then(beamsClient => beamsClient.clearDeviceInterests())
+      ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
 });
