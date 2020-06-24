@@ -451,17 +451,17 @@ function isSupportedBrowser() {
   const isChromium =
     window.chrome !== null && typeof window.chrome !== 'undefined';
   const isOpera = winNav.userAgent.indexOf('OPR') > -1;
-  const isIEedge = winNav.userAgent.indexOf('Edg') > -1;
+  const isEdge = winNav.userAgent.indexOf('Edg') > -1;
   const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
 
   const isChrome =
-    isChromium && vendorName === 'Google Inc.' && !isIEedge && !isOpera;
+    isChromium && vendorName === 'Google Inc.' && !isEdge && !isOpera;
 
-  const isSupported = isChrome || isOpera || isFirefox;
+  const isSupported = isChrome || isOpera || isFirefox || isEdge;
 
   if (!isSupported) {
     console.warn(
-      'Whilst in Beta, Pusher Web Push Notifications only supports Chrome, Firefox and Opera.'
+      'Whilst in Beta, Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
     );
   }
   return isSupported;
