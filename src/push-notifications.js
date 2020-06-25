@@ -35,9 +35,9 @@ export async function init(config) {
     );
   }
 
-  if(!window.isSecureContext) {
+  if (!window.isSecureContext) {
     throw new Error(
-      'Pusher Beams can only be used in a secure context. Ensure your page is being served over HTTPS (Not loaded from a secure context)'
+      'Pusher Beams can only be used in a secure context. Check that your page is being served over HTTPS. (Not loaded from a secure context)'
     );
   }
 
