@@ -3,6 +3,7 @@
   "version": "0.11.0",
   "description": "",
   "main": "dist/push-notifications-esm.js",
+  "types": "index.d.ts",
   "scripts": {
     "build:esm": "rollup -c ./rollup/esm.js",
     "build:cdn": "rollup -c ./rollup/cdn.js",
