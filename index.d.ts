@@ -36,11 +36,13 @@ declare module '@pusher/push-notifications-web' {
     clearAllState(): Promise<undefined>;
   }
 
-  interface InitConfig {
+  interface InitOptions {
     instanceId: string;
     serviceWorkerRegistration?: ServiceWorkerRegistration;
     endpointOverride?: string;
   }
 
-  export function init(config: InitConfig): Promise<PushNotificationsInstance>;
+  export function init(
+    options: InitOptions
+  ): Promise<PushNotificationsInstance>;
 }
