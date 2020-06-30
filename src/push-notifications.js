@@ -35,6 +35,12 @@ export async function init(config) {
     );
   }
 
+  if (!window.isSecureContext) {
+    throw new Error(
+      'Pusher Beams relies on Service Workers, which only work in secure contexts. Check that your page is being served from localhost/over HTTPS'
+    );
+  }
+
   if (!('serviceWorker' in navigator)) {
     throw new Error(
       'Pusher Beams does not support this browser version (Service Workers not supported)'

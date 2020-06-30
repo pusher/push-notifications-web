@@ -47,6 +47,14 @@ describe('Constructor', () => {
     );
   });
 
+  test('will throw if the SDK is loaded from a context that is not secure', () => {
+    setUpGlobals({ isSecureContext: false });
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+      'Pusher Beams relies on Service Workers, which only work in secure contexts'
+    );
+  });
+
   test('will throw if ServiceWorkerRegistration not supported', () => {
     setUpGlobals({ serviceWorkerSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
@@ -463,6 +471,7 @@ const setUpGlobals = ({
   indexedDBSupport = true,
   serviceWorkerSupport = true,
   webPushSupport = true,
+  isSecureContext = true,
 }) => {
   if (indexedDBSupport) {
     global.window.indexedDB = {};
@@ -479,6 +488,7 @@ const setUpGlobals = ({
   if (webPushSupport) {
     global.window.PushManager = {};
   }
+  global.window.isSecureContext = isSecureContext;
 };
 
 const tearDownGlobals = () => {
