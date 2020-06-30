@@ -51,7 +51,7 @@ describe('Constructor', () => {
     setUpGlobals({ isSecureContext: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
     return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
-      'Pusher Beams can only be used in a secure context'
+      'Pusher Beams relies on Service Workers, which only work in secure contexts'
     );
   });
 
