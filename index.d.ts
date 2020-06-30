@@ -25,7 +25,7 @@ declare module '@pusher/push-notifications-web' {
     start(): Promise<PushNotificationsInstance>;
     addDeviceInterest(interest: string): Promise<undefined>;
     removeDeviceInterest(interest: string): Promise<undefined>;
-    getDeviceInterests(): Proimise<Array<string>>;
+    getDeviceInterests(): Promise<Array<string>>;
     setDeviceInterests(interests: Array<string>): Promise<undefined>;
     clearDeviceInterests(): Promise<undefined>;
     setUserId(
