@@ -138,6 +138,14 @@ class PushNotificationsInstance {
     return `https://${this.instanceId}.pushnotifications.pusher.com`;
   }
 
+  _throwIfNotStarted(message) {
+    if (!this.deviceId) {
+      throw new Error(
+        `${message}. SDK not registered with Beams. Did you call .start?`
+      );
+    }
+  }
+
   async start() {
     if (!isSupportedBrowser()) {
       return this;
@@ -168,6 +176,7 @@ class PushNotificationsInstance {
   }
 
   async addDeviceInterest(interest) {
+    this._throwIfNotStarted('Could not add Device Interest');
     validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
@@ -181,6 +190,7 @@ class PushNotificationsInstance {
   }
 
   async removeDeviceInterest(interest) {
+    this._throwIfNotStarted('Could not remove Device Interest');
     validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
@@ -194,6 +204,8 @@ class PushNotificationsInstance {
   }
 
   async getDeviceInterests() {
+    this._throwIfNotStarted('Could not get Device Interests');
+
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/devices/web/${this.deviceId}/interests`;
@@ -205,6 +217,8 @@ class PushNotificationsInstance {
   }
 
   async setDeviceInterests(interests) {
+    this._throwIfNotStarted('Could not set Device Interests');
+
     if (interests === undefined || interests === null) {
       throw new Error('interests argument is required');
     }
@@ -237,6 +251,7 @@ class PushNotificationsInstance {
   }
 
   async clearDeviceInterests() {
+    this._throwIfNotStarted('Could not clear Device Interests');
     await this.setDeviceInterests([]);
   }
 
