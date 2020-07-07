@@ -12,7 +12,7 @@ const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVer
 export const STATE = Object.freeze({
   READY_FOR_NOTIFICATIONS: 'READY_FOR_NOTIFICATIONS',
   NOT_STARTED_HAS_PERMISSION: 'NOT_STARTED_HAS_PERMISSION',
-  NOT_STARTED_NEEDS_PERMISSION: 'NOT_STARTED_NEEDS_PERMISSION',
+  NOT_STARTED_WILL_PROMPT: 'NOT_STARTED_WILL_PROMPT',
   BLOCKED: 'BLOCKED',
 });
 
@@ -195,7 +195,7 @@ class PushNotificationsInstance {
       return STATE.NOT_STARTED_HAS_PERMISSION;
     }
 
-    return STATE.NOT_STARTED_NEEDS_PERMISSION;
+    return STATE.NOT_STARTED_WILL_PROMPT;
   }
 
   async addDeviceInterest(interest) {

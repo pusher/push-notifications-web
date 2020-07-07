@@ -32,7 +32,7 @@ test('.getState should return READY_FOR_NOTIFICATIONS if start has been called a
   expect(state).toBe(PusherPushNotifications.STATE.READY_FOR_NOTIFICATIONS);
 });
 
-test('.getState should return NOT_STARTED_NEEDS_PERMISSION if start has not been called and permissions are default', async () => {
+test('.getState should return NOT_STARTED_WILL_PROMPT if start has not been called and permissions are default', async () => {
   await prepareServer(NOTIFICATIONS_DEFAULT)
 
   const state = await chromeDriver.executeAsyncScript(() => {
@@ -44,7 +44,7 @@ test('.getState should return NOT_STARTED_NEEDS_PERMISSION if start has not been
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(state).toBe(PusherPushNotifications.STATE.NOT_STARTED_NEEDS_PERMISSION);
+  expect(state).toBe(PusherPushNotifications.STATE.NOT_STARTED_WILL_PROMPT);
 });
 
 test('.getState should return NOT_STARTED_HAS_PERMISSION if start has not been called and permissions are granted', async () => {

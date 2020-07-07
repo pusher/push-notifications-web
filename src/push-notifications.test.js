@@ -610,7 +610,7 @@ describe('.getState', () => {
         });
     });
 
-    test('should return NOT_STARTED_NEEDS_PERMISSION if browser permission is default', () => {
+    test('should return NOT_STARTED_WILL_PROMPT if browser permission is default', () => {
       setUpGlobals({ notificationPermission: 'default' });
 
       return PusherPushNotifications.init({
@@ -619,7 +619,7 @@ describe('.getState', () => {
         .then(beamsClient => beamsClient.getState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.STATE.NOT_STARTED_NEEDS_PERMISSION
+            PusherPushNotifications.STATE.NOT_STARTED_WILL_PROMPT
           );
         });
     });
