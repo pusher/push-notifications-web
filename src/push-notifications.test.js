@@ -595,6 +595,7 @@ describe('.getState', () => {
     afterEach(() => {
       jest.resetModules();
       devicestatestore = require('./device-state-store');
+      tearDownGlobals()
     });
 
     test('should return BLOCKED if browser permission is denied', () => {
@@ -671,6 +672,8 @@ const tearDownGlobals = () => {
   delete global.window.indexedDB;
   delete global.window.PushManager;
   delete global.navigator.serviceWorker;
+  delete global.window.isSecureContext;
+  delete global.Notification;
 };
 
 const makeDeviceStateStore = ({ deviceId, token, userId }) => {
