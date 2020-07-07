@@ -595,7 +595,7 @@ describe('.getState', () => {
     afterEach(() => {
       jest.resetModules();
       devicestatestore = require('./device-state-store');
-      tearDownGlobals()
+      tearDownGlobals();
     });
 
     test('should return BLOCKED if browser permission is denied', () => {
