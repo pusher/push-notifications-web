@@ -19,6 +19,10 @@ const CHROME_SCREEN_SIZE = {
 };
 const CHROME_CONFIG_TEMP_DIR = `${__dirname}/temp`;
 
+export const NOTIFICATIONS_DEFAULT = 0
+export const NOTIFICATIONS_GRANTED = 1
+export const NOTIFICATIONS_BLOCKED = 2
+
 beforeAll(() => {
   jest.setTimeout(SCRIPT_TIMEOUT_MS);
 });
@@ -88,9 +92,10 @@ function httpPing(url) {
 /**
  * Helper for instantiating a new Selenium webdriver instance (Chrome only)
  * @async
+ * @param {number} notificationPermission - The notification permission for the test server
  * @return {ChromeDriver} - Selenium webdriver instance (Chrome)
  */
-export async function createChromeWebDriver() {
+export async function createChromeWebDriver(notificationPermission = NOTIFICATIONS_DEFAULT) {
   // This is tricky for a few reasons:
   //  1. Selenium cannot accept the Web Push permission, so we have to
   //     create a custom config file to do this in advance.
@@ -119,7 +124,7 @@ export async function createChromeWebDriver() {
 
   // Create preferences file
   const prefsFileName = `${prefsDir}/Preferences`;
-  const configFileObject = createTempBrowserPreferences(TEST_SERVER_URL);
+  const configFileObject = createTempBrowserPreferences(TEST_SERVER_URL, notificationPermission);
   const configFileString = JSON.stringify(configFileObject);
 
   fs.writeFileSync(prefsFileName, configFileString);
@@ -145,17 +150,21 @@ export async function createChromeWebDriver() {
   return driver;
 }
 
-function createTempBrowserPreferences(testSiteURL) {
-  const testSiteKey = `${testSiteURL},*`;
+function createTempBrowserPreferences(testSiteURL, notificationPermission) {
+  let notifications = {}
+  if (notificationPermission !== NOTIFICATIONS_DEFAULT) {
+    const testSiteKey = `${testSiteURL},*`;
+    notifications = {
+      [testSiteKey]: {
+        setting: notificationPermission,
+      }
+    }
+  }
   return {
     profile: {
       content_settings: {
         exceptions: {
-          notifications: {
-            [testSiteKey]: {
-              setting: 1,
-            },
-          },
+          notifications
         },
       },
     },
