@@ -576,7 +576,7 @@ describe('.getState', () => {
         .then(beamsClient => beamsClient.getState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.STATE.READY_FOR_NOTIFICATIONS
+            PusherPushNotifications.State.READY_FOR_NOTIFICATIONS
           );
         });
     });
@@ -606,7 +606,7 @@ describe('.getState', () => {
       })
         .then(beamsClient => beamsClient.getState())
         .then(state => {
-          expect(state).toEqual(PusherPushNotifications.STATE.BLOCKED);
+          expect(state).toEqual(PusherPushNotifications.State.BLOCKED);
         });
     });
 
@@ -619,7 +619,7 @@ describe('.getState', () => {
         .then(beamsClient => beamsClient.getState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.STATE.NOT_STARTED_WILL_PROMPT
+            PusherPushNotifications.State.NOT_STARTED_WILL_PROMPT
           );
         });
     });
@@ -633,7 +633,7 @@ describe('.getState', () => {
         .then(beamsClient => beamsClient.getState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.STATE.NOT_STARTED_HAS_PERMISSION
+            PusherPushNotifications.State.NOT_STARTED_HAS_PERMISSION
           );
         });
     });

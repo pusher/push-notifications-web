@@ -9,7 +9,7 @@ const MAX_INTERESTS_NUM = 5000;
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
-export const STATE = Object.freeze({
+export const State = Object.freeze({
   READY_FOR_NOTIFICATIONS: 'READY_FOR_NOTIFICATIONS',
   NOT_STARTED_HAS_PERMISSION: 'NOT_STARTED_HAS_PERMISSION',
   NOT_STARTED_WILL_PROMPT: 'NOT_STARTED_WILL_PROMPT',
@@ -184,18 +184,18 @@ class PushNotificationsInstance {
 
   async getState() {
     if (Notification.permission === 'denied') {
-      return STATE.BLOCKED;
+      return State.BLOCKED;
     }
 
     if (Notification.permission === 'granted' && this.deviceId !== null) {
-      return STATE.READY_FOR_NOTIFICATIONS;
+      return State.READY_FOR_NOTIFICATIONS;
     }
 
     if (Notification.permission === 'granted' && this.deviceId === null) {
-      return STATE.NOT_STARTED_HAS_PERMISSION;
+      return State.NOT_STARTED_HAS_PERMISSION;
     }
 
-    return STATE.NOT_STARTED_WILL_PROMPT;
+    return State.NOT_STARTED_WILL_PROMPT;
   }
 
   async addDeviceInterest(interest) {
