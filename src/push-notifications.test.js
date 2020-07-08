@@ -1,4 +1,5 @@
 import * as PusherPushNotifications from './push-notifications';
+import { makeDeviceStateStore } from '../test-utils/fake-device-state-store';
 
 const DUMMY_PUSH_SUBSCRIPTION = { foo: 'bar' };
 const ENCODED_DUMMY_PUSH_SUBSCRIPTION = 'eyJmb28iOiJiYXIifQ==';
@@ -577,53 +578,4 @@ const tearDownGlobals = () => {
   delete global.window.indexedDB;
   delete global.window.PushManager;
   delete global.navigator.serviceWorker;
-};
-
-const makeDeviceStateStore = ({ deviceId, token, userId }) => {
-  class FakeDeviceStateStore {
-    constructor(instanceId) {
-      this.instanceId = instanceId;
-      this._deviceId = null;
-      this._token = null;
-      this._userId = null;
-    }
-
-    async connect() {
-      this._deviceId = deviceId || null;
-      this._token = token || null;
-      this._userId = userId || null;
-    }
-
-    async clear() {
-      this._deviceId = null;
-      this._token = null;
-      this._userId = null;
-    }
-
-    async getDeviceId() {
-      return this._deviceId;
-    }
-
-    async setDeviceId(deviceId) {
-      this._deviceId = deviceId;
-    }
-
-    async getToken() {
-      return this._token;
-    }
-
-    async setToken(token) {
-      this._token = token;
-    }
-
-    async getUserId() {
-      return this._userId;
-    }
-
-    async setUserId(userId) {
-      this._userId = userId;
-    }
-  }
-
-  return FakeDeviceStateStore;
 };

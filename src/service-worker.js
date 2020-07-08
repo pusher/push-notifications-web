@@ -1,6 +1,74 @@
 /* eslint-env serviceworker */
+import doRequest from './do-request';
+import DeviceStateStore from './device-state-store';
+
 self.PusherPushNotifications = {
+  endpointOverride: null,
   onNotificationReceived: null,
+
+  _endpoint: instanceId =>
+    self.PusherPushNotifications.endpointOverride
+      ? self.PusherPushNotifications.endpointOverride
+      : `https://${instanceId}.pushnotifications.pusher.com`,
+
+  _getVisibleClient: () =>
+    self.clients
+      .matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+      .then(clients => clients.find(c => c.visibilityState === 'visible')),
+
+  _hasVisibleClient: () =>
+    self.PusherPushNotifications._getVisibleClient().then(
+      client => client !== undefined
+    ),
+
+  reportEvent: async ({ eventType, pusherMetadata }) => {
+    const {
+      instanceId,
+      publishId,
+      hasDisplayableContent,
+      hasData,
+    } = pusherMetadata;
+    if (!instanceId || !publishId) {
+      // Can't report this notification, fail silently.
+      return;
+    }
+
+    const deviceStateStore = new DeviceStateStore(instanceId);
+    await deviceStateStore.connect();
+
+    const deviceId = await deviceStateStore.getDeviceId();
+    const userId = (await deviceStateStore.getUserId()) || null;
+
+    const appInBackground = !(await self.PusherPushNotifications._hasVisibleClient());
+
+    const path = `${self.PusherPushNotifications._endpoint(
+      instanceId
+    )}/reporting_api/v2/instances/${instanceId}/events`;
+
+    const options = {
+      method: 'POST',
+      path,
+      body: {
+        publishId,
+        event: eventType,
+        deviceId,
+        userId,
+        timestampSecs: Date.now() / 1000,
+        appInBackground,
+        hasDisplayableContent,
+        hasData,
+      },
+    };
+
+    try {
+      await doRequest(options);
+    } catch (_) {
+      // Reporting is best effort, so we do nothing.
+    }
+  },
 };
 
 self.addEventListener('push', e => {
@@ -14,6 +82,12 @@ self.addEventListener('push', e => {
   if (!payload.data || !payload.data.pusher) {
     return; // Not a pusher notification
   }
+
+  // Report analytics event, best effort
+  self.PusherPushNotifications.reportEvent({
+    eventType: 'delivery',
+    pusherMetadata: payload.data.pusher,
+  });
 
   const customerPayload = { ...payload };
   const customerData = {};
@@ -54,6 +128,12 @@ self.addEventListener('notificationclick', e => {
 
   const isPusherNotification = payload !== undefined;
   if (isPusherNotification) {
+    // Report analytics event, best effort
+    self.PusherPushNotifications.reportEvent({
+      eventType: 'open',
+      pusherMetadata: payload.data.pusher,
+    });
+
     if (payload.notification.deep_link) {
       e.waitUntil(clients.openWindow(payload.notification.deep_link));
     }
