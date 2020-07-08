@@ -1,4 +1,4 @@
-import { launchServer, createChromeWebDriver, NOTIFICATIONS_DEFAULT, NOTIFICATIONS_GRANTED, NOTIFICATIONS_BLOCKED } from './test-utils';
+import { launchServer, createChromeWebDriver, NOTIFICATIONS_DEFAULT, NOTIFICATIONS_GRANTED, NOTIFICATIONS_DENIED } from './test-utils';
 import * as PusherPushNotifications from '../src/push-notifications';
 
 let killServer = null;
@@ -16,7 +16,7 @@ async function prepareServer(notificationPermission) {
     }, 2000);
 }
 
-test('.getState should return READY_FOR_NOTIFICATIONS if start has been called and permissions are granted', async () => {
+test('.getState should return PERMISSION_GRANTED_REGISTERED_WITH_BEAMS if start has been called and permissions are granted', async () => {
   await prepareServer(NOTIFICATIONS_GRANTED)
 
   const state = await chromeDriver.executeAsyncScript(() => {
@@ -24,57 +24,57 @@ test('.getState should return READY_FOR_NOTIFICATIONS if start has been called a
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return PusherPushNotifications.init({ instanceId })
       .then(beamsClient => beamsClient.start())
-      .then(beamsClient => beamsClient.getState())
+      .then(beamsClient => beamsClient.getRegistrationState())
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(state).toBe(PusherPushNotifications.State.READY_FOR_NOTIFICATIONS);
+  expect(state).toBe(PusherPushNotifications.RegistrationState.PERMISSION_GRANTED_REGISTERED_WITH_BEAMS);
 });
 
-test('.getState should return NOT_STARTED_WILL_PROMPT if start has not been called and permissions are default', async () => {
+test('.getState should return PERMISSION_PROMPT_REQUIRED if start has not been called and permissions are default', async () => {
   await prepareServer(NOTIFICATIONS_DEFAULT)
 
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.getState())
+      .then(beamsClient => beamsClient.getRegistrationState())
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(state).toBe(PusherPushNotifications.State.NOT_STARTED_WILL_PROMPT);
+  expect(state).toBe(PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED);
 });
 
-test('.getState should return NOT_STARTED_HAS_PERMISSION if start has not been called and permissions are granted', async () => {
+test('.getState should return PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS if start has not been called and permissions are granted', async () => {
   await prepareServer(NOTIFICATIONS_GRANTED)
 
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.getState())
+      .then(beamsClient => beamsClient.getRegistrationState())
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(state).toBe(PusherPushNotifications.State.NOT_STARTED_HAS_PERMISSION);
+  expect(state).toBe(PusherPushNotifications.RegistrationState.PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS);
 });
 
-test('.getState should return BLOCKED if start has not been called and permissions are blocked', async () => {
-  await prepareServer(NOTIFICATIONS_BLOCKED)
+test('.getState should return PERMISSION_DENIED if start has not been called and permissions are denied', async () => {
+  await prepareServer(NOTIFICATIONS_DENIED)
 
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.getState())
+      .then(beamsClient => beamsClient.getRegistrationState())
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
-  expect(state).toBe(PusherPushNotifications.State.BLOCKED);
+  expect(state).toBe(PusherPushNotifications.RegistrationState.PERMISSION_DENIED);
 });
 
 afterEach(async () => {

@@ -9,11 +9,13 @@ const MAX_INTERESTS_NUM = 5000;
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
-export const State = Object.freeze({
-  READY_FOR_NOTIFICATIONS: 'READY_FOR_NOTIFICATIONS',
-  NOT_STARTED_HAS_PERMISSION: 'NOT_STARTED_HAS_PERMISSION',
-  NOT_STARTED_WILL_PROMPT: 'NOT_STARTED_WILL_PROMPT',
-  BLOCKED: 'BLOCKED',
+export const RegistrationState = Object.freeze({
+  PERMISSION_PROMPT_REQUIRED: 'PERMISSION_PROMPT_REQUIRED',
+  PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS:
+    'PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS',
+  PERMISSION_GRANTED_REGISTERED_WITH_BEAMS:
+    'PERMISSION_GRANTED_REGISTERED_WITH_BEAMS',
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
 });
 
 export async function init(config) {
@@ -182,20 +184,20 @@ class PushNotificationsInstance {
     return this;
   }
 
-  async getState() {
+  async getRegistrationState() {
     if (Notification.permission === 'denied') {
-      return State.BLOCKED;
+      return RegistrationState.PERMISSION_DENIED;
     }
 
     if (Notification.permission === 'granted' && this.deviceId !== null) {
-      return State.READY_FOR_NOTIFICATIONS;
+      return RegistrationState.PERMISSION_GRANTED_REGISTERED_WITH_BEAMS;
     }
 
     if (Notification.permission === 'granted' && this.deviceId === null) {
-      return State.NOT_STARTED_HAS_PERMISSION;
+      return RegistrationState.PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS;
     }
 
-    return State.NOT_STARTED_WILL_PROMPT;
+    return RegistrationState.PERMISSION_PROMPT_REQUIRED;
   }
 
   async addDeviceInterest(interest) {

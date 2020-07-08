@@ -549,7 +549,7 @@ describe('interest methods', () => {
   });
 });
 
-describe('.getState', () => {
+describe('.getRegistrationState', () => {
   const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
 
   describe('if SDK is started', () => {
@@ -567,16 +567,17 @@ describe('.getState', () => {
       devicestatestore = require('./device-state-store');
     });
 
-    test('should return READY_FOR_NOTIFICATIONS if browser permission is granted', () => {
+    test('should return PERMISSION_GRANTED_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
       setUpGlobals({ notificationPermission: 'granted' });
 
       return PusherPushNotifications.init({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getState())
+        .then(beamsClient => beamsClient.getRegistrationState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.State.READY_FOR_NOTIFICATIONS
+            PusherPushNotifications.RegistrationState
+              .PERMISSION_GRANTED_REGISTERED_WITH_BEAMS
           );
         });
     });
@@ -598,42 +599,45 @@ describe('.getState', () => {
       tearDownGlobals();
     });
 
-    test('should return BLOCKED if browser permission is denied', () => {
+    test('should return PERMISSION_DENIED if browser permission is denied', () => {
       setUpGlobals({ notificationPermission: 'denied' });
 
       return PusherPushNotifications.init({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getState())
+        .then(beamsClient => beamsClient.getRegistrationState())
         .then(state => {
-          expect(state).toEqual(PusherPushNotifications.State.BLOCKED);
+          expect(state).toEqual(
+            PusherPushNotifications.RegistrationState.PERMISSION_DENIED
+          );
         });
     });
 
-    test('should return NOT_STARTED_WILL_PROMPT if browser permission is default', () => {
+    test('should return PERMISSION_PROMPT_REQUIRED if browser permission is default', () => {
       setUpGlobals({ notificationPermission: 'default' });
 
       return PusherPushNotifications.init({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getState())
+        .then(beamsClient => beamsClient.getRegistrationState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.State.NOT_STARTED_WILL_PROMPT
+            PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED
           );
         });
     });
 
-    test('should return NOT_STARTED_HAS_PERMISSION if browser permission is granted', () => {
+    test('should return PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
       setUpGlobals({ notificationPermission: 'granted' });
 
       return PusherPushNotifications.init({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getState())
+        .then(beamsClient => beamsClient.getRegistrationState())
         .then(state => {
           expect(state).toEqual(
-            PusherPushNotifications.State.NOT_STARTED_HAS_PERMISSION
+            PusherPushNotifications.RegistrationState
+              .PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS
           );
         });
     });

@@ -21,7 +21,7 @@ const CHROME_CONFIG_TEMP_DIR = `${__dirname}/temp`;
 
 export const NOTIFICATIONS_DEFAULT = 0
 export const NOTIFICATIONS_GRANTED = 1
-export const NOTIFICATIONS_BLOCKED = 2
+export const NOTIFICATIONS_DENIED = 2
 
 beforeAll(() => {
   jest.setTimeout(SCRIPT_TIMEOUT_MS);
