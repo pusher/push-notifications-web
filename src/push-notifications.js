@@ -16,6 +16,7 @@ export const RegistrationState = Object.freeze({
   PERMISSION_GRANTED_REGISTERED_WITH_BEAMS:
     'PERMISSION_GRANTED_REGISTERED_WITH_BEAMS',
   PERMISSION_DENIED: 'PERMISSION_DENIED',
+  INITIALIZING: 'INITIALIZING',
 });
 
 export async function init(config) {
@@ -24,6 +25,7 @@ export async function init(config) {
   }
   const {
     instanceId,
+    listeners,
     endpointOverride = null,
     serviceWorkerRegistration = null,
   } = config;
@@ -80,24 +82,19 @@ export async function init(config) {
   const deviceStateStore = new DeviceStateStore(instanceId);
   await deviceStateStore.connect();
 
-  const storedToken = await deviceStateStore.getToken();
-  const actualToken = await getWebPushToken(swReg);
-
-  const pushTokenHasChanged = storedToken !== actualToken;
-
-  if (pushTokenHasChanged) {
-    // The web push subscription has changed out from underneath us.
-    // This can happen when the user disables the web push permission
-    // (potentially also renabling it, thereby changing the token)
-    //
-    // This means the SDK has effectively been stopped, so we should update
-    // the SDK state to reflect that.
-    await deviceStateStore.clear();
-  }
-
   const deviceId = await deviceStateStore.getDeviceId();
   const token = await deviceStateStore.getToken();
   const userId = await deviceStateStore.getUserId();
+
+  let registrationStateChange = []
+
+  if (listeners && listeners.registrationStateChange) {
+    if (Array.isArray(listeners.registrationStateChange)) {
+      registrationStateChange = listeners.registrationStateChange
+    } else {
+      registrationStateChange.push(listeners.registrationStateChange)
+    }
+  }
 
   const instance = new PushNotificationsInstance({
     instanceId,
@@ -107,6 +104,7 @@ export async function init(config) {
     serviceWorkerRegistration: swReg,
     deviceStateStore,
     endpointOverride,
+    registrationStateChangeHooks: registrationStateChange
   });
 
   const deviceExists = deviceId !== null;
@@ -116,6 +114,18 @@ export async function init(config) {
     } catch (_) {
       // Best effort, do nothing if this fails.
     }
+  }
+
+  // Not all browsers support the Permission API. We should list this as a limtation,
+  // but it isn't important if they don't. Changing the browser permission
+  // would likely result in a page reload in such browsers.
+  if ('permissions' in navigator) {
+    navigator.permissions.query({ name: 'notifications' }).then( (notificationPermission) => {
+      notificationPermission.onchange = () => {
+        instance._detectSubscriptionChange()
+        instance._detectRegistrationStateChange()
+      };
+    });
   }
 
   return instance;
@@ -130,6 +140,7 @@ class PushNotificationsInstance {
     serviceWorkerRegistration,
     deviceStateStore,
     endpointOverride = null,
+    registrationStateChangeHooks,
   }) {
     this.instanceId = instanceId;
     this.deviceId = deviceId;
@@ -138,6 +149,11 @@ class PushNotificationsInstance {
     this._serviceWorkerRegistration = serviceWorkerRegistration;
     this._deviceStateStore = deviceStateStore;
     this._endpoint = endpointOverride; // Internal only
+    this._registrationStateChangeBubbling = false
+    this._registrationStateChangeHooks = registrationStateChangeHooks
+    this._registrationState = RegistrationState.INITIALIZING
+    this._detectSubscriptionChange()
+    this._detectRegistrationStateChange()
   }
 
   get _baseURL() {
@@ -155,6 +171,57 @@ class PushNotificationsInstance {
     }
   }
 
+  addListener(name, func) {
+    if (name === "registrationStateChange") {
+      if(!this._registrationStateChangeHooks.includes(func)) {
+        this._registrationStateChangeHooks.push(func)
+      }
+    }
+  }
+
+  removeListener(name, func) {
+    if (name === "registrationStateChange") {
+      let index = this._registrationStateChangeHooks.indexOf(func)
+      if (index !== -1){
+        this._registrationStateChangeHooks.splice(index,1)
+      }
+    }
+  }
+
+  async _detectSubscriptionChange() {
+    const storedToken = await this._deviceStateStore.getToken();
+    const actualToken = await getWebPushToken(this._serviceWorkerRegistration);
+
+    const pushTokenHasChanged = storedToken !== actualToken;
+
+    if (pushTokenHasChanged) {
+      // The web push subscription has changed out from underneath us.
+      // This can happen when the user disables the web push permission
+      // (potentially also renabling it, thereby changing the token)
+      //
+      // This means the SDK has effectively been stopped, so we should update
+      // the SDK state to reflect that.
+      await this.stop()
+    }
+    this._detectRegistrationStateChange()
+  }
+
+  async _detectRegistrationStateChange() {
+    if(this._registrationStateChangeBubbling){
+      return
+    }
+
+    let currentState = await this.getRegistrationState()
+    let previousState = this._registrationState
+    if (currentState !== previousState) {
+      this._registrationState = currentState
+      let hooks = this._registrationStateChangeHooks
+      for(let hook of hooks){
+        hook(currentState, previousState, this)
+      }
+    }
+  }
+
   async start() {
     if (!isSupportedBrowser()) {
       return this;
@@ -166,11 +233,20 @@ class PushNotificationsInstance {
 
     const { vapidPublicKey: publicKey } = await this._getPublicKey();
 
-    // register with pushManager, get endpoint etc
-    const token = await this._getPushToken(publicKey);
+    let token;
+    let deviceId;
+    try {
+      this._registrationStateChangeBubbling = true
 
-    // get device id from errol
-    const deviceId = await this._registerDevice(token);
+      // register with pushManager, get endpoint etc
+      token = await this._getPushToken(publicKey);
+
+      // get device id from errol
+      deviceId = await this._registerDevice(token);
+
+    } finally {
+      this._registrationStateChangeBubbling = false
+    }
 
     await this._deviceStateStore.setToken(token);
     await this._deviceStateStore.setDeviceId(deviceId);
@@ -181,6 +257,8 @@ class PushNotificationsInstance {
 
     this.token = token;
     this.deviceId = deviceId;
+
+    this._detectRegistrationStateChange()
     return this;
   }
 
@@ -333,6 +411,8 @@ class PushNotificationsInstance {
     this.deviceId = null;
     this.token = null;
     this.userId = null;
+
+    this._detectRegistrationStateChange()
   }
 
   async clearAllState() {
