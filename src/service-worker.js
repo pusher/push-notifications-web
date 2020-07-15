@@ -24,6 +24,19 @@ self.PusherPushNotifications = {
       client => client !== undefined
     ),
 
+  _getFocusedClient: () =>
+    self.clients
+      .matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+      .then(clients => clients.find(c => c.focused === true)),
+
+  _hasFocusedClient: () =>
+    self.PusherPushNotifications._getFocusedClient().then(
+      client => client !== undefined
+    ),
+
   reportEvent: async ({ eventType, pusherMetadata }) => {
     const {
       instanceId,
@@ -98,7 +111,16 @@ self.addEventListener('push', e => {
   });
   customerPayload.data = customerData;
 
-  const handleNotification = payload => {
+  const handleNotification = async payload => {
+    const shouldHideNotification =
+      payload.notification.hide_notification_if_site_has_focus === true;
+    if (
+      shouldHideNotification &&
+      (await self.PusherPushNotifications._hasFocusedClient())
+    ) {
+      return;
+    }
+
     const title = payload.notification.title || '';
     const body = payload.notification.body || '';
     const icon = payload.notification.icon;
