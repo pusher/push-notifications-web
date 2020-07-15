@@ -1,6 +1,7 @@
 /* eslint-env serviceworker */
 import doRequest from './do-request';
 import DeviceStateStore from './device-state-store';
+import urljs from 'urijs'
 
 self.PusherPushNotifications = {
   endpointOverride: null,
@@ -24,17 +25,17 @@ self.PusherPushNotifications = {
       client => client !== undefined
     ),
 
-  _getFocusedClient: () =>
+  _getFocusedClients: () =>
     self.clients
       .matchAll({
         type: 'window',
         includeUncontrolled: true,
       })
-      .then(clients => clients.find(c => c.focused === true)),
+      .then(clients => clients.filter(c => c.focused === true)),
 
   _hasFocusedClient: () =>
-    self.PusherPushNotifications._getFocusedClient().then(
-      client => client !== undefined
+    self.PusherPushNotifications._getFocusedClients().then(
+      clients => clients.length > 0
     ),
 
   reportEvent: async ({ eventType, pusherMetadata }) => {
@@ -112,13 +113,52 @@ self.addEventListener('push', e => {
   customerPayload.data = customerData;
 
   const handleNotification = async payload => {
-    const shouldHideNotification =
-      payload.notification.hide_notification_if_site_has_focus === true;
-    if (
-      shouldHideNotification &&
-      (await self.PusherPushNotifications._hasFocusedClient())
-    ) {
-      return;
+    let hidePayload = payload.notification.hide_notification_if_page_has_focus
+    if (hidePayload) {
+      let mode = hidePayload.mode
+      if (mode === "deep_link" || mode === "url") {
+        let rawUrl;
+        if (mode === "deep_link") {
+          rawUrl = payload.notification.deep_link
+        } else {
+          rawUrl = hidePayload.url
+        }
+
+        let url = urljs(rawUrl)
+        if (hidePayload.ignore_all_query_parameters) {
+          url.query("")
+        }
+        if (hidePayload.ignore_fragment) {
+          url.fragment("")
+        }
+        if (hidePayload.ignore_protocol) {
+          url.protocol("")
+        }
+
+        if (url.is("relative")) {
+          url = url.absoluteTo(self.location)
+        }
+
+        let focusedClients = await self.PusherPushNotifications._getFocusedClients()
+        for (const focusedClient of focusedClients) {
+          let clientURL = urljs(focusedClient.url)
+          if (hidePayload.ignore_all_query_parameters) {
+            clientURL.query('')
+          }
+          if (hidePayload.ignore_fragment) {
+            clientURL.fragment('')
+          }
+          if (hidePayload.ignore_protocol) {
+            url.protocol("")
+          }
+
+          if (url.equals(clientURL)) {
+            return
+          }
+        }
+      } else if (await self.PusherPushNotifications._hasFocusedClient()) {
+        return
+      }
     }
 
     const title = payload.notification.title || '';
