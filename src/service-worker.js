@@ -195,9 +195,64 @@ self.addEventListener('notificationclick', e => {
       pusherMetadata: payload.data.pusher,
     });
 
-    if (payload.notification.deep_link) {
-      e.waitUntil(clients.openWindow(payload.notification.deep_link));
+    let goToDeepLink = async ()=>{
+      if (payload.notification.deep_link) {
+        return self.clients.openWindow(payload.notification.deep_link);
+      }
     }
+
+    let checkClient = (client) => {
+      return new Promise(resolve => {
+        let timeout = setTimeout(()=>{
+          self.PusherPushNotifications._removeMessageListener(messageListener)
+          resolve(false)
+        }, 100)
+
+        let publishId = payload.publishId;
+        let messageListener = (event) => {
+          if(event.data.type === 'pusher-click-listener-response' && event.data.publishId === publishId){
+            clearTimeout(timeout)
+            self.PusherPushNotifications._removeMessageListener(messageListener)
+            resolve(event.data.shouldTakeFocus)
+          }
+        }
+        self.PusherPushNotifications._addMessageListener(messageListener)
+        client.postMessage({
+          type: 'pusher-click-listener-request',
+          publishId,
+          payload
+        });
+      })
+    }
+
+    let checkClients = async ()=>{
+      let clients = await self.clients
+        .matchAll({
+          type: 'window',
+          includeUncontrolled: true,
+        })
+
+      // Check the focused client first
+      clients.sort((client1,client2)=>{
+        if(client1.focused === client2.focused){
+          return 0
+        } else if (client1.focused) {
+          return -1
+        } else {
+          return 1
+        }
+      })
+
+      for(const client of clients){
+        let shouldTakeFocus = await checkClient(client)
+        if (shouldTakeFocus) {
+          return client.focus()
+        }
+      }
+      return goToDeepLink()
+    }
+
+    e.waitUntil(checkClients())
     e.notification.close();
   }
 });

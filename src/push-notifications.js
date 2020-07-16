@@ -130,6 +130,7 @@ class PushNotificationsInstance {
     this._deviceStateStore = deviceStateStore;
     this._endpoint = endpointOverride; // Internal only
     this._notificationFilters = []
+    this._clickListeners = []
 
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data.type === 'pusher-notification-filter-request') {
@@ -145,6 +146,21 @@ class PushNotificationsInstance {
           type: 'pusher-notification-filter-response',
           publishId: event.data.publishId,
           shouldShow
+        });
+      }
+      if (event.data.type === 'pusher-click-listener-request') {
+        let shouldTakeFocus = false
+        for(const filterFn of this._clickListeners){
+          let result = filterFn(event.data.payload)
+          if (result === true) {
+            shouldTakeFocus = true;
+            break;
+          }
+        }
+        navigator.serviceWorker.controller.postMessage({
+          type: 'pusher-click-listener-response',
+          publishId: event.data.publishId,
+          shouldTakeFocus
         });
       }
     }, false);
@@ -171,6 +187,14 @@ class PushNotificationsInstance {
 
   removeNotificationFilter(filterFn) {
     this._notificationFilters = this._notificationFilters.filter(fn => fn !== filterFn)
+  }
+
+  addNotificationClickHandler(listener) {
+    this._clickListeners.unshift(listener)
+  }
+
+  removeNotificationClickHandler(listener) {
+    this._clickListeners = this._clickListeners.filter(fn => fn !== listener)
   }
 
   async start() {
