@@ -5,6 +5,21 @@ import DeviceStateStore from './device-state-store';
 self.PusherPushNotifications = {
   endpointOverride: null,
   onNotificationReceived: null,
+  _messagesListeners: [],
+
+  _messageReceived: (event) => {
+    for(const listener of self.PusherPushNotifications._messagesListeners){
+      listener(event)
+    }
+  },
+
+  _addMessageListener: (listener) => {
+    self.PusherPushNotifications._messagesListeners.push(listener)
+  },
+
+  _removeMessageListener: (listener) => {
+    self.PusherPushNotifications._messagesListeners = self.PusherPushNotifications._messagesListeners.filter(l => l !== listener)
+  },
 
   _endpoint: instanceId =>
     self.PusherPushNotifications.endpointOverride
@@ -23,6 +38,14 @@ self.PusherPushNotifications = {
     self.PusherPushNotifications._getVisibleClient().then(
       client => client !== undefined
     ),
+
+  _getFocusedClient: () =>
+    self.clients
+      .matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+      .then(clients => clients.find(c => c.focused === true)),
 
   reportEvent: async ({ eventType, pusherMetadata }) => {
     const {
@@ -98,18 +121,52 @@ self.addEventListener('push', e => {
   });
   customerPayload.data = customerData;
 
-  const handleNotification = payload => {
-    const title = payload.notification.title || '';
-    const body = payload.notification.body || '';
-    const icon = payload.notification.icon;
+  const handleNotification = async payload => {
+    const showNotification = async () => {
+      const title = payload.notification.title || '';
+      const body = payload.notification.body || '';
+      const icon = payload.notification.icon;
 
-    const options = {
-      body,
-      icon,
-      data: { pusherPayload: payload },
-    };
+      const options = {
+        body,
+        icon,
+        data: { pusherPayload: payload },
+      };
 
-    return self.registration.showNotification(title, options);
+      return self.registration.showNotification(title, options);
+    }
+
+    let focusedClient = await self.PusherPushNotifications._getFocusedClient()
+    if(focusedClient) {
+      return new Promise((resolve)=>{
+        // Wait a maximum of 200ms before showing notification anyway
+        let timeout = setTimeout(()=>{
+          self.PusherPushNotifications._removeMessageListener(messageListener)
+          resolve(showNotification())
+        }, 200)
+
+        let publishId = payload.data.pusher.publishId;
+        let messageListener = (event) => {
+          if(event.data.type === 'pusher-notification-filter-response' && event.data.publishId === publishId){
+            clearTimeout(timeout)
+            self.PusherPushNotifications._removeMessageListener(messageListener)
+            if(event.data.shouldShow === true) {
+              resolve(showNotification())
+            } else {
+              resolve()
+            }
+          }
+        }
+        self.PusherPushNotifications._addMessageListener(messageListener)
+        focusedClient.postMessage({
+          type: 'pusher-notification-filter-request',
+          publishId,
+          payload: customerPayload
+        });
+      })
+    } else {
+      return showNotification()
+    }
   };
 
   if (self.PusherPushNotifications.onNotificationReceived) {
@@ -121,6 +178,10 @@ self.addEventListener('push', e => {
   } else {
     e.waitUntil(handleNotification(payload));
   }
+});
+
+self.addEventListener('message', event => {
+  self.PusherPushNotifications._messageReceived(event)
 });
 
 self.addEventListener('notificationclick', e => {

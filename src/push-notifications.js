@@ -129,6 +129,25 @@ class PushNotificationsInstance {
     this._serviceWorkerRegistration = serviceWorkerRegistration;
     this._deviceStateStore = deviceStateStore;
     this._endpoint = endpointOverride; // Internal only
+    this._notificationFilters = []
+
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data.type === 'pusher-notification-filter-request') {
+        let shouldShow = true
+        for(const filterFn of this._notificationFilters){
+          let result = filterFn(event.data.payload)
+          if (result === false) {
+            shouldShow = false;
+            break;
+          }
+        }
+        navigator.serviceWorker.controller.postMessage({
+          type: 'pusher-notification-filter-response',
+          publishId: event.data.publishId,
+          shouldShow
+        });
+      }
+    }, false);
   }
 
   get _baseURL() {
@@ -144,6 +163,14 @@ class PushNotificationsInstance {
         `${message}. SDK not registered with Beams. Did you call .start?`
       );
     }
+  }
+
+  addNotificationFilter(filterFn) {
+    this._notificationFilters.unshift(filterFn)
+  }
+
+  removeNotificationFilter(filterFn) {
+    this._notificationFilters = this._notificationFilters.filter(fn => fn !== filterFn)
   }
 
   async start() {
