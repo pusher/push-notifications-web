@@ -566,14 +566,13 @@ describe('.getRegistrationState', () => {
 
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-      return beamsClient.getRegistrationState()
-        .then(state => {
-          expect(state).toEqual(
-            PusherPushNotifications.RegistrationState
-              .PERMISSION_GRANTED_REGISTERED_WITH_BEAMS
-          );
-        });
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState
+            .PERMISSION_GRANTED_REGISTERED_WITH_BEAMS
+        );
+      });
     });
   });
 
@@ -598,13 +597,12 @@ describe('.getRegistrationState', () => {
 
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-      return beamsClient.getRegistrationState()
-        .then(state => {
-          expect(state).toEqual(
-            PusherPushNotifications.RegistrationState.PERMISSION_DENIED
-          );
-        });
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState.PERMISSION_DENIED
+        );
+      });
     });
 
     test('should return PERMISSION_PROMPT_REQUIRED if browser permission is default', () => {
@@ -612,13 +610,12 @@ describe('.getRegistrationState', () => {
 
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-      return beamsClient.getRegistrationState()
-        .then(state => {
-          expect(state).toEqual(
-            PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED
-          );
-        });
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED
+        );
+      });
     });
 
     test('should return PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
@@ -626,14 +623,13 @@ describe('.getRegistrationState', () => {
 
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-      return beamsClient.getRegistrationState()
-        .then(state => {
-          expect(state).toEqual(
-            PusherPushNotifications.RegistrationState
-              .PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS
-          );
-        });
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState
+            .PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS
+        );
+      });
     });
   });
 });
