@@ -18,6 +18,7 @@ beforeEach(() => {
   listeners = {};
   shownNotifications = [];
   openedWindows = [];
+  clients = [];
 
   global.addEventListener = (name, func) => {
     listeners[name] = func;
