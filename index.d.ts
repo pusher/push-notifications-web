@@ -17,6 +17,13 @@ declare module '@pusher/push-notifications-web' {
     fetchToken(userId: string): Promise<TokenProviderResponse>;
   }
 
+  enum RegistrationState {
+    PERMISSION_GRANTED_REGISTERED_WITH_BEAMS = 'PERMISSION_GRANTED_REGISTERED_WITH_BEAMS',
+    PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS = 'PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS',
+    PERMISSION_PROMPT_REQUIRED = 'PERMISSION_PROMPT_REQUIRED',
+    PERMISSION_DENIED = 'PERMISSION_DENIED',
+  }
+
   class PushNotificationsInstance {
     instanceId: string;
     deviceId: string;
@@ -34,6 +41,7 @@ declare module '@pusher/push-notifications-web' {
     ): Promise<undefined>;
     stop(): Promise<undefined>;
     clearAllState(): Promise<undefined>;
+    getRegistrationState(): Promise<RegistrationState>;
   }
 
   interface InitOptions {

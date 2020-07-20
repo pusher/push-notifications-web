@@ -1,5 +1,5 @@
 import { ErrolTestClient } from './errol-client';
-import { launchServer, createChromeWebDriver } from './test-utils';
+import { launchServer, createChromeWebDriver, NOTIFICATIONS_GRANTED } from './test-utils';
 
 let killServer = null;
 let chromeDriver = null;
@@ -9,7 +9,7 @@ beforeAll(() => {
     .then(killFunc => {
       killServer = killFunc;
     })
-    .then(() => createChromeWebDriver())
+    .then(() => createChromeWebDriver(NOTIFICATIONS_GRANTED))
     .then(driver => {
       chromeDriver = driver;
     })

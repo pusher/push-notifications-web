@@ -543,11 +543,103 @@ describe('interest methods', () => {
   });
 });
 
+describe('.getRegistrationState', () => {
+  const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+
+  describe('if SDK is started', () => {
+    let devicestatestore = require('./device-state-store');
+    beforeEach(() => {
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
+        token: ENCODED_DUMMY_PUSH_SUBSCRIPTION,
+        userId: null,
+      });
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+      devicestatestore = require('./device-state-store');
+    });
+
+    test('should return PERMISSION_GRANTED_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
+      setUpGlobals({ notificationPermission: 'granted' });
+
+      let beamsClient = new PusherPushNotifications.Client({
+        instanceId,
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState
+            .PERMISSION_GRANTED_REGISTERED_WITH_BEAMS
+        );
+      });
+    });
+  });
+
+  describe('if SDK is not started', () => {
+    let devicestatestore = require('./device-state-store');
+    beforeEach(() => {
+      devicestatestore.default = makeDeviceStateStore({
+        deviceId: null,
+        token: null,
+        userId: null,
+      });
+    });
+
+    afterEach(() => {
+      jest.resetModules();
+      devicestatestore = require('./device-state-store');
+      tearDownGlobals();
+    });
+
+    test('should return PERMISSION_DENIED if browser permission is denied', () => {
+      setUpGlobals({ notificationPermission: 'denied' });
+
+      let beamsClient = new PusherPushNotifications.Client({
+        instanceId,
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState.PERMISSION_DENIED
+        );
+      });
+    });
+
+    test('should return PERMISSION_PROMPT_REQUIRED if browser permission is default', () => {
+      setUpGlobals({ notificationPermission: 'default' });
+
+      let beamsClient = new PusherPushNotifications.Client({
+        instanceId,
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED
+        );
+      });
+    });
+
+    test('should return PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
+      setUpGlobals({ notificationPermission: 'granted' });
+
+      let beamsClient = new PusherPushNotifications.Client({
+        instanceId,
+      });
+      return beamsClient.getRegistrationState().then(state => {
+        expect(state).toEqual(
+          PusherPushNotifications.RegistrationState
+            .PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS
+        );
+      });
+    });
+  });
+});
+
 const setUpGlobals = ({
   indexedDBSupport = true,
   serviceWorkerSupport = true,
   webPushSupport = true,
   isSecureContext = true,
+  notificationPermission = 'default',
 }) => {
   if (indexedDBSupport) {
     global.window.indexedDB = {};
@@ -565,10 +657,15 @@ const setUpGlobals = ({
     global.window.PushManager = {};
   }
   global.window.isSecureContext = isSecureContext;
+
+  global.Notification = {};
+  global.Notification.permission = notificationPermission;
 };
 
 const tearDownGlobals = () => {
   delete global.window.indexedDB;
   delete global.window.PushManager;
   delete global.navigator.serviceWorker;
+  delete global.window.isSecureContext;
+  delete global.Notification;
 };

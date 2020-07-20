@@ -9,6 +9,15 @@ const MAX_INTERESTS_NUM = 5000;
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
+export const RegistrationState = Object.freeze({
+  PERMISSION_PROMPT_REQUIRED: 'PERMISSION_PROMPT_REQUIRED',
+  PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS:
+    'PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS',
+  PERMISSION_GRANTED_REGISTERED_WITH_BEAMS:
+    'PERMISSION_GRANTED_REGISTERED_WITH_BEAMS',
+  PERMISSION_DENIED: 'PERMISSION_DENIED',
+});
+
 export class Client {
   constructor(config) {
     if (!config) {
@@ -163,6 +172,24 @@ export class Client {
     this._token = token;
     this._deviceId = deviceId;
     return this;
+  }
+
+  async getRegistrationState() {
+    await this._ready;
+
+    if (Notification.permission === 'denied') {
+      return RegistrationState.PERMISSION_DENIED;
+    }
+
+    if (Notification.permission === 'granted' && this._deviceId !== null) {
+      return RegistrationState.PERMISSION_GRANTED_REGISTERED_WITH_BEAMS;
+    }
+
+    if (Notification.permission === 'granted' && this._deviceId === null) {
+      return RegistrationState.PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS;
+    }
+
+    return RegistrationState.PERMISSION_PROMPT_REQUIRED;
   }
 
   async addDeviceInterest(interest) {
