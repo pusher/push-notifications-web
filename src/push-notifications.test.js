@@ -130,7 +130,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      beamsClient.addDeviceInterest(interest).then(() => {
+      return beamsClient.addDeviceInterest(interest).then(() => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
@@ -216,7 +216,7 @@ describe('interest methods', () => {
       dorequest.default = mockDoRequest;
 
       const beamsClient = new PusherPushNotifications.Client({ instanceId });
-      beamsClient.removeDeviceInterest(interest).then(() => {
+      return beamsClient.removeDeviceInterest(interest).then(() => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
@@ -308,7 +308,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      beamsClient.getDeviceInterests().then(interests => {
+      return beamsClient.getDeviceInterests().then(interests => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
@@ -354,7 +354,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      beamsClient.setDeviceInterests(interests).then(() => {
+      return beamsClient.setDeviceInterests(interests).then(() => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0].method).toEqual('PUT');
@@ -386,7 +386,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      beamsClient.setDeviceInterests(interests).then(() => {
+      return beamsClient.setDeviceInterests(interests).then(() => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0].method).toEqual('PUT');
@@ -508,7 +508,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      beamsClient.clearDeviceInterests().then(() => {
+      return beamsClient.clearDeviceInterests().then(() => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
