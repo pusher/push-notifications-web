@@ -112,10 +112,10 @@ self.addEventListener('push', e => {
   customerPayload.data = customerData;
 
   const handleNotification = async payload => {
-    const shouldHideNotification =
+    const hideNotificationIfSiteHasFocus =
       payload.notification.hide_notification_if_site_has_focus === true;
     if (
-      shouldHideNotification &&
+      hideNotificationIfSiteHasFocus &&
       (await self.PusherPushNotifications._hasFocusedClient())
     ) {
       return;

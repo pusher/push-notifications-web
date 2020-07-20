@@ -453,7 +453,7 @@ test('SW should show notification if site has focus but hide flag is not set', (
   }
   pushListener(pushEvent);
 
-  return pushEvent.getPromise().then(() => {
+  return pushEvent.getWaitUntilPromise().then(() => {
     // Then a notification should be shown
     expect(shownNotifications).toHaveLength(1);
   });
@@ -477,7 +477,7 @@ test('SW should show notification if site has focus but hide flag is false', () 
   }
   pushListener(pushEvent);
 
-  return pushEvent.getPromise().then(() => {
+  return pushEvent.getWaitUntilPromise().then(() => {
     // Then a notification should be shown
     expect(shownNotifications).toHaveLength(1);
   });
@@ -501,7 +501,7 @@ test('SW should not show notification if site has focus and hide flag is true', 
   }
   pushListener(pushEvent);
 
-  return pushEvent.getPromise().then(() => {
+  return pushEvent.getWaitUntilPromise().then(() => {
     // Then a notification should not be shown
     expect(shownNotifications).toHaveLength(0);
   });
@@ -526,7 +526,7 @@ test('SW should show notification if site does not have focus and hide flag is t
   }
   pushListener(pushEvent);
 
-  return pushEvent.getPromise().then(() => {
+  return pushEvent.getWaitUntilPromise().then(() => {
     // Then a notification should be shown
     expect(shownNotifications).toHaveLength(1);
   });
@@ -542,7 +542,7 @@ class FakePushEvent {
     };
   }
 
-  getPromise() {
+  getWaitUntilPromise() {
     expect(this.waitUntilPromise).not.toBeUndefined();
     return this.waitUntilPromise;
   }
