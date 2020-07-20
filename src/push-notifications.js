@@ -9,126 +9,114 @@ const MAX_INTERESTS_NUM = 5000;
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
-export async function init(config) {
-  if (!config) {
-    throw new Error('Config object required');
-  }
-  const {
-    instanceId,
-    endpointOverride = null,
-    serviceWorkerRegistration = null,
-  } = config;
+export class Client {
+  constructor(config) {
+    if (!config) {
+      throw new Error('Config object required');
+    }
+    const {
+      instanceId,
+      endpointOverride = null,
+      serviceWorkerRegistration = null,
+    } = config;
 
-  if (instanceId === undefined) {
-    throw new Error('Instance ID is required');
-  }
-  if (typeof instanceId !== 'string') {
-    throw new Error('Instance ID must be a string');
-  }
-  if (instanceId.length === 0) {
-    throw new Error('Instance ID cannot be empty');
-  }
+    if (instanceId === undefined) {
+      throw new Error('Instance ID is required');
+    }
+    if (typeof instanceId !== 'string') {
+      throw new Error('Instance ID must be a string');
+    }
+    if (instanceId.length === 0) {
+      throw new Error('Instance ID cannot be empty');
+    }
 
-  if (!('indexedDB' in window)) {
-    throw new Error(
-      'Pusher Beams does not support this browser version (IndexedDB not supported)'
-    );
-  }
-
-  if (!window.isSecureContext) {
-    throw new Error(
-      'Pusher Beams relies on Service Workers, which only work in secure contexts. Check that your page is being served from localhost/over HTTPS'
-    );
-  }
-
-  if (!('serviceWorker' in navigator)) {
-    throw new Error(
-      'Pusher Beams does not support this browser version (Service Workers not supported)'
-    );
-  }
-
-  if (!('PushManager' in window)) {
-    throw new Error(
-      'Pusher Beams does not support this browser version (Web Push not supported)'
-    );
-  }
-
-  let swReg;
-  if (serviceWorkerRegistration) {
-    const serviceWorkerScope = serviceWorkerRegistration.scope;
-    const currentURL = window.location.href;
-    const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
-    if (!scopeMatchesCurrentPage) {
+    if (!('indexedDB' in window)) {
       throw new Error(
-        `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+        'Pusher Beams does not support this browser version (IndexedDB not supported)'
       );
     }
-    swReg = serviceWorkerRegistration;
-  } else {
-    swReg = await getServiceWorkerRegistration();
-  }
 
-  const deviceStateStore = new DeviceStateStore(instanceId);
-  await deviceStateStore.connect();
-
-  const storedToken = await deviceStateStore.getToken();
-  const actualToken = await getWebPushToken(swReg);
-
-  const pushTokenHasChanged = storedToken !== actualToken;
-
-  if (pushTokenHasChanged) {
-    // The web push subscription has changed out from underneath us.
-    // This can happen when the user disables the web push permission
-    // (potentially also renabling it, thereby changing the token)
-    //
-    // This means the SDK has effectively been stopped, so we should update
-    // the SDK state to reflect that.
-    await deviceStateStore.clear();
-  }
-
-  const deviceId = await deviceStateStore.getDeviceId();
-  const token = await deviceStateStore.getToken();
-  const userId = await deviceStateStore.getUserId();
-
-  const instance = new PushNotificationsInstance({
-    instanceId,
-    deviceId,
-    token,
-    userId,
-    serviceWorkerRegistration: swReg,
-    deviceStateStore,
-    endpointOverride,
-  });
-
-  const deviceExists = deviceId !== null;
-  if (deviceExists) {
-    try {
-      await instance._updateDeviceMetadata();
-    } catch (_) {
-      // Best effort, do nothing if this fails.
+    if (!window.isSecureContext) {
+      throw new Error(
+        'Pusher Beams relies on Service Workers, which only work in secure contexts. Check that your page is being served from localhost/over HTTPS'
+      );
     }
+
+    if (!('serviceWorker' in navigator)) {
+      throw new Error(
+        'Pusher Beams does not support this browser version (Service Workers not supported)'
+      );
+    }
+
+    if (!('PushManager' in window)) {
+      throw new Error(
+        'Pusher Beams does not support this browser version (Web Push not supported)'
+      );
+    }
+
+    if (serviceWorkerRegistration) {
+      const serviceWorkerScope = serviceWorkerRegistration.scope;
+      const currentURL = window.location.href;
+      const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
+      if (!scopeMatchesCurrentPage) {
+        throw new Error(
+          `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+        );
+      }
+    }
+
+    this.instanceId = instanceId;
+    this._deviceId = null;
+    this._token = null;
+    this._userId = null;
+    this._serviceWorkerRegistration = serviceWorkerRegistration;
+    this._deviceStateStore = new DeviceStateStore(instanceId);
+    this._endpoint = endpointOverride; // Internal only
+
+    this._ready = this._init();
   }
 
-  return instance;
-}
+  async _init() {
+    if (this._deviceId !== null) {
+      return;
+    }
 
-class PushNotificationsInstance {
-  constructor({
-    instanceId,
-    deviceId,
-    token,
-    userId,
-    serviceWorkerRegistration,
-    deviceStateStore,
-    endpointOverride = null,
-  }) {
-    this.instanceId = instanceId;
-    this.deviceId = deviceId;
-    this.token = token;
-    this.userId = userId;
-    this._serviceWorkerRegistration = serviceWorkerRegistration;
-    this._deviceStateStore = deviceStateStore;
-    this._endpoint = endpointOverride; // Internal only
+    await this._deviceStateStore.connect();
+
+    if (!this._serviceWorkerRegistration) {
+      this._serviceWorkerRegistration = await getServiceWorkerRegistration();
+    }
+
+    const storedToken = await this._deviceStateStore.getToken();
+    const actualToken = await getWebPushToken(this._serviceWorkerRegistration);
+
+    const pushTokenHasChanged = storedToken !== actualToken;
+
+    if (pushTokenHasChanged) {
+      // The web push subscription has changed out from underneath us.
+      // This can happen when the user disables the web push permission
+      // (potentially also renabling it, thereby changing the token)
+      //
+      // This means the SDK has effectively been stopped, so we should update
+      // the SDK state to reflect that.
+      await this._deviceStateStore.clear();
+    }
+
+    this._deviceId = await this._deviceStateStore.getDeviceId();
+    this._token = await this._deviceStateStore.getToken();
+    this._userId = await this._deviceStateStore.getUserId();
+  }
+
+  getDeviceId() {
+    return this._ready.then(() => this._deviceId);
+  }
+
+  async getToken() {
+    return this._ready.then(() => this._token);
+  }
+
+  async getUserId() {
+    return this._ready.then(() => this._userId);
   }
 
   get _baseURL() {
@@ -139,7 +127,7 @@ class PushNotificationsInstance {
   }
 
   _throwIfNotStarted(message) {
-    if (!this.deviceId) {
+    if (!this._deviceId) {
       throw new Error(
         `${message}. SDK not registered with Beams. Did you call .start?`
       );
@@ -147,11 +135,13 @@ class PushNotificationsInstance {
   }
 
   async start() {
+    await this._ready;
+
     if (!isSupportedBrowser()) {
       return this;
     }
 
-    if (this.deviceId !== null) {
+    if (this._deviceId !== null) {
       return this;
     }
 
@@ -170,18 +160,20 @@ class PushNotificationsInstance {
       window.navigator.userAgent
     );
 
-    this.token = token;
-    this.deviceId = deviceId;
+    this._token = token;
+    this._deviceId = deviceId;
     return this;
   }
 
   async addDeviceInterest(interest) {
+    await this._ready;
+
     this._throwIfNotStarted('Could not add Device Interest');
     validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
+    )}/devices/web/${this._deviceId}/interests/${encodeURIComponent(interest)}`;
     const options = {
       method: 'POST',
       path,
@@ -190,12 +182,14 @@ class PushNotificationsInstance {
   }
 
   async removeDeviceInterest(interest) {
+    await this._ready;
+
     this._throwIfNotStarted('Could not remove Device Interest');
     validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this.deviceId}/interests/${encodeURIComponent(interest)}`;
+    )}/devices/web/${this._deviceId}/interests/${encodeURIComponent(interest)}`;
     const options = {
       method: 'DELETE',
       path,
@@ -204,11 +198,13 @@ class PushNotificationsInstance {
   }
 
   async getDeviceInterests() {
+    await this._ready;
+
     this._throwIfNotStarted('Could not get Device Interests');
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this.deviceId}/interests`;
+    )}/devices/web/${this._deviceId}/interests`;
     const options = {
       method: 'GET',
       path,
@@ -217,6 +213,8 @@ class PushNotificationsInstance {
   }
 
   async setDeviceInterests(interests) {
+    await this._ready;
+
     this._throwIfNotStarted('Could not set Device Interests');
 
     if (interests === undefined || interests === null) {
@@ -239,7 +237,7 @@ class PushNotificationsInstance {
     const uniqueInterests = Array.from(new Set(interests));
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this.deviceId}/interests`;
+    )}/devices/web/${this._deviceId}/interests`;
     const options = {
       method: 'PUT',
       path,
@@ -251,16 +249,20 @@ class PushNotificationsInstance {
   }
 
   async clearDeviceInterests() {
+    await this._ready;
+
     this._throwIfNotStarted('Could not clear Device Interests');
     await this.setDeviceInterests([]);
   }
 
   async setUserId(userId, tokenProvider) {
+    await this._ready;
+
     if (!isSupportedBrowser()) {
       return;
     }
 
-    if (this.deviceId === null) {
+    if (this._deviceId === null) {
       const error = new Error('.start must be called before .setUserId');
       return Promise.reject(error);
     }
@@ -270,13 +272,13 @@ class PushNotificationsInstance {
     if (userId === '') {
       throw new Error('User ID cannot be the empty string');
     }
-    if (this.userId !== null && this.userId !== userId) {
+    if (this._userId !== null && this._userId !== userId) {
       throw new Error('Changing the `userId` is not allowed.');
     }
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this.deviceId}/user`;
+    )}/devices/web/${this._deviceId}/user`;
 
     const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
     const options = {
@@ -288,16 +290,18 @@ class PushNotificationsInstance {
     };
     await doRequest(options);
 
-    this.userId = userId;
+    this._userId = userId;
     return this._deviceStateStore.setUserId(userId);
   }
 
   async stop() {
+    await this._ready;
+
     if (!isSupportedBrowser()) {
       return;
     }
 
-    if (this.deviceId === null) {
+    if (this._deviceId === null) {
       return;
     }
 
@@ -305,12 +309,14 @@ class PushNotificationsInstance {
     await this._deviceStateStore.clear();
     this._clearPushToken().catch(() => {}); // Not awaiting this, best effort.
 
-    this.deviceId = null;
-    this.token = null;
-    this.userId = null;
+    this._deviceId = null;
+    this._token = null;
+    this._userId = null;
   }
 
   async clearAllState() {
+    await this._ready;
+
     if (!isSupportedBrowser()) {
       return;
     }
@@ -371,7 +377,7 @@ class PushNotificationsInstance {
   async _deleteDevice() {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${encodeURIComponent(this.deviceId)}`;
+    )}/devices/web/${encodeURIComponent(this._deviceId)}`;
 
     const options = { method: 'DELETE', path };
     await doRequest(options);
@@ -392,7 +398,7 @@ class PushNotificationsInstance {
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this.deviceId}/metadata`;
+    )}/devices/web/${this._deviceId}/metadata`;
 
     const metadata = {
       sdkVersion,
