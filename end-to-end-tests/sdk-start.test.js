@@ -24,9 +24,11 @@ test('SDK should register a device with errol', async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -43,9 +45,11 @@ test('SDK should remember the device ID', async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -58,9 +62,11 @@ test('SDK should remember the device ID', async () => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -101,11 +107,12 @@ describe('When service worker is missing', () => {
       const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
       const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-      return PusherPushNotifications.init({
+      const beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-        .then(beamsClient => beamsClient.start())
-        .then(beamsClient => asyncScriptReturnCallback('start succeeded'))
+      });
+      beamsClient
+        .start()
+        .then(() => asyncScriptReturnCallback('start succeeded'))
         .catch(e => asyncScriptReturnCallback(e.message));
     });
 
@@ -139,14 +146,16 @@ test('SDK should register a device with errol without registering the service wo
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       serviceWorkerRegistration: await window.navigator.serviceWorker.register(
         '/service-worker.js'
       ),
       instanceId,
-    })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -165,12 +174,13 @@ test('SDK should fail if provided service worker is in wrong scope', async () =>
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     return window.navigator.serviceWorker
       .register('/not-the-root/service-worker.js')
-      .then(registration =>
-        PusherPushNotifications.init({
+      .then(registration => {
+        const beamsClient = new PusherPushNotifications.Client({
           instanceId,
           serviceWorkerRegistration: registration,
-        })
-      )
+        });
+        return beamsClient.start();
+      })
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 

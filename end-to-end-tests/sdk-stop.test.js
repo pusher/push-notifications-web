@@ -51,10 +51,11 @@ test('Calling .stop should clear SDK state', async () => {
 
     const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
-    return PusherPushNotifications.init({ instanceId })
-      .then(c => (window.beamsClient = c))
-      .then(() => window.beamsClient.start())
-      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+    window.beamsClient = new PusherPushNotifications.Client({ instanceId });
+    window.beamsClient
+      .start()
+      .then(() => window.beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -83,9 +84,10 @@ test('Calling .stop should clear SDK state', async () => {
 
     const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
-    return PusherPushNotifications.init({ instanceId })
-      .then(c => (window.beamsClient = c))
-      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
+      .getDeviceId()
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -114,8 +116,9 @@ test('Calling .stop before .start should do nothing', async () => {
 
     const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.stop())
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
+      .stop()
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -139,10 +142,11 @@ test('Calling .clearAllState should clear SDK state and create a new device', as
 
     const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
 
-    return PusherPushNotifications.init({ instanceId })
-      .then(c => (window.beamsClient = c))
-      .then(() => window.beamsClient.start())
-      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -153,9 +157,13 @@ test('Calling .clearAllState should clear SDK state and create a new device', as
   const deviceIdAfterClear = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return window.beamsClient
+    const instanceId = '1b880590-6301-4bb5-b34f-45db1c5f5644';
+
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    beamsClient
       .clearAllState()
-      .then(() => asyncScriptReturnCallback(window.beamsClient.deviceId))
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 

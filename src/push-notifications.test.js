@@ -1,4 +1,5 @@
 import * as PusherPushNotifications from './push-notifications';
+import { makeDeviceStateStore } from '../test-utils/fake-device-state-store';
 
 const DUMMY_PUSH_SUBSCRIPTION = { foo: 'bar' };
 const ENCODED_DUMMY_PUSH_SUBSCRIPTION = 'eyJmb28iOiJiYXIifQ==';
@@ -9,48 +10,46 @@ describe('Constructor', () => {
     tearDownGlobals();
   });
 
-  test('should be a function', () => {
-    expect(typeof PusherPushNotifications.init).toBe('function');
-  });
-
   test('will throw if there is no config object given', () => {
-    return expect(PusherPushNotifications.init()).rejects.toThrow(
+    return expect(() => new PusherPushNotifications.Client()).toThrow(
       'Config object required'
     );
   });
 
   test('will throw if there is no instance ID specified', () => {
-    return expect(PusherPushNotifications.init({})).rejects.toThrow(
+    return expect(() => new PusherPushNotifications.Client({})).toThrow(
       'Instance ID is required'
     );
   });
 
   test('will throw if instance ID is not a string', () => {
     const instanceId = null;
-    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
-      'Instance ID must be a string'
-    );
+    return expect(
+      () => new PusherPushNotifications.Client({ instanceId })
+    ).toThrow('Instance ID must be a string');
   });
 
   test('will throw if the instance id is the empty string', () => {
     const instanceId = '';
-    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
-      'Instance ID cannot be empty'
-    );
+    return expect(
+      () => new PusherPushNotifications.Client({ instanceId })
+    ).toThrow('Instance ID cannot be empty');
   });
 
   test('will throw if indexedDB is not available', () => {
     setUpGlobals({ indexedDBSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
-      'IndexedDB not supported'
-    );
+    return expect(
+      () => new PusherPushNotifications.Client({ instanceId })
+    ).toThrow('IndexedDB not supported');
   });
 
   test('will throw if the SDK is loaded from a context that is not secure', () => {
     setUpGlobals({ isSecureContext: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
+    return expect(
+      () => new PusherPushNotifications.Client({ instanceId })
+    ).toThrow(
       'Pusher Beams relies on Service Workers, which only work in secure contexts'
     );
   });
@@ -58,17 +57,17 @@ describe('Constructor', () => {
   test('will throw if ServiceWorkerRegistration not supported', () => {
     setUpGlobals({ serviceWorkerSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
-      'Service Workers not supported'
-    );
+    return expect(
+      () => new PusherPushNotifications.Client({ instanceId })
+    ).toThrow('Service Workers not supported');
   });
 
   test('will throw if Web Push not supported', () => {
     setUpGlobals({ webPushSupport: false });
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(PusherPushNotifications.init({ instanceId })).rejects.toThrow(
-      'Web Push not supported'
-    );
+    return expect(
+      () => new PusherPushNotifications.Client({ instanceId })
+    ).toThrow('Web Push not supported');
   });
 
   test('will return properly configured instance otherwise', () => {
@@ -85,12 +84,15 @@ describe('Constructor', () => {
 
     const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
 
-    return PusherPushNotifications.init({ instanceId }).then(beamsClient => {
-      expect(beamsClient.deviceId).toEqual(
-        'web-1db66b8a-f51f-49de-b225-72591535c855'
-      );
-      expect(beamsClient.token).toEqual(ENCODED_DUMMY_PUSH_SUBSCRIPTION);
-      expect(beamsClient.userId).toEqual('alice');
+    const beamsClient = new PusherPushNotifications.Client({ instanceId });
+    return Promise.all([
+      beamsClient.getDeviceId(),
+      beamsClient.getToken(),
+      beamsClient.getUserId(),
+    ]).then(([deviceId, token, userId]) => {
+      expect(deviceId).toEqual('web-1db66b8a-f51f-49de-b225-72591535c855');
+      expect(token).toEqual(ENCODED_DUMMY_PUSH_SUBSCRIPTION);
+      expect(userId).toEqual('alice');
     });
   });
 });
@@ -126,31 +128,30 @@ describe('interest methods', () => {
 
       dorequest.default = mockDoRequest;
 
-      return PusherPushNotifications.init({
+      const beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-        .then(beamsClient => beamsClient.addDeviceInterest(interest))
-        .then(() => {
-          expect(mockDoRequest.mock.calls.length).toBe(1);
-          expect(mockDoRequest.mock.calls[0].length).toBe(1);
-          expect(mockDoRequest.mock.calls[0][0]).toEqual({
-            method: 'POST',
-            path: [
-              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-              '/interests/donuts',
-            ].join(''),
-          });
+      });
+      return beamsClient.addDeviceInterest(interest).then(() => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0]).toEqual({
+          method: 'POST',
+          path: [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests/donuts',
+          ].join(''),
         });
+      });
     });
 
     test('should fail if interest name is not passed', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.addDeviceInterest())
+        }).addDeviceInterest()
       ).rejects.toThrow('Interest name is required');
     });
 
@@ -158,9 +159,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interest = false;
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+        }).addDeviceInterest(interest)
       ).rejects.toThrow('Interest false is not a string');
     });
 
@@ -171,9 +172,9 @@ describe('interest methods', () => {
         interest += 'A';
       }
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+        }).addDeviceInterest(interest)
       ).rejects.toThrow('Interest is longer than the maximum of 164 chars');
     });
 
@@ -181,9 +182,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interest = 'bad|interest';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+        }).addDeviceInterest(interest)
       ).rejects.toThrow('contains a forbidden character');
     });
 
@@ -198,9 +199,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interest = 'some-interest';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.addDeviceInterest(interest))
+        }).addDeviceInterest(interest)
       ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
@@ -215,31 +216,28 @@ describe('interest methods', () => {
 
       dorequest.default = mockDoRequest;
 
-      return PusherPushNotifications.init({
-        instanceId,
-      })
-        .then(beamsClient => beamsClient.removeDeviceInterest(interest))
-        .then(() => {
-          expect(mockDoRequest.mock.calls.length).toBe(1);
-          expect(mockDoRequest.mock.calls[0].length).toBe(1);
-          expect(mockDoRequest.mock.calls[0][0]).toEqual({
-            method: 'DELETE',
-            path: [
-              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-              '/interests/donuts',
-            ].join(''),
-          });
+      const beamsClient = new PusherPushNotifications.Client({ instanceId });
+      return beamsClient.removeDeviceInterest(interest).then(() => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0]).toEqual({
+          method: 'DELETE',
+          path: [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests/donuts',
+          ].join(''),
         });
+      });
     });
 
     test('should fail if interest name is not passed', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.removeDeviceInterest())
+        }).removeDeviceInterest()
       ).rejects.toThrow('Interest name is required');
     });
 
@@ -247,9 +245,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interest = false;
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.removeDeviceInterest(interest))
+        }).removeDeviceInterest(interest)
       ).rejects.toThrow('Interest false is not a string');
     });
 
@@ -260,9 +258,9 @@ describe('interest methods', () => {
         interest += 'A';
       }
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.removeDeviceInterest(interest))
+        }).removeDeviceInterest(interest)
       ).rejects.toThrow('Interest is longer than the maximum of 164 chars');
     });
 
@@ -270,9 +268,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interest = 'bad|interest';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.removeDeviceInterest(interest))
+        }).removeDeviceInterest(interest)
       ).rejects.toThrow('contains a forbidden character');
     });
 
@@ -287,9 +285,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interest = 'some-interest';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.removeDeviceInterest(interest))
+        }).removeDeviceInterest(interest)
       ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
@@ -308,24 +306,23 @@ describe('interest methods', () => {
 
       dorequest.default = mockDoRequest;
 
-      return PusherPushNotifications.init({
+      const beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-        .then(beamsClient => beamsClient.getDeviceInterests())
-        .then(interests => {
-          expect(mockDoRequest.mock.calls.length).toBe(1);
-          expect(mockDoRequest.mock.calls[0].length).toBe(1);
-          expect(mockDoRequest.mock.calls[0][0]).toEqual({
-            method: 'GET',
-            path: [
-              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-              '/interests',
-            ].join(''),
-          });
-          expect(interests).toEqual(['donuts']);
+      });
+      return beamsClient.getDeviceInterests().then(interests => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0]).toEqual({
+          method: 'GET',
+          path: [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests',
+          ].join(''),
         });
+        expect(interests).toEqual(['donuts']);
+      });
     });
 
     test('should fail if SDK is not started', () => {
@@ -338,9 +335,9 @@ describe('interest methods', () => {
 
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.getDeviceInterests())
+        }).getDeviceInterests()
       ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
@@ -355,26 +352,25 @@ describe('interest methods', () => {
 
       dorequest.default = mockDoRequest;
 
-      return PusherPushNotifications.init({
+      const beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-        .then(beamsClient => beamsClient.setDeviceInterests(interests))
-        .then(() => {
-          expect(mockDoRequest.mock.calls.length).toBe(1);
-          expect(mockDoRequest.mock.calls[0].length).toBe(1);
-          expect(mockDoRequest.mock.calls[0][0].method).toEqual('PUT');
-          expect(mockDoRequest.mock.calls[0][0].path).toEqual(
-            [
-              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-              '/interests',
-            ].join('')
-          );
-          expect(mockDoRequest.mock.calls[0][0].body.interests.sort()).toEqual(
-            [...interests].sort()
-          );
-        });
+      });
+      return beamsClient.setDeviceInterests(interests).then(() => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0].method).toEqual('PUT');
+        expect(mockDoRequest.mock.calls[0][0].path).toEqual(
+          [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests',
+          ].join('')
+        );
+        expect(mockDoRequest.mock.calls[0][0].body.interests.sort()).toEqual(
+          [...interests].sort()
+        );
+      });
     });
 
     test('should make correct PUT request with duplicate interests', () => {
@@ -388,34 +384,33 @@ describe('interest methods', () => {
 
       const expectedInterests = ['apples', 'bananas'];
 
-      return PusherPushNotifications.init({
+      const beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-        .then(beamsClient => beamsClient.setDeviceInterests(interests))
-        .then(() => {
-          expect(mockDoRequest.mock.calls.length).toBe(1);
-          expect(mockDoRequest.mock.calls[0].length).toBe(1);
-          expect(mockDoRequest.mock.calls[0][0].method).toEqual('PUT');
-          expect(mockDoRequest.mock.calls[0][0].path).toEqual(
-            [
-              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-              '/interests',
-            ].join('')
-          );
-          expect(mockDoRequest.mock.calls[0][0].body.interests.sort()).toEqual(
-            expectedInterests.sort()
-          );
-        });
+      });
+      return beamsClient.setDeviceInterests(interests).then(() => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0].method).toEqual('PUT');
+        expect(mockDoRequest.mock.calls[0][0].path).toEqual(
+          [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests',
+          ].join('')
+        );
+        expect(mockDoRequest.mock.calls[0][0].body.interests.sort()).toEqual(
+          expectedInterests.sort()
+        );
+      });
     });
 
     test('should fail if interest array is not passed', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests())
+        }).setDeviceInterests()
       ).rejects.toThrow('interests argument is required');
     });
 
@@ -423,9 +418,9 @@ describe('interest methods', () => {
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       const interests = false;
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+        }).setDeviceInterests(interests)
       ).rejects.toThrow('interests argument must be an array');
     });
 
@@ -438,9 +433,9 @@ describe('interest methods', () => {
       }
 
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+        }).setDeviceInterests(interests)
       ).rejects.toThrow(
         `Number of interests (${maxInterests +
           1}) exceeds maximum of ${maxInterests}`
@@ -452,9 +447,9 @@ describe('interest methods', () => {
       const interests = ['good-interest', false];
 
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+        }).setDeviceInterests(interests)
       ).rejects.toThrow('Interest false is not a string');
     });
 
@@ -466,9 +461,9 @@ describe('interest methods', () => {
       }
 
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+        }).setDeviceInterests(interests)
       ).rejects.toThrow('longer than the maximum of 164 chars');
     });
 
@@ -477,9 +472,9 @@ describe('interest methods', () => {
       const interests = ['good-interest', 'bad|interest'];
 
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests(interests))
+        }).setDeviceInterests(interests)
       ).rejects.toThrow(
         'interest "bad|interest" contains a forbidden character'
       );
@@ -495,9 +490,9 @@ describe('interest methods', () => {
 
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.setDeviceInterests([]))
+        }).setDeviceInterests([])
       ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
@@ -511,24 +506,23 @@ describe('interest methods', () => {
 
       dorequest.default = mockDoRequest;
 
-      return PusherPushNotifications.init({
+      const beamsClient = new PusherPushNotifications.Client({
         instanceId,
-      })
-        .then(beamsClient => beamsClient.clearDeviceInterests())
-        .then(() => {
-          expect(mockDoRequest.mock.calls.length).toBe(1);
-          expect(mockDoRequest.mock.calls[0].length).toBe(1);
-          expect(mockDoRequest.mock.calls[0][0]).toEqual({
-            method: 'PUT',
-            path: [
-              'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
-              '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
-              '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
-              '/interests',
-            ].join(''),
-            body: { interests: [] },
-          });
+      });
+      return beamsClient.clearDeviceInterests().then(() => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0]).toEqual({
+          method: 'PUT',
+          path: [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests',
+          ].join(''),
+          body: { interests: [] },
         });
+      });
     });
 
     test('should fail if SDK is not started', () => {
@@ -541,9 +535,9 @@ describe('interest methods', () => {
 
       const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
       return expect(
-        PusherPushNotifications.init({
+        new PusherPushNotifications.Client({
           instanceId,
-        }).then(beamsClient => beamsClient.clearDeviceInterests())
+        }).clearDeviceInterests()
       ).rejects.toThrow('SDK not registered with Beams. Did you call .start?');
     });
   });
@@ -570,10 +564,10 @@ describe('.getRegistrationState', () => {
     test('should return PERMISSION_GRANTED_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
       setUpGlobals({ notificationPermission: 'granted' });
 
-      return PusherPushNotifications.init({
+      let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getRegistrationState())
+      return beamsClient.getRegistrationState()
         .then(state => {
           expect(state).toEqual(
             PusherPushNotifications.RegistrationState
@@ -602,10 +596,10 @@ describe('.getRegistrationState', () => {
     test('should return PERMISSION_DENIED if browser permission is denied', () => {
       setUpGlobals({ notificationPermission: 'denied' });
 
-      return PusherPushNotifications.init({
+      let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getRegistrationState())
+      return beamsClient.getRegistrationState()
         .then(state => {
           expect(state).toEqual(
             PusherPushNotifications.RegistrationState.PERMISSION_DENIED
@@ -616,10 +610,10 @@ describe('.getRegistrationState', () => {
     test('should return PERMISSION_PROMPT_REQUIRED if browser permission is default', () => {
       setUpGlobals({ notificationPermission: 'default' });
 
-      return PusherPushNotifications.init({
+      let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getRegistrationState())
+      return beamsClient.getRegistrationState()
         .then(state => {
           expect(state).toEqual(
             PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED
@@ -630,10 +624,10 @@ describe('.getRegistrationState', () => {
     test('should return PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS if browser permission is granted', () => {
       setUpGlobals({ notificationPermission: 'granted' });
 
-      return PusherPushNotifications.init({
+      let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       })
-        .then(beamsClient => beamsClient.getRegistrationState())
+      return beamsClient.getRegistrationState()
         .then(state => {
           expect(state).toEqual(
             PusherPushNotifications.RegistrationState
@@ -678,53 +672,4 @@ const tearDownGlobals = () => {
   delete global.navigator.serviceWorker;
   delete global.window.isSecureContext;
   delete global.Notification;
-};
-
-const makeDeviceStateStore = ({ deviceId, token, userId }) => {
-  class FakeDeviceStateStore {
-    constructor(instanceId) {
-      this.instanceId = instanceId;
-      this._deviceId = null;
-      this._token = null;
-      this._userId = null;
-    }
-
-    async connect() {
-      this._deviceId = deviceId || null;
-      this._token = token || null;
-      this._userId = userId || null;
-    }
-
-    async clear() {
-      this._deviceId = null;
-      this._token = null;
-      this._userId = null;
-    }
-
-    async getDeviceId() {
-      return this._deviceId;
-    }
-
-    async setDeviceId(deviceId) {
-      this._deviceId = deviceId;
-    }
-
-    async getToken() {
-      return this._token;
-    }
-
-    async setToken(token) {
-      this._token = token;
-    }
-
-    async getUserId() {
-      return this._userId;
-    }
-
-    async setUserId(userId) {
-      this._userId = userId;
-    }
-  }
-
-  return FakeDeviceStateStore;
 };

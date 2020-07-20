@@ -50,11 +50,13 @@ test('SDK should set user id with errol', async () => {
   const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    });
+    return beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -83,10 +85,12 @@ test('SDK should set user id with errol', async () => {
       },
     };
 
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(beamsClient => beamsClient.setUserId('cucas', tokenProvider))
+    });
+    return beamsClient
+      .start()
+      .then(() => beamsClient.setUserId('cucas', tokenProvider))
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -111,11 +115,13 @@ test('SDK should return an error if we try to reassign the user id', async () =>
   const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    });
+    return beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -131,12 +137,11 @@ test('SDK should return an error if we try to reassign the user id', async () =>
       }),
     };
 
-    let beamsClient;
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.setUserId('cucas', tokenProvider))
+    });
+    beamsClient
+      .setUserId('cucas', tokenProvider)
       .then(() => beamsClient.setUserId('ronaldinho', tokenProvider))
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
@@ -161,12 +166,11 @@ test('SDK should return an error if .start has not been called', async () => {
       }),
     };
 
-    let beamsClient;
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.setUserId('cucas', tokenProvider))
+    });
+    beamsClient
+      .setUserId('cucas', tokenProvider)
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -183,11 +187,13 @@ test('SDK should return an error if user ID is empty string', async () => {
   const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -203,12 +209,11 @@ test('SDK should return an error if user ID is empty string', async () => {
       }),
     };
 
-    let beamsClient;
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.setUserId('', tokenProvider))
+    });
+    beamsClient
+      .setUserId('', tokenProvider)
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -225,11 +230,13 @@ test('SDK should return an error if user ID is not a string', async () => {
   const deviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
 
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(beamsClient => beamsClient.start())
-      .then(beamsClient => asyncScriptReturnCallback(beamsClient.deviceId))
+    });
+    beamsClient
+      .start()
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => asyncScriptReturnCallback(deviceId))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
 
@@ -245,12 +252,11 @@ test('SDK should return an error if user ID is not a string', async () => {
       }),
     };
 
-    let beamsClient;
-    return PusherPushNotifications.init({
+    const beamsClient = new PusherPushNotifications.Client({
       instanceId: '1b880590-6301-4bb5-b34f-45db1c5f5644',
-    })
-      .then(c => (beamsClient = c))
-      .then(() => beamsClient.setUserId(undefined, tokenProvider))
+    });
+    beamsClient
+      .setUserId(undefined, tokenProvider)
       .then(() => asyncScriptReturnCallback(''))
       .catch(e => asyncScriptReturnCallback(e.message));
   });

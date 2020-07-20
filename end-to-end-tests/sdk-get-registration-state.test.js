@@ -22,8 +22,10 @@ test('.getState should return PERMISSION_GRANTED_REGISTERED_WITH_BEAMS if start 
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.start())
+    let beamsClient = new PusherPushNotifications.Client({
+      instanceId,
+    })
+    return beamsClient.start()
       .then(beamsClient => beamsClient.getRegistrationState())
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
@@ -38,8 +40,10 @@ test('.getState should return PERMISSION_PROMPT_REQUIRED if start has not been c
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.getRegistrationState())
+    let beamsClient = new PusherPushNotifications.Client({
+      instanceId,
+    })
+    return beamsClient.getRegistrationState()
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -53,8 +57,10 @@ test('.getState should return PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS if st
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.getRegistrationState())
+    let beamsClient = new PusherPushNotifications.Client({
+      instanceId,
+    })
+    return beamsClient.getRegistrationState()
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
@@ -68,8 +74,10 @@ test('.getState should return PERMISSION_DENIED if start has not been called and
   const state = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
-    return PusherPushNotifications.init({ instanceId })
-      .then(beamsClient => beamsClient.getRegistrationState())
+    let beamsClient = new PusherPushNotifications.Client({
+      instanceId,
+    })
+    return beamsClient.getRegistrationState()
       .then(state => asyncScriptReturnCallback(state))
       .catch(e => asyncScriptReturnCallback(e.message));
   });
