@@ -435,12 +435,120 @@ test('SW should send event with appInBackground false given a visible client', (
   });
 });
 
-const makePushEvent = payload => ({
-  waitUntil: () => {},
-  data: {
-    json: () => JSON.parse(payload),
-  },
+test('SW should show notification if site has focus but hide flag is not set', () => {
+  require('./service-worker.js');
+
+  // Given a push event that comes from Pusher without the flag set
+  const pushEvent = makeBeamsPushEvent({
+    hide_notification_if_site_has_focus: undefined,
+  });
+
+  // and at least once focused client
+  registerFocusedClient();
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  return pushEvent.getWaitUntilPromise().then(() => {
+    // Then a notification should be shown
+    expect(shownNotifications).toHaveLength(1);
+  });
 });
+
+test('SW should show notification if site has focus but hide flag is false', () => {
+  require('./service-worker.js');
+
+  // Given a push event that comes from Pusher with the flag set to false
+  const pushEvent = makeBeamsPushEvent({
+    hide_notification_if_site_has_focus: false,
+  });
+
+  // and at least once focused client
+  registerFocusedClient();
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  return pushEvent.getWaitUntilPromise().then(() => {
+    // Then a notification should be shown
+    expect(shownNotifications).toHaveLength(1);
+  });
+});
+
+test('SW should not show notification if site has focus and hide flag is true', () => {
+  require('./service-worker.js');
+
+  // Given a push event that comes from Pusher with the flag set
+  const pushEvent = makeBeamsPushEvent({
+    hide_notification_if_site_has_focus: true,
+  });
+
+  // and at least once focused client
+  registerFocusedClient();
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  return pushEvent.getWaitUntilPromise().then(() => {
+    // Then a notification should not be shown
+    expect(shownNotifications).toHaveLength(0);
+  });
+});
+
+test('SW should show notification if site does not have focus and hide flag is true', () => {
+  require('./service-worker.js');
+
+  // Given a push event that comes from Pusher with the flag set
+
+  const pushEvent = makeBeamsPushEvent({
+    hide_notification_if_site_has_focus: true,
+  });
+
+  // and no focused clients
+  expect(clients).toHaveLength(0);
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  return pushEvent.getWaitUntilPromise().then(() => {
+    // Then a notification should be shown
+    expect(shownNotifications).toHaveLength(1);
+  });
+});
+
+class FakePushEvent {
+  constructor(payload) {
+    this.data = {
+      json: () => JSON.parse(payload),
+    };
+    this.waitUntil = promise => {
+      this.waitUntilPromise = promise;
+    };
+  }
+
+  getWaitUntilPromise() {
+    expect(this.waitUntilPromise).not.toBeUndefined();
+    return this.waitUntilPromise;
+  }
+}
+
+const makePushEvent = payload => new FakePushEvent(payload);
 
 const makeBeamsPushEvent = ({
   instanceId = TEST_INSTANCE_ID,
@@ -448,10 +556,11 @@ const makeBeamsPushEvent = ({
   title = TEST_NOTIFICATION_TITLE,
   body = TEST_NOTIFICATION_BODY,
   icon = TEST_NOTIFICATION_ICON,
+  hide_notification_if_site_has_focus = undefined,
 }) =>
   makePushEvent(
     JSON.stringify({
-      notification: { title, body, icon },
+      notification: { title, body, icon, hide_notification_if_site_has_focus },
       data: {
         pusher: {
           instanceId,
@@ -481,3 +590,5 @@ const makeClickEvent = ({ data }) => {
 
 const registerVisibleClient = () =>
   clients.push({ visibilityState: 'visible' });
+
+const registerFocusedClient = () => clients.push({ focused: true });
