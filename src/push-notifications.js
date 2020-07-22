@@ -527,7 +527,7 @@ function isSupportedBrowser() {
 
   if (!isSupported) {
     console.warn(
-      'Whilst in Beta, Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
+      'Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
     );
   }
   return isSupported;
