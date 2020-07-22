@@ -1,8 +1,6 @@
-# Push Notifications Web (BETA)
+# Push Notifications Web
 [![Build Status](https://travis-ci.org/pusher/push-notifications-web.svg?branch=master)](https://travis-ci.org/pusher/push-notifications-web)
 [![Twitter](https://img.shields.io/badge/twitter-@Pusher-blue.svg?style=flat)](http://twitter.com/Pusher)
-
-**Warning: This SDK is in Beta therefore there may be breaking changes in the future. In its current form, the SDK has limitations, which are explained in the [getting started guide](https://pusher.com/docs/beams/getting-started/web/sdk-integration).**
 
 This is the web SDK for the [Pusher Beams](https://pusher.com/beams) service.
 
