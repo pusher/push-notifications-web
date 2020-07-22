@@ -5,5 +5,5 @@
 4. Update version in package manifest
 5. Commit
 6. `git tag <VERSION e.g. 1.2.3>`
-7. `git push --follow-tags`
+7. `git push --tags`
 8. `npm run publish-please`
