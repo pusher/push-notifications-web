@@ -634,12 +634,63 @@ describe('.getRegistrationState', () => {
   });
 });
 
+describe('SDK state', () => {
+  afterEach(() => {
+    jest.resetModules();
+    tearDownGlobals();
+  });
+
+  test('should be reset if subscription changes', () => {
+    const PusherPushNotifications = require('./push-notifications');
+    const devicestatestore = require('./device-state-store');
+
+    let state = { subscription: DUMMY_PUSH_SUBSCRIPTION };
+    setUpGlobals({
+      getSWSubscription: () => {
+        return Promise.resolve(state.subscription);
+      },
+    });
+
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    let deviceId = 'web-1db66b8a-f51f-49de-b225-72591535c855';
+    let newSubscription = { another: 'subscription' };
+    expect(newSubscription).not.toEqual(DUMMY_PUSH_SUBSCRIPTION);
+
+    devicestatestore.default = makeDeviceStateStore({
+      deviceId,
+      token: ENCODED_DUMMY_PUSH_SUBSCRIPTION,
+      userId: 'alice',
+    });
+
+    let beamsClient = new PusherPushNotifications.Client({
+      instanceId,
+    });
+
+    return beamsClient
+      .getDeviceId()
+      .then(returnedDeviceId => {
+        // Device ID should have been set
+        return expect(returnedDeviceId).toEqual(deviceId);
+      })
+      .then(() => {
+        // Change subscription
+        state.subscription = newSubscription;
+      })
+      .then(() => beamsClient.getDeviceId())
+      .then(deviceId => {
+        // Device ID should have been cleared
+        return expect(deviceId).toBeNull();
+      });
+  });
+});
+
 const setUpGlobals = ({
   indexedDBSupport = true,
   serviceWorkerSupport = true,
   webPushSupport = true,
   isSecureContext = true,
   notificationPermission = 'default',
+  getSWSubscription = () => Promise.resolve(DUMMY_PUSH_SUBSCRIPTION),
 }) => {
   if (indexedDBSupport) {
     global.window.indexedDB = {};
@@ -649,7 +700,7 @@ const setUpGlobals = ({
     global.navigator.serviceWorker.register = () => {};
     global.navigator.serviceWorker.ready = Promise.resolve({
       pushManager: {
-        getSubscription: () => Promise.resolve(DUMMY_PUSH_SUBSCRIPTION),
+        getSubscription: getSWSubscription,
       },
     });
   }
