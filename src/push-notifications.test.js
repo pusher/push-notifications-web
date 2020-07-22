@@ -644,10 +644,10 @@ describe('SDK state', () => {
     const PusherPushNotifications = require('./push-notifications');
     const devicestatestore = require('./device-state-store');
 
-    let state = { subscription: DUMMY_PUSH_SUBSCRIPTION };
+    let subscription = DUMMY_PUSH_SUBSCRIPTION;
     setUpGlobals({
       getSWSubscription: () => {
-        return Promise.resolve(state.subscription);
+        return Promise.resolve(subscription);
       },
     });
 
@@ -674,7 +674,7 @@ describe('SDK state', () => {
       })
       .then(() => {
         // Change subscription
-        state.subscription = newSubscription;
+        subscription = newSubscription;
       })
       .then(() => beamsClient.getDeviceId())
       .then(deviceId => {
