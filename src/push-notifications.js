@@ -96,6 +96,20 @@ export class Client {
       this._serviceWorkerRegistration = await getServiceWorkerRegistration();
     }
 
+    await this._detectSubscriptionChange();
+
+    this._deviceId = await this._deviceStateStore.getDeviceId();
+    this._token = await this._deviceStateStore.getToken();
+    this._userId = await this._deviceStateStore.getUserId();
+  }
+
+  // Ensure SDK is loaded and is consistent
+  async _resolveSDKState() {
+    await this._ready;
+    await this._detectSubscriptionChange();
+  }
+
+  async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
     const actualToken = await getWebPushToken(this._serviceWorkerRegistration);
 
@@ -109,22 +123,24 @@ export class Client {
       // This means the SDK has effectively been stopped, so we should update
       // the SDK state to reflect that.
       await this._deviceStateStore.clear();
+      this._deviceId = null;
+      this._token = null;
+      this._userId = null;
     }
-
-    this._deviceId = await this._deviceStateStore.getDeviceId();
-    this._token = await this._deviceStateStore.getToken();
-    this._userId = await this._deviceStateStore.getUserId();
   }
 
-  getDeviceId() {
+  async getDeviceId() {
+    await this._resolveSDKState();
     return this._ready.then(() => this._deviceId);
   }
 
   async getToken() {
+    await this._resolveSDKState();
     return this._ready.then(() => this._token);
   }
 
   async getUserId() {
+    await this._resolveSDKState();
     return this._ready.then(() => this._userId);
   }
 
@@ -144,7 +160,7 @@ export class Client {
   }
 
   async start() {
-    await this._ready;
+    await this._resolveSDKState();
 
     if (!isSupportedBrowser()) {
       return this;
@@ -175,7 +191,7 @@ export class Client {
   }
 
   async getRegistrationState() {
-    await this._ready;
+    await this._resolveSDKState();
 
     if (Notification.permission === 'denied') {
       return RegistrationState.PERMISSION_DENIED;
@@ -193,9 +209,9 @@ export class Client {
   }
 
   async addDeviceInterest(interest) {
-    await this._ready;
-
+    await this._resolveSDKState();
     this._throwIfNotStarted('Could not add Device Interest');
+
     validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
@@ -209,9 +225,9 @@ export class Client {
   }
 
   async removeDeviceInterest(interest) {
-    await this._ready;
-
+    await this._resolveSDKState();
     this._throwIfNotStarted('Could not remove Device Interest');
+
     validateInterestName(interest);
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
@@ -225,8 +241,7 @@ export class Client {
   }
 
   async getDeviceInterests() {
-    await this._ready;
-
+    await this._resolveSDKState();
     this._throwIfNotStarted('Could not get Device Interests');
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
@@ -240,8 +255,7 @@ export class Client {
   }
 
   async setDeviceInterests(interests) {
-    await this._ready;
-
+    await this._resolveSDKState();
     this._throwIfNotStarted('Could not set Device Interests');
 
     if (interests === undefined || interests === null) {
@@ -276,14 +290,14 @@ export class Client {
   }
 
   async clearDeviceInterests() {
-    await this._ready;
-
+    await this._resolveSDKState();
     this._throwIfNotStarted('Could not clear Device Interests');
+
     await this.setDeviceInterests([]);
   }
 
   async setUserId(userId, tokenProvider) {
-    await this._ready;
+    await this._resolveSDKState();
 
     if (!isSupportedBrowser()) {
       return;
@@ -322,7 +336,7 @@ export class Client {
   }
 
   async stop() {
-    await this._ready;
+    await this._resolveSDKState();
 
     if (!isSupportedBrowser()) {
       return;
@@ -342,8 +356,6 @@ export class Client {
   }
 
   async clearAllState() {
-    await this._ready;
-
     if (!isSupportedBrowser()) {
       return;
     }
