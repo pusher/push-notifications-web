@@ -69,7 +69,7 @@ self.PusherPushNotifications = {
         event: eventType,
         deviceId,
         userId,
-        timestampSecs: Date.now() / 1000,
+        timestampSecs: Math.floor(Date.now() / 1000),
         appInBackground,
         hasDisplayableContent,
         hasData,
