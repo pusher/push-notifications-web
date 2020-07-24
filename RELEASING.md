@@ -6,6 +6,7 @@
 5. Check you are logged in to npm `npm whoami`
 6. If not, login via `npm login`
 7. `git tag <VERSION e.g. 1.2.3>`
+8. `git push`
 8. `git push --tags`
 9. `npm run publish-please`
 10. Upload `./dist/push-notifications-cdn` to the appropriate S3 buckets:
