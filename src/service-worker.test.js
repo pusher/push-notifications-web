@@ -12,13 +12,14 @@ let listeners = {};
 let shownNotifications = [];
 let openedWindows = [];
 let clients = [];
-let now = new Date('2000-01-01T00:00:00Z');
+let now;
 
 beforeEach(() => {
   listeners = {};
   shownNotifications = [];
   openedWindows = [];
   clients = [];
+  now = new Date('2000-01-01T00:00:00Z');
 
   global.addEventListener = (name, func) => {
     listeners[name] = func;
@@ -323,6 +324,54 @@ test('SW should send delivery event when notification arrives', () => {
     expect(requestOptions.body.appInBackground).toBe(true);
     expect(requestOptions.body.hasDisplayableContent).toBe(true);
     expect(requestOptions.body.hasData).toBe(false);
+  });
+});
+
+test('SW should send integer timestamp when time has fractional millis', () => {
+  jest.resetModules();
+
+  const devicestatestore = require('./device-state-store');
+  devicestatestore.default = makeDeviceStateStore({
+    deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
+    token: 'some-token',
+    userId: 'alice',
+  });
+
+  const dorequest = require('./do-request');
+  const mockDoRequest = jest.fn();
+  mockDoRequest.mockReturnValueOnce(Promise.resolve('ok'));
+  dorequest.default = mockDoRequest;
+
+  require('./service-worker.js');
+
+  // Given a push event that comes from Pusher
+  const pushEvent = makeBeamsPushEvent({});
+
+  // And that the current time as a fractional millis part
+  now = new Date('2000-01-01T00:00:00.999Z');
+
+  // When the push listener is called
+  const pushListener = listeners['push'];
+  if (!pushListener) {
+    throw new Error('No push listener has been set');
+  }
+  pushListener(pushEvent);
+
+  return new Promise(resolve => setTimeout(resolve, 200)).then(() => {
+    expect(mockDoRequest.mock.calls.length).toBe(1);
+    expect(mockDoRequest.mock.calls[0].length).toBe(1);
+    const requestOptions = mockDoRequest.mock.calls[0][0];
+
+    expect(requestOptions.method).toBe('POST');
+    expect(requestOptions.path).toBe(
+      [
+        `https://${TEST_INSTANCE_ID}.pushnotifications.pusher.com`,
+        `/reporting_api/v2/instances/${TEST_INSTANCE_ID}/events`,
+      ].join('')
+    );
+
+    // Then the timetamp should be rounded down to the nearest second
+    expect(requestOptions.body.timestampSecs).toBe(946684800);
   });
 });
 
