@@ -7,7 +7,7 @@
   "scripts": {
     "build:esm": "rollup -c ./rollup/esm.js",
     "build:cdn": "rollup -c ./rollup/cdn.js",
-    "build:sw": "rollup -c ./rollup/service-worker.js",
+    "build:sw": "rollup -c ./rollup/service-worker.js && node ./scripts/add-version-to-service-worker.js",
     "format": "prettier ./src/**/*.js --write",
     "lint": "eslint ./src/**/*.js && prettier ./src/**/*.js -l",
     "test": "npm run test:unit",
