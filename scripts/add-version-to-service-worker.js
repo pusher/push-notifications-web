@@ -7,21 +7,7 @@ const SW_FILE_PATH = '../dist/service-worker.js';
 
 // Get SDK version
 const packageJSONFullPath = path.join(__dirname, PACKAGE_JSON_PATH);
-let packageJSONContents = '';
-try {
-  packageJSONContents = fs.readFileSync(packageJSONFullPath, 'utf8');
-} catch (e) {
-  console.error('Could not read package.json', e.message);
-  process.exit(1);
-}
-
-let packageJSON = {};
-try {
-  packageJSON = JSON.parse(packageJSONContents);
-} catch (e) {
-  console.error('Could not parse package.json', e.message);
-  process.exit(1);
-}
+const packageJSON = require(packageJSONFullPath);
 
 const version = packageJSON.version;
 if (!version) {
