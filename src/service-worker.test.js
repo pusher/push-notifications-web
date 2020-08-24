@@ -105,19 +105,20 @@ test('SW should show notification when it comes from Pusher', () => {
       icon: TEST_NOTIFICATION_ICON,
       body: TEST_NOTIFICATION_BODY,
       data: {
-        pusherPayload: {
-          notification: {
-            title: TEST_NOTIFICATION_TITLE,
-            body: TEST_NOTIFICATION_BODY,
-            icon: TEST_NOTIFICATION_ICON,
-          },
-          data: {
-            pusher: {
-              instanceId: TEST_INSTANCE_ID,
-              publishId: TEST_PUBLISH_ID,
-              hasDisplayableContent: true,
-              hasData: false,
+        pusher: {
+          customerPayload: {
+            notification: {
+              title: TEST_NOTIFICATION_TITLE,
+              body: TEST_NOTIFICATION_BODY,
+              icon: TEST_NOTIFICATION_ICON,
             },
+            data: {},
+          },
+          pusherMetadata: {
+            instanceId: TEST_INSTANCE_ID,
+            publishId: TEST_PUBLISH_ID,
+            hasDisplayableContent: true,
+            hasData: false,
           },
         },
       },
@@ -215,7 +216,32 @@ test('SW should show correct notification if handleNotification is called', () =
 
   // And should have the correct payload
   const notification = shownNotifications[0];
-  expect(notification.options.body).toEqual('Body has been changed');
+  expect(notification).toEqual({
+    title: TEST_NOTIFICATION_TITLE,
+    options: {
+      icon: TEST_NOTIFICATION_ICON,
+      body: 'Body has been changed', // Notification body should have changed
+      data: {
+        pusher: {
+          customerPayload: {
+            notification: {
+              title: TEST_NOTIFICATION_TITLE,
+              body: 'Body has been changed', // Here too
+              icon: TEST_NOTIFICATION_ICON,
+            },
+            data: {}, // Pusher metadata has been stripped
+          },
+          pusherMetadata: {
+            // But still embedded in the notification, out of band
+            instanceId: TEST_INSTANCE_ID,
+            publishId: TEST_PUBLISH_ID,
+            hasDisplayableContent: true,
+            hasData: false,
+          },
+        },
+      },
+    },
+  });
 });
 
 test('SW should open deep link in click handler if one is provided', () => {
@@ -224,16 +250,20 @@ test('SW should open deep link in click handler if one is provided', () => {
   // Given a notification click event with a deep link
   const clickEvent = makeClickEvent({
     data: {
-      pusherPayload: {
-        notification: {
-          title: 'Hi!',
-          body: 'This is a notification!',
-          deep_link: 'https://pusher.com',
-        },
-        data: {
-          pusher: {
-            publishId: 'some-publish-id',
+      pusher: {
+        customerPayload: {
+          notification: {
+            title: 'Hi!',
+            body: 'This is a notification!',
+            deep_link: 'https://pusher.com',
           },
+          data: {},
+        },
+        pusherMetadata: {
+          instanceId: TEST_INSTANCE_ID,
+          publishId: TEST_PUBLISH_ID,
+          hasDisplayableContent: true,
+          hasData: false,
         },
       },
     },
@@ -395,19 +425,20 @@ test('SW should send open event when notification clicked', () => {
   // Given a notification click event with a deep link
   const clickEvent = makeClickEvent({
     data: {
-      pusherPayload: {
-        notification: {
-          title: 'Hi!',
-          body: 'This is a notification!',
-          deep_link: 'https://pusher.com',
-        },
-        data: {
-          pusher: {
-            instanceId: TEST_INSTANCE_ID,
-            publishId: TEST_PUBLISH_ID,
-            hasDisplayableContent: true,
-            hasData: false,
+      pusher: {
+        customerPayload: {
+          notification: {
+            title: 'Hi!',
+            body: 'This is a notification!',
+            deep_link: 'https://pusher.com',
           },
+          data: {},
+        },
+        pusherMetadata: {
+          instanceId: TEST_INSTANCE_ID,
+          publishId: TEST_PUBLISH_ID,
+          hasDisplayableContent: true,
+          hasData: false,
         },
       },
     },
