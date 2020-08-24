@@ -111,9 +111,12 @@ self.addEventListener('push', e => {
   });
   customerPayload.data = customerData;
 
-  const handleNotification = async payload => {
+  const pusherMetadata = payload.data.pusher;
+
+  const handleNotification = async payloadFromCallback => {
     const hideNotificationIfSiteHasFocus =
-      payload.notification.hide_notification_if_site_has_focus === true;
+      payloadFromCallback.notification.hide_notification_if_site_has_focus ===
+      true;
     if (
       hideNotificationIfSiteHasFocus &&
       (await self.PusherPushNotifications._hasFocusedClient())
@@ -121,14 +124,19 @@ self.addEventListener('push', e => {
       return;
     }
 
-    const title = payload.notification.title || '';
-    const body = payload.notification.body || '';
-    const icon = payload.notification.icon;
+    const title = payloadFromCallback.notification.title || '';
+    const body = payloadFromCallback.notification.body || '';
+    const icon = payloadFromCallback.notification.icon;
 
     const options = {
       body,
       icon,
-      data: { pusherPayload: payload },
+      data: {
+        pusher: {
+          customerPayload: payloadFromCallback,
+          pusherMetadata,
+        },
+      },
     };
 
     return self.registration.showNotification(title, options);
@@ -141,23 +149,25 @@ self.addEventListener('push', e => {
       handleNotification,
     });
   } else {
-    e.waitUntil(handleNotification(payload));
+    e.waitUntil(handleNotification(customerPayload));
   }
 });
 
 self.addEventListener('notificationclick', e => {
-  const { pusherPayload: payload } = e.notification.data;
+  const { pusher } = e.notification.data;
 
-  const isPusherNotification = payload !== undefined;
+  const isPusherNotification = pusher !== undefined;
   if (isPusherNotification) {
     // Report analytics event, best effort
     self.PusherPushNotifications.reportEvent({
       eventType: 'open',
-      pusherMetadata: payload.data.pusher,
+      pusherMetadata: pusher.pusherMetadata,
     });
 
-    if (payload.notification.deep_link) {
-      e.waitUntil(clients.openWindow(payload.notification.deep_link));
+    if (pusher.customerPayload.notification.deep_link) {
+      e.waitUntil(
+        clients.openWindow(pusher.customerPayload.notification.deep_link)
+      );
     }
     e.notification.close();
   }
