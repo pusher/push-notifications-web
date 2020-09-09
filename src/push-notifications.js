@@ -92,7 +92,11 @@ export class Client {
 
     await this._deviceStateStore.connect();
 
-    if (!this._serviceWorkerRegistration) {
+    if (this._serviceWorkerRegistration) {
+      // If we have been given a service worker, wait for it to be ready
+      await window.navigator.serviceWorker.ready;
+    } else {
+      // Otherwise register our own one
       this._serviceWorkerRegistration = await getServiceWorkerRegistration();
     }
 

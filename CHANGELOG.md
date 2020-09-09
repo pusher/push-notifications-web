@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/pusher/push-notifications-web/compare/1.0.1...HEAD)
+ - Fix bug in SDK where we weren't waiting for custom Service Workers to become
+   ready before starting the SDK
 
 ## [1.0.2](https://github.com/pusher/push-notifications-web/compare/1.0.1...1.0.2) - 2020-08-24
 - Fix bug in service worker where analytics events would cause runtime errors
