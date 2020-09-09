@@ -10,6 +10,7 @@ declare module '@pusher/push-notifications-web' {
     url: string;
     queryParams?: { [key: string]: any };
     headers?: { [key: string]: string };
+    credentials?: string;
   }
 
   class TokenProvider implements ITokenProvider {
