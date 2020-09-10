@@ -1,57 +1,52 @@
-declare module '@pusher/push-notifications-web' {
-  export interface TokenProviderResponse {
-    token: string;
-  }
-  export interface ITokenProvider {
-    fetchToken(userId: string): Promise<TokenProviderResponse>;
-  }
+export interface TokenProviderResponse {
+  token: string;
+}
+export interface ITokenProvider {
+  fetchToken(userId: string): Promise<TokenProviderResponse>;
+}
 
-  interface TokenProviderOptions {
-    url: string;
-    queryParams?: { [key: string]: any };
-    headers?: { [key: string]: string };
-    credentials?: string;
-  }
+interface TokenProviderOptions {
+  url: string;
+  queryParams?: { [key: string]: any };
+  headers?: { [key: string]: string };
+  credentials?: string;
+}
 
-  class TokenProvider implements ITokenProvider {
-    constructor(options: TokenProviderOptions);
-    fetchToken(userId: string): Promise<TokenProviderResponse>;
-  }
+export class TokenProvider implements ITokenProvider {
+  constructor(options: TokenProviderOptions);
+  fetchToken(userId: string): Promise<TokenProviderResponse>;
+}
 
-  enum RegistrationState {
-    PERMISSION_GRANTED_REGISTERED_WITH_BEAMS = 'PERMISSION_GRANTED_REGISTERED_WITH_BEAMS',
-    PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS = 'PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS',
-    PERMISSION_PROMPT_REQUIRED = 'PERMISSION_PROMPT_REQUIRED',
-    PERMISSION_DENIED = 'PERMISSION_DENIED',
-  }
+export enum RegistrationState {
+  PERMISSION_GRANTED_REGISTERED_WITH_BEAMS = 'PERMISSION_GRANTED_REGISTERED_WITH_BEAMS',
+  PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS = 'PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS',
+  PERMISSION_PROMPT_REQUIRED = 'PERMISSION_PROMPT_REQUIRED',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+}
 
-  class PushNotificationsInstance {
-    instanceId: string;
-    deviceId: string;
-    userId: string;
+export class Client {
+  instanceId: string;
+  deviceId: string;
+  userId: string;
 
-    start(): Promise<PushNotificationsInstance>;
-    addDeviceInterest(interest: string): Promise<undefined>;
-    removeDeviceInterest(interest: string): Promise<undefined>;
-    getDeviceInterests(): Promise<Array<string>>;
-    setDeviceInterests(interests: Array<string>): Promise<undefined>;
-    clearDeviceInterests(): Promise<undefined>;
-    setUserId(
-      userId: string,
-      tokenProvider: ITokenProvider
-    ): Promise<undefined>;
-    stop(): Promise<undefined>;
-    clearAllState(): Promise<undefined>;
-    getRegistrationState(): Promise<RegistrationState>;
-  }
+  constructor(options: ClientOptions);
 
-  interface InitOptions {
-    instanceId: string;
-    serviceWorkerRegistration?: ServiceWorkerRegistration;
-    endpointOverride?: string;
-  }
+  start(): Promise<undefined>;
+  getDeviceId(): Promise<string>;
+  addDeviceInterest(interest: string): Promise<undefined>;
+  removeDeviceInterest(interest: string): Promise<undefined>;
+  getDeviceInterests(): Promise<Array<string>>;
+  setDeviceInterests(interests: Array<string>): Promise<undefined>;
+  clearDeviceInterests(): Promise<undefined>;
+  getUserId(): Promise<string>;
+  setUserId(userId: string, tokenProvider: ITokenProvider): Promise<undefined>;
+  stop(): Promise<undefined>;
+  clearAllState(): Promise<undefined>;
+  getRegistrationState(): Promise<RegistrationState>;
+}
 
-  export function init(
-    options: InitOptions
-  ): Promise<PushNotificationsInstance>;
+interface ClientOptions {
+  instanceId: string;
+  serviceWorkerRegistration?: ServiceWorkerRegistration;
+  endpointOverride?: string;
 }
