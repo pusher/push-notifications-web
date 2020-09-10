@@ -1,4 +1,10 @@
-export default function doRequest({ method, path, body = null, headers = {}, credentials = 'same-origin' }) {
+export default function doRequest({
+  method,
+  path,
+  body = null,
+  headers = {},
+  credentials = 'same-origin',
+}) {
   const options = {
     method,
     headers,

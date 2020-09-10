@@ -17,7 +17,7 @@ export default class TokenProvider {
       method: 'GET',
       path: `${this.url}?${encodedParams}`,
       headers: this.headers,
-      credentials : this.credentials
+      credentials: this.credentials,
     };
     let response = await doRequest(options);
     return response;
