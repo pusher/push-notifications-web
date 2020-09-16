@@ -9,6 +9,7 @@ interface TokenProviderOptions {
   url: string;
   queryParams?: { [key: string]: any };
   headers?: { [key: string]: string };
+  credentials?: string;
 }
 
 export class TokenProvider implements ITokenProvider {

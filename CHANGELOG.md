@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/pusher/push-notifications-web/compare/1.0.3...HEAD)
+ - Allow the fetch `credentials` option to be overidden in the default TokenProvider
+   implementation.
 
 ## [1.0.3](https://github.com/pusher/push-notifications-web/compare/1.0.2...1.0.3) - 2020-09-10
  - Fix bug in SDK where we weren't waiting for custom Service Workers to become
