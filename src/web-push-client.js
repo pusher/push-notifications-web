@@ -1,15 +1,15 @@
 import doRequest from './do-request';
+import BaseClient from './base-client';
 import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
-
-const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
-const MAX_INTEREST_LENGTH = 164;
-const MAX_INTERESTS_NUM = 5000;
+import { RegistrationState } from './base-client';
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
 
-export class WebPushClient {
+export class WebPushClient extends BaseClient {
   constructor(config) {
+    // TODO can this validation be moved into the base client
+    super(config);
     if (!config) {
       throw new Error('Config object required');
     }
@@ -71,6 +71,7 @@ export class WebPushClient {
     this._serviceWorkerRegistration = serviceWorkerRegistration;
     this._deviceStateStore = new DeviceStateStore(instanceId);
     this._endpoint = endpointOverride; // Internal only
+    this._platform = 'web';
 
     this._ready = this._init();
   }
@@ -97,12 +98,6 @@ export class WebPushClient {
     this._userId = await this._deviceStateStore.getUserId();
   }
 
-  // Ensure SDK is loaded and is consistent
-  async _resolveSDKState() {
-    await this._ready;
-    await this._detectSubscriptionChange();
-  }
-
   async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
     const actualToken = await getWebPushToken(this._serviceWorkerRegistration);
@@ -120,36 +115,6 @@ export class WebPushClient {
       this._deviceId = null;
       this._token = null;
       this._userId = null;
-    }
-  }
-
-  async getDeviceId() {
-    await this._resolveSDKState();
-    return this._ready.then(() => this._deviceId);
-  }
-
-  async getToken() {
-    await this._resolveSDKState();
-    return this._ready.then(() => this._token);
-  }
-
-  async getUserId() {
-    await this._resolveSDKState();
-    return this._ready.then(() => this._userId);
-  }
-
-  get _baseURL() {
-    if (this._endpoint !== null) {
-      return this._endpoint;
-    }
-    return `https://${this.instanceId}.pushnotifications.pusher.com`;
-  }
-
-  _throwIfNotStarted(message) {
-    if (!this._deviceId) {
-      throw new Error(
-        `${message}. SDK not registered with Beams. Did you call .start?`
-      );
     }
   }
 
@@ -200,94 +165,6 @@ export class WebPushClient {
     }
 
     return RegistrationState.PERMISSION_PROMPT_REQUIRED;
-  }
-
-  async addDeviceInterest(interest) {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not add Device Interest');
-
-    validateInterestName(interest);
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests/${encodeURIComponent(interest)}`;
-    const options = {
-      method: 'POST',
-      path,
-    };
-    await doRequest(options);
-  }
-
-  async removeDeviceInterest(interest) {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not remove Device Interest');
-
-    validateInterestName(interest);
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests/${encodeURIComponent(interest)}`;
-    const options = {
-      method: 'DELETE',
-      path,
-    };
-    await doRequest(options);
-  }
-
-  async getDeviceInterests() {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not get Device Interests');
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests`;
-    const options = {
-      method: 'GET',
-      path,
-    };
-    return (await doRequest(options))['interests'] || [];
-  }
-
-  async setDeviceInterests(interests) {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not set Device Interests');
-
-    if (interests === undefined || interests === null) {
-      throw new Error('interests argument is required');
-    }
-    if (!Array.isArray(interests)) {
-      throw new Error('interests argument must be an array');
-    }
-    if (interests.length > MAX_INTERESTS_NUM) {
-      throw new Error(
-        `Number of interests (${
-          interests.length
-        }) exceeds maximum of ${MAX_INTERESTS_NUM}`
-      );
-    }
-    for (let interest of interests) {
-      validateInterestName(interest);
-    }
-
-    const uniqueInterests = Array.from(new Set(interests));
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests`;
-    const options = {
-      method: 'PUT',
-      path,
-      body: {
-        interests: uniqueInterests,
-      },
-    };
-    await doRequest(options);
-  }
-
-  async clearDeviceInterests() {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not clear Device Interests');
-
-    await this.setDeviceInterests([]);
   }
 
   async setUserId(userId, tokenProvider) {
@@ -406,66 +283,7 @@ export class WebPushClient {
     const response = await doRequest(options);
     return response.id;
   }
-
-  async _deleteDevice() {
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${encodeURIComponent(this._deviceId)}`;
-
-    const options = { method: 'DELETE', path };
-    await doRequest(options);
-  }
-
-  /**
-   * Submit SDK version and browser details (via the user agent) to Pusher Beams.
-   */
-  async _updateDeviceMetadata() {
-    const userAgent = window.navigator.userAgent;
-    const storedUserAgent = await this._deviceStateStore.getLastSeenUserAgent();
-    const storedSdkVersion = await this._deviceStateStore.getLastSeenSdkVersion();
-
-    if (userAgent === storedUserAgent && sdkVersion === storedSdkVersion) {
-      // Nothing to do
-      return;
-    }
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/metadata`;
-
-    const metadata = {
-      sdkVersion,
-    };
-
-    const options = { method: 'PUT', path, body: metadata };
-    await doRequest(options);
-
-    await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
-    await this._deviceStateStore.setLastSeenUserAgent(userAgent);
-  }
 }
-
-// TODO this should be in the base client
-const validateInterestName = (interest) => {
-  if (interest === undefined || interest === null) {
-    throw new Error('Interest name is required');
-  }
-  if (typeof interest !== 'string') {
-    throw new Error(`Interest ${interest} is not a string`);
-  }
-  if (!INTERESTS_REGEX.test(interest)) {
-    throw new Error(
-      `interest "${interest}" contains a forbidden character. ` +
-        'Allowed characters are: ASCII upper/lower-case letters, ' +
-        'numbers or one of _-=@,.;'
-    );
-  }
-  if (interest.length > MAX_INTEREST_LENGTH) {
-    throw new Error(
-      `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
-    );
-  }
-};
 
 async function getServiceWorkerRegistration() {
   // Check that service worker file exists

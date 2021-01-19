@@ -1,12 +1,16 @@
 import doRequest from './do-request';
+import BaseClient from './base-client';
 import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
+import { RegistrationState } from './base-client';
 
 const __url = 'https://localhost:8080';
 const __pushId = 'web.io.lees.safari-push';
 
-export class SafariClient {
+export class SafariClient extends BaseClient {
   constructor(config) {
+    // TODO can this validation be moved into the base client
+    super(config);
     if (!config) {
       throw new Error('Config object required');
     }
@@ -40,6 +44,7 @@ export class SafariClient {
     this._userId = null;
     this._deviceStateStore = new DeviceStateStore(instanceId);
     this._endpoint = endpointOverride; // Internal only
+    this._platform = 'safari';
 
     this._ready = this._init();
   }
@@ -161,140 +166,13 @@ export class SafariClient {
     // await this.start();
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // Everything below can be moved to the base client
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  async getDeviceId() {
-    await this._resolveSDKState();
-    return this._ready.then(() => this.deviceId);
-  }
-  async getToken() {
-    await this._resolveSDKState();
-    return this._ready.then(() => this._token);
-  }
-  async getUserId() {
-    await this._resolveSDKState();
-    return this._ready.then(() => this.userId);
-  }
-
-  get _baseURL() {
-    if (this._endpoint !== null) {
-      return this._endpoint;
-    }
-    return `https://${this.instanceId}.pushnotifications.pusher.com`;
-  }
-
-  _throwIfNotStarted(message) {
-    if (!this._deviceId) {
-      throw new Error(
-        `${message}. SDK not registered with Beams. Did you call .start?`
-      );
-    }
-  }
-
-  async _resolveSDKState() {
-    await this._ready;
-    await this._detectSubscriptionChange();
-  }
-
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // copied and pasted from the other client
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  //
-  async addDeviceInterest(interest) {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not add Device Interest');
-
-    validateInterestName(interest);
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests/${encodeURIComponent(interest)}`;
-    const options = {
-      method: 'POST',
-      path,
-    };
-    await doRequest(options);
-  }
-
-  async removeDeviceInterest(interest) {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not remove Device Interest');
-
-    validateInterestName(interest);
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests/${encodeURIComponent(interest)}`;
-    const options = {
-      method: 'DELETE',
-      path,
-    };
-    await doRequest(options);
-  }
-
-  async getDeviceInterests() {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not get Device Interests');
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests`;
-    const options = {
-      method: 'GET',
-      path,
-    };
-    return (await doRequest(options))['interests'] || [];
-  }
-
-  async setDeviceInterests(interests) {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not set Device Interests');
-
-    if (interests === undefined || interests === null) {
-      throw new Error('interests argument is required');
-    }
-    if (!Array.isArray(interests)) {
-      throw new Error('interests argument must be an array');
-    }
-    if (interests.length > MAX_INTERESTS_NUM) {
-      throw new Error(
-        `Number of interests (${
-          interests.length
-        }) exceeds maximum of ${MAX_INTERESTS_NUM}`
-      );
-    }
-    for (let interest of interests) {
-      validateInterestName(interest);
-    }
-
-    const uniqueInterests = Array.from(new Set(interests));
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/interests`;
-    const options = {
-      method: 'PUT',
-      path,
-      body: {
-        interests: uniqueInterests,
-      },
-    };
-    await doRequest(options);
-  }
-
-  async clearDeviceInterests() {
-    await this._resolveSDKState();
-    this._throwIfNotStarted('Could not clear Device Interests');
-
-    await this.setDeviceInterests([]);
-  }
-
+  // TODO these _should_ be movable, just need to resolve the isSupported thing
   async setUserId(userId, tokenProvider) {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
-      return;
-    }
+    // if (!isSupportedBrowser()) {
+    //   return;
+    // }
 
     if (this._deviceId === null) {
       const error = new Error('.start must be called before .setUserId');
@@ -347,71 +225,11 @@ export class SafariClient {
     this._token = null;
     this._userId = null;
   }
-
-  async _deleteDevice() {
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${encodeURIComponent(this._deviceId)}`;
-
-    const options = { method: 'DELETE', path };
-    await doRequest(options);
-  }
-
-  // TODO is this ever used?
-  /**
-   * Submit SDK version and browser details (via the user agent) to Pusher Beams.
-   */
-  async _updateDeviceMetadata() {
-    const userAgent = window.navigator.userAgent;
-    const storedUserAgent = await this._deviceStateStore.getLastSeenUserAgent();
-    const storedSdkVersion = await this._deviceStateStore.getLastSeenSdkVersion();
-
-    if (userAgent === storedUserAgent && sdkVersion === storedSdkVersion) {
-      // Nothing to do
-      return;
-    }
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/metadata`;
-
-    const metadata = {
-      sdkVersion,
-    };
-
-    const options = { method: 'PUT', path, body: metadata };
-    await doRequest(options);
-
-    await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
-    await this._deviceStateStore.setLastSeenUserAgent(userAgent);
-  }
 }
 
 function isSupportedVersion() {
   return 'safari' in window && 'pushNotification' in window.safari;
 }
-
-// TODO should be in base client
-const validateInterestName = (interest) => {
-  if (interest === undefined || interest === null) {
-    throw new Error('Interest name is required');
-  }
-  if (typeof interest !== 'string') {
-    throw new Error(`Interest ${interest} is not a string`);
-  }
-  if (!INTERESTS_REGEX.test(interest)) {
-    throw new Error(
-      `interest "${interest}" contains a forbidden character. ` +
-        'Allowed characters are: ASCII upper/lower-case letters, ' +
-        'numbers or one of _-=@,.;'
-    );
-  }
-  if (interest.length > MAX_INTEREST_LENGTH) {
-    throw new Error(
-      `Interest is longer than the maximum of ${MAX_INTEREST_LENGTH} chars`
-    );
-  }
-};
 
 function getPermission(pushId) {
   return window.safari.pushNotification.permission(pushId);
