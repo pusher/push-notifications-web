@@ -1,1 +1,1 @@
-importScripts('/src/service-worker.js');
+importScripts('/dist/service-worker.js');
