@@ -178,6 +178,24 @@ export default class BaseClient {
     await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
     await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
+
+  async _registerDevice(deviceToken) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/${this._platform}`;
+
+    const device = {
+      token,
+      metadata: {
+        sdkVersion,
+      },
+    };
+
+    const options = { method: 'POST', path, body: device };
+    const response = await doRequest(options);
+    return response.id;
+  }
+
 }
 
 function validateInterestName(interest) {

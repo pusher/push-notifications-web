@@ -267,24 +267,6 @@ export class WebPushClient extends BaseClient {
       });
   }
 
-  async _registerDevice(token) {
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web`;
-
-    const device = {
-      token,
-      metadata: {
-        sdkVersion,
-      },
-    };
-
-    const options = { method: 'POST', path, body: device };
-    const response = await doRequest(options);
-    return response.id;
-  }
-}
-
 async function getServiceWorkerRegistration() {
   // Check that service worker file exists
   const { status: swStatusCode } = await fetch(SERVICE_WORKER_URL);

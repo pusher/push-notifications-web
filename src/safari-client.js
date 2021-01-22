@@ -113,29 +113,6 @@ export class SafariClient extends BaseClient {
     }
   }
 
-  async _registerDevice(deviceToken) {
-    // const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-    //   this.instanceId
-    // )}/devices/web`;
-
-    // const device = {
-    //   token,
-    //   metadata: {
-    //     sdkVersion,
-    //   },
-    // };
-
-    // const options = { method: 'POST', path, body: device };
-    // const response = await doRequest(options);
-    // return response.id;
-    return new Promise((resolve) => {
-      console.debug(
-        'I should be sending the device token to errol now, but that is not implemented yet'
-      );
-      resolve('not--a--real--device--id');
-    });
-  }
-
   async getRegistrationState() {
     await this._resolveSDKState();
 
