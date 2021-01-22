@@ -134,6 +134,8 @@ export class SafariClient extends BaseClient {
   }
 
   async clearAllState() {
+    // TODO we can only call start() in a user gesture so this may not work in
+    // safari, can't we clear the state another way
     throw new Error('Not implemented');
     // if (!isSupportedBrowser()) {
     //   return;
@@ -143,7 +145,10 @@ export class SafariClient extends BaseClient {
     // await this.start();
   }
 
-  // TODO these _should_ be movable, just need to resolve the isSupported thing
+  // TODO these seem similar enough to go in the base client but
+  // isSupportedBrowser is going to be different for safari/web-push. It's not
+  // clear to me at the moment why we need to check whether the browser is
+  // supported here anyway
   async setUserId(userId, tokenProvider) {
     await this._resolveSDKState();
 
