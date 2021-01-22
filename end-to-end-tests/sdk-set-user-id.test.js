@@ -1,5 +1,10 @@
 import { ErrolTestClient } from './errol-client';
-import { launchServer, createChromeWebDriver, NOTIFICATIONS_GRANTED } from './test-utils';
+import {
+  launchServer,
+  createChromeWebDriver,
+  NOTIFICATIONS_GRANTED,
+  unregisterServiceWorker
+} from './test-utils';
 
 let killServer = null;
 let chromeDriver = null;
@@ -38,8 +43,11 @@ beforeEach(() => {
       deleteDbRequest.onsuccess = asyncScriptReturnCallback;
       deleteDbRequest.onerror = asyncScriptReturnCallback;
     });
+
   })();
 });
+
+afterEach(() => unregisterServiceWorker(chromeDriver));
 
 test('SDK should set user id with errol', async () => {
   await chromeDriver.get('http://localhost:3000');

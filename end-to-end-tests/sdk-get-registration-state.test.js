@@ -1,4 +1,11 @@
-import { launchServer, createChromeWebDriver, NOTIFICATIONS_DEFAULT, NOTIFICATIONS_GRANTED, NOTIFICATIONS_DENIED } from './test-utils';
+import {
+  launchServer,
+  createChromeWebDriver,
+  NOTIFICATIONS_DEFAULT,
+  NOTIFICATIONS_GRANTED,
+  NOTIFICATIONS_DENIED,
+  unregisterServiceWorker
+} from './test-utils';
 import * as PusherPushNotifications from '../src/push-notifications';
 
 let killServer = null;
@@ -87,10 +94,11 @@ test('.getState should return PERMISSION_DENIED if start has not been called and
 
 afterEach(async () => {
   if (chromeDriver) {
+    await unregisterServiceWorker(chromeDriver)
     await chromeDriver.quit();
   }
 })
-  
+
 afterAll(() => {
   if (killServer) {
     killServer();

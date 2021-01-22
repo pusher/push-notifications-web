@@ -1,4 +1,9 @@
-import { launchServer, createChromeWebDriver, NOTIFICATIONS_GRANTED } from './test-utils';
+import {
+  launchServer,
+  createChromeWebDriver,
+  NOTIFICATIONS_GRANTED,
+  unregisterServiceWorker
+} from './test-utils';
 
 let killServer = null;
 let chromeDriver = null;
@@ -13,6 +18,8 @@ beforeAll(() => {
       chromeDriver = driver;
     });
 });
+
+afterEach(() => unregisterServiceWorker(chromeDriver));
 
 test('SDK should register a device with errol', async () => {
   await chromeDriver.get('http://localhost:3000');
