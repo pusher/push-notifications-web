@@ -4,23 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="./dist/push-notifications-cdn.js"></script>
     <title>Example</title>
   </head>
   <body>
-    <script src="./dist/push-notifications-cdn.js"></script>
-    <script>
-      let tokenProvider = new PusherPushNotifications.TokenProvider({
-        url: 'https://deadc0de-beams-test-server.herokuapp.com/auth',
-      });
-
-      let beamsClient;
-      PusherPushNotifications.init({
-        instanceId: 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b',
-      })
-        .then(c => {
-          beamsClient = c;
-        })
-        .catch(console.error);
-    </script>
+    <h1>Example</h1>
+    <button id="start">Start Beams</button>
   </body>
+  <script>
+    const beamsClient = new PusherPushNotifications.Client({
+      instanceId: '2e65aab4-a26e-4cca-a9e6-b68589627a8d',
+    });
+
+    document.querySelector('#start').addEventListener('click', function() {
+      beamsClient
+        .start()
+        .then(() => {
+          console.log('Successfully started beams client');
+        })
+        .catch((err) => {
+          console.error('Error starting beams client', err);
+        });
+    });
+  </script>
 </html>

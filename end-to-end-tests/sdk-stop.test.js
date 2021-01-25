@@ -1,5 +1,10 @@
 import { ErrolTestClient } from './errol-client';
-import { launchServer, createChromeWebDriver, NOTIFICATIONS_GRANTED } from './test-utils';
+import {
+  launchServer,
+  createChromeWebDriver,
+  NOTIFICATIONS_GRANTED,
+  unregisterServiceWorker
+} from './test-utils';
 
 let killServer = null;
 let chromeDriver = null;
@@ -33,6 +38,8 @@ beforeEach(() => {
     });
   })();
 });
+
+afterEach(() => unregisterServiceWorker(chromeDriver));
 
 test('Calling .stop should clear SDK state', async () => {
   const errolClient = new ErrolTestClient(

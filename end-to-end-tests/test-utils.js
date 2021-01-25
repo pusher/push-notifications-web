@@ -150,6 +150,17 @@ export async function createChromeWebDriver(notificationPermission = NOTIFICATIO
   return driver;
 }
 
+export async function unregisterServiceWorker(chromeDriver) {
+  return chromeDriver.executeAsyncScript(async () => {
+    const asyncScriptReturnCallback = arguments[arguments.length - 1];
+    let serviceWorkerRegistration = await window.navigator.serviceWorker.getRegistration()
+    if (serviceWorkerRegistration) {
+      await serviceWorkerRegistration.unregister()
+    }
+    asyncScriptReturnCallback()
+  })
+}
+
 function createTempBrowserPreferences(testSiteURL, notificationPermission) {
   let notifications = {}
   if (notificationPermission !== NOTIFICATIONS_DEFAULT) {
@@ -195,3 +206,4 @@ function rimraf(dir_path) {
     fs.rmdirSync(dir_path);
   }
 }
+
