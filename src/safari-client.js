@@ -4,9 +4,6 @@ import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 import { RegistrationState } from './base-client';
 
-const __url = 'https://localhost:8080';
-const __pushId = 'web.io.lees.safari-push';
-
 export class SafariClient extends BaseClient {
   constructor(config) {
     // TODO can this validation be moved into the base client
@@ -49,12 +46,22 @@ export class SafariClient extends BaseClient {
     this._ready = this._init();
   }
 
+  fetchWebsitePushId(instanceId) {
+    return fetch('/website_push_id.json')
+      .then(res => res.json())
+      .then(data => data.website_push_id);
+  }
+
   async _init() {
     if (this._deviceId !== null) {
       return;
     }
 
     await this._deviceStateStore.connect();
+
+    this._websitePushId = await this.fetchWebsitePushId(this.instanceId);
+    // TODO temporary
+    this._serviceURL = 'https://localhost:8080';
 
     await this._detectSubscriptionChange();
 
@@ -65,7 +72,7 @@ export class SafariClient extends BaseClient {
 
   async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
-    const actualToken = getDeviceToken();
+    const actualToken = getDeviceToken(this._websitePushId);
 
     const tokenHasChanged = storedToken !== actualToken;
     if (tokenHasChanged) {
@@ -81,8 +88,8 @@ export class SafariClient extends BaseClient {
   _requestPermission() {
     return new Promise(resolve => {
       window.safari.pushNotification.requestPermission(
-        __url,
-        __pushId,
+        this._serviceURL,
+        this._websitePushId,
         { userID: 'abcdef' },
         resolve
       );
@@ -90,17 +97,24 @@ export class SafariClient extends BaseClient {
   }
 
   async start() {
+    await this.ready;
+
     if (this._deviceId !== null) {
       return this;
     }
 
-    let { permission } = getPermission(__pushId);
+    let { permission } = getPermission(this._websitePushId);
 
     if (permission === 'default') {
-      console.debug('permission is default, requesting permission');
-      let { deviceToken, permission } = await this._requestPermission(__pushId);
+      let { deviceToken, permission } = await this._requestPermission(
+        this._websitePushId
+      );
+      console.log('permission', deviceToken, permission);
       if (permission == 'granted') {
-        const deviceId = await this._registerDevice(deviceToken);
+        const deviceId = await this._registerDevice(
+          deviceToken,
+          this._websitePushId
+        );
         await this._deviceStateStore.setToken(deviceToken);
         await this._deviceStateStore.setDeviceId(deviceId);
         await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
@@ -116,7 +130,7 @@ export class SafariClient extends BaseClient {
   async getRegistrationState() {
     await this._resolveSDKState();
 
-    const { permission } = getPermission(__pushId);
+    const { permission } = getPermission(this._websitePushId);
 
     if (permission === 'denied') {
       return RegistrationState.PERMISSION_DENIED;
@@ -207,6 +221,24 @@ export class SafariClient extends BaseClient {
     this._token = null;
     this._userId = null;
   }
+
+  async _registerDevice(token, websitePushId) {
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/${this._platform}`;
+
+    const device = {
+      token,
+      websitePushId,
+      metadata: {
+        sdkVersion,
+      },
+    };
+
+    const options = { method: 'POST', path, body: device };
+    const response = await doRequest(options);
+    return response.id;
+  }
 }
 
 function isSupportedBrowser() {
@@ -217,10 +249,10 @@ function isSupportedVersion() {
   return 'safari' in window && 'pushNotification' in window.safari;
 }
 
-function getPermission(pushId) {
-  return window.safari.pushNotification.permission(pushId);
+function getPermission(websitePushId) {
+  return window.safari.pushNotification.permission(websitePushId);
 }
-function getDeviceToken() {
-  const { deviceToken } = window.safari.pushNotification.permission(__pushId);
+function getDeviceToken(websitePushId) {
+  const { deviceToken } = getPermission(websitePushId);
   return deviceToken;
 }
