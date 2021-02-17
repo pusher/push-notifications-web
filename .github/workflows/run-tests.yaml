@@ -1,0 +1,27 @@
+name: run-tests
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - master
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - uses: nanasess/setup-chromedriver@master
+      - name: "Install deps"
+        run: npm install
+      - name: "Lint"
+        run: npm run lint
+      - name: "Run unit tests"
+        run: npm run test:unit
+      - name: "Run end-to-end tests"
+        run: |
+          npm run build:cdn
+          npm run test:e2e
