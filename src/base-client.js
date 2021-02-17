@@ -185,7 +185,7 @@ export default class BaseClient {
     )}/devices/${this._platform}`;
 
     const device = {
-      token,
+      deviceToken,
       metadata: {
         sdkVersion,
       },
