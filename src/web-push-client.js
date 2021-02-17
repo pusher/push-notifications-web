@@ -266,6 +266,7 @@ export class WebPushClient extends BaseClient {
         if (sub) sub.unsubscribe();
       });
   }
+}
 
 async function getServiceWorkerRegistration() {
   // Check that service worker file exists
