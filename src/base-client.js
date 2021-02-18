@@ -180,13 +180,13 @@ export default class BaseClient {
     await this._deviceStateStore.setLastSeenUserAgent(userAgent);
   }
 
-  async _registerDevice(deviceToken) {
+  async _registerDevice(token) {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/devices/${this._platform}`;
 
     const device = {
-      deviceToken,
+      token,
       metadata: {
         sdkVersion,
       },
