@@ -100,7 +100,10 @@ export class SafariClient extends BaseClient {
       console.debug('permission is default, requesting permission');
       let { deviceToken, permission } = await this._requestPermission(__pushId);
       if (permission == 'granted') {
-        const deviceId = await this._registerDevice(deviceToken);
+        const deviceId = await this._registerDevice(
+          deviceToken,
+          this._websitePushId
+        );
         await this._deviceStateStore.setToken(deviceToken);
         await this._deviceStateStore.setDeviceId(deviceId);
         await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
@@ -206,6 +209,16 @@ export class SafariClient extends BaseClient {
     this._deviceId = null;
     this._token = null;
     this._userId = null;
+  }
+
+  async _registerDevice(token, websitePushId) {
+    return await super._registerDevice({
+      token,
+      websitePushId,
+      metadata: {
+        sdkVersion,
+      },
+    });
   }
 }
 

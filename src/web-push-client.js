@@ -266,6 +266,15 @@ export class WebPushClient extends BaseClient {
         if (sub) sub.unsubscribe();
       });
   }
+
+  async _registerDevice(token) {
+    return await super._registerDevice({
+      token,
+      metadata: {
+        sdkVersion,
+      },
+    });
+  }
 }
 
 async function getServiceWorkerRegistration() {
