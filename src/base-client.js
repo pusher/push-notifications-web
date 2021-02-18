@@ -1,4 +1,5 @@
 import doRequest from './do-request';
+import { version as sdkVersion } from '../package.json';
 
 const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
 const MAX_INTEREST_LENGTH = 164;
@@ -14,7 +15,7 @@ export const RegistrationState = Object.freeze({
 });
 
 export default class BaseClient {
-  constructor(config) {}
+  constructor(_) {}
 
   async getDeviceId() {
     await this._resolveSDKState();
@@ -195,7 +196,6 @@ export default class BaseClient {
     const response = await doRequest(options);
     return response.id;
   }
-
 }
 
 function validateInterestName(interest) {

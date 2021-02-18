@@ -261,8 +261,8 @@ export class WebPushClient extends BaseClient {
 
   async _clearPushToken() {
     return navigator.serviceWorker.ready
-      .then((reg) => reg.pushManager.getSubscription())
-      .then((sub) => {
+      .then(reg => reg.pushManager.getSubscription())
+      .then(sub => {
         if (sub) sub.unsubscribe();
       });
   }
@@ -289,7 +289,7 @@ async function getServiceWorkerRegistration() {
 function getWebPushToken(swReg) {
   return swReg.pushManager
     .getSubscription()
-    .then((sub) => (!sub ? null : encodeSubscription(sub)));
+    .then(sub => (!sub ? null : encodeSubscription(sub)));
 }
 
 function encodeSubscription(sub) {
@@ -300,7 +300,7 @@ function urlBase64ToUInt8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
 /**

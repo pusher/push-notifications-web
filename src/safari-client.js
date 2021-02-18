@@ -79,7 +79,7 @@ export class SafariClient extends BaseClient {
   }
 
   _requestPermission() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       window.safari.pushNotification.requestPermission(
         __url,
         __pushId,
@@ -94,7 +94,7 @@ export class SafariClient extends BaseClient {
       return this;
     }
 
-    let { deviceToken, permission } = getPermission(__pushId);
+    let { permission } = getPermission(__pushId);
 
     if (permission === 'default') {
       console.debug('permission is default, requesting permission');
@@ -207,6 +207,10 @@ export class SafariClient extends BaseClient {
     this._token = null;
     this._userId = null;
   }
+}
+
+function isSupportedBrowser() {
+  return isSupportedVersion();
 }
 
 function isSupportedVersion() {
