@@ -51,7 +51,7 @@ export class SafariClient extends BaseClient {
 
   async _init() {
     // Temporary until the website push id endpoint is up and running
-    this._websitePushId = __pushId;
+    this._websitePushId = await this._fetchWebsitePushId();
     this._serviceUrl = __url;
 
     if (this._deviceId !== null) {
@@ -228,6 +228,13 @@ export class SafariClient extends BaseClient {
       metadata: {
         sdkVersion,
       },
+    });
+  }
+
+  _fetchWebsitePushId() {
+    return new Promise(resolve => {
+      // TODO temporary
+      resolve(__pushId);
     });
   }
 }
