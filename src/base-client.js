@@ -224,6 +224,45 @@ export default class BaseClient {
     const response = await doRequest(options);
     return response.id;
   }
+
+  async setUserId(userId, tokenProvider) {
+    await this._resolveSDKState();
+
+    if (!this._isSupportedBrowser()) {
+      return;
+    }
+
+    if (this._deviceId === null) {
+      const error = new Error('.start must be called before .setUserId');
+      return Promise.reject(error);
+    }
+    if (typeof userId !== 'string') {
+      throw new Error(`User ID must be a string (was ${userId})`);
+    }
+    if (userId === '') {
+      throw new Error('User ID cannot be the empty string');
+    }
+    if (this._userId !== null && this._userId !== userId) {
+      throw new Error('Changing the `userId` is not allowed.');
+    }
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this._deviceId}/user`;
+
+    const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
+    const options = {
+      method: 'PUT',
+      path,
+      headers: {
+        Authorization: `Bearer ${beamsAuthToken}`,
+      },
+    };
+    await doRequest(options);
+
+    this._userId = userId;
+    return this._deviceStateStore.setUserId(userId);
+  }
 }
 
 function validateInterestName(interest) {

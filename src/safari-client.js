@@ -127,49 +127,6 @@ export class SafariClient extends BaseClient {
     // await this.start();
   }
 
-  // TODO these seem similar enough to go in the base client but
-  // isSupportedBrowser is going to be different for safari/web-push. It's not
-  // clear to me at the moment why we need to check whether the browser is
-  // supported here anyway
-  async setUserId(userId, tokenProvider) {
-    await this._resolveSDKState();
-
-    if (!this._isSupportedBrowser()) {
-      return;
-    }
-
-    if (this._deviceId === null) {
-      const error = new Error('.start must be called before .setUserId');
-      return Promise.reject(error);
-    }
-    if (typeof userId !== 'string') {
-      throw new Error(`User ID must be a string (was ${userId})`);
-    }
-    if (userId === '') {
-      throw new Error('User ID cannot be the empty string');
-    }
-    if (this._userId !== null && this._userId !== userId) {
-      throw new Error('Changing the `userId` is not allowed.');
-    }
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/user`;
-
-    const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
-    const options = {
-      method: 'PUT',
-      path,
-      headers: {
-        Authorization: `Bearer ${beamsAuthToken}`,
-      },
-    };
-    await doRequest(options);
-
-    this._userId = userId;
-    return this._deviceStateStore.setUserId(userId);
-  }
-
   async stop() {
     await this._resolveSDKState();
 
