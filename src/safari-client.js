@@ -11,7 +11,7 @@ const platform = 'safari';
 export class SafariClient extends BaseClient {
   constructor(config) {
     super(config, platform);
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       throw new Error(
         'Pusher Beams does not support this Safari version (Safari Push Notifications not supported)'
       );
@@ -119,7 +119,7 @@ export class SafariClient extends BaseClient {
     // TODO we can only call start() in a user gesture so this may not work in
     // safari, can't we clear the state another way
     throw new Error('Not implemented');
-    // if (!isSupportedBrowser()) {
+    // if (!this._isSupportedBrowser()) {
     //   return;
     // }
 
@@ -134,7 +134,7 @@ export class SafariClient extends BaseClient {
   async setUserId(userId, tokenProvider) {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -173,7 +173,7 @@ export class SafariClient extends BaseClient {
   async stop() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -206,11 +206,11 @@ export class SafariClient extends BaseClient {
       resolve(__pushId);
     });
   }
+  _isSupportedBrowser() {
+    return 'safari' in window && 'pushNotification' in window.safari;
+  }
 }
 
-function isSupportedBrowser() {
-  return 'safari' in window && 'pushNotification' in window.safari;
-}
 
 function getPermission(pushId) {
   return window.safari.pushNotification.permission(pushId);

@@ -89,7 +89,7 @@ export class WebPushClient extends BaseClient {
   async start() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return this;
     }
 
@@ -138,7 +138,7 @@ export class WebPushClient extends BaseClient {
   async setUserId(userId, tokenProvider) {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -177,7 +177,7 @@ export class WebPushClient extends BaseClient {
   async stop() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -195,7 +195,7 @@ export class WebPushClient extends BaseClient {
   }
 
   async clearAllState() {
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -243,6 +243,32 @@ export class WebPushClient extends BaseClient {
       },
     });
   }
+
+  /**
+   * Modified from https://stackoverflow.com/questions/4565112
+   */
+  _isSupportedBrowser() {
+    const winNav = window.navigator;
+    const vendorName = winNav.vendor;
+
+    const isChromium =
+      window.chrome !== null && typeof window.chrome !== 'undefined';
+    const isOpera = winNav.userAgent.indexOf('OPR') > -1;
+    const isEdge = winNav.userAgent.indexOf('Edg') > -1;
+    const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
+
+    const isChrome =
+      isChromium && vendorName === 'Google Inc.' && !isEdge && !isOpera;
+
+    const isSupported = isChrome || isOpera || isFirefox || isEdge;
+
+    if (!isSupported) {
+      console.warn(
+        'Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
+      );
+    }
+    return isSupported;
+  }
 }
 
 async function getServiceWorkerRegistration() {
@@ -280,28 +306,3 @@ function urlBase64ToUInt8Array(base64String) {
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
-/**
- * Modified from https://stackoverflow.com/questions/4565112
- */
-function isSupportedBrowser() {
-  const winNav = window.navigator;
-  const vendorName = winNav.vendor;
-
-  const isChromium =
-    window.chrome !== null && typeof window.chrome !== 'undefined';
-  const isOpera = winNav.userAgent.indexOf('OPR') > -1;
-  const isEdge = winNav.userAgent.indexOf('Edg') > -1;
-  const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
-
-  const isChrome =
-    isChromium && vendorName === 'Google Inc.' && !isEdge && !isOpera;
-
-  const isSupported = isChrome || isOpera || isFirefox || isEdge;
-
-  if (!isSupported) {
-    console.warn(
-      'Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
-    );
-  }
-  return isSupported;
-}
