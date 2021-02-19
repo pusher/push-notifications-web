@@ -15,6 +15,19 @@ export const RegistrationState = Object.freeze({
   PERMISSION_DENIED: 'PERMISSION_DENIED',
 });
 
+/* BaseClient is an abstract client containing functionality shared between
+ * safari and web push clients. Platform specific classes should extend this
+ * class. This method expects sub classes to implement the following public
+ * methods:
+ * async start()
+ * async getRegistrationState() {
+ * async stop() {
+ * async clearAllState() {
+ *
+ * It also assumes that the following private methods are implemented:
+ * async _init()
+ * async _detectSubscriptionChange()
+ */
 export default class BaseClient {
   constructor(config, platform) {
     if (this.constructor === BaseClient) {
