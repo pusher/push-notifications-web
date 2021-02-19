@@ -1,4 +1,3 @@
-import doRequest from './do-request';
 import BaseClient from './base-client';
 import { version as sdkVersion } from '../package.json';
 import { RegistrationState } from './base-client';
@@ -167,7 +166,6 @@ export class SafariClient extends BaseClient {
     return 'safari' in window && 'pushNotification' in window.safari;
   }
 }
-
 
 function getPermission(pushId) {
   return window.safari.pushNotification.permission(pushId);

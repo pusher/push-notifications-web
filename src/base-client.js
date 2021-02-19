@@ -263,6 +263,26 @@ export default class BaseClient {
     this._userId = userId;
     return this._deviceStateStore.setUserId(userId);
   }
+
+  async start() {
+    throwNotImplementedError('start');
+  }
+  async getRegistrationState() {
+    throwNotImplementedError('getRegistrationState');
+  }
+  async stop() {
+    throwNotImplementedError('stop');
+  }
+  async clearAllState() {
+    throwNotImplementedError('clearAllState');
+  }
+}
+
+function throwNotImplementedError(method) {
+  throw new Error(
+    `${method} not implemented on abstract BaseClient.` +
+      'Instantiate either WebPushClient or SafariClient'
+  );
 }
 
 function validateInterestName(interest) {
