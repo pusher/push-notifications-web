@@ -1,56 +1,26 @@
 import doRequest from './do-request';
 import BaseClient from './base-client';
-import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 import { RegistrationState } from './base-client';
 
 const __url = 'https://localhost:8080';
 const __pushId = 'web.io.lees.safari-push';
 
+const platform = 'safari';
+
 export class SafariClient extends BaseClient {
   constructor(config) {
-    // TODO can this validation be moved into the base client
-    super(config);
-    if (!config) {
-      throw new Error('Config object required');
-    }
-    const { instanceId, endpointOverride = null } = config;
-
-    if (instanceId === undefined) {
-      throw new Error('Instance ID is required');
-    }
-    if (typeof instanceId !== 'string') {
-      throw new Error('Instance ID must be a string');
-    }
-    if (instanceId.length === 0) {
-      throw new Error('Instance ID cannot be empty');
-    }
-
-    if (!('indexedDB' in window)) {
+    super(config, platform);
+    if (!isSupportedBrowser()) {
       throw new Error(
-        'Pusher Beams does not support this browser version (IndexedDB not supported)'
+        'Pusher Beams does not support this Safari version (Safari Push Notifications not supported)'
       );
     }
-
-    if (!isSupportedVersion()) {
-      throw new Error(
-        'Pusher Beams does not support this safari version (Safari Push Noifications not supported)'
-      );
-    }
-
-    this.instanceId = instanceId;
-    this._deviceId = null;
-    this._token = null;
-    this._userId = null;
-    this._deviceStateStore = new DeviceStateStore(instanceId);
-    this._endpoint = endpointOverride; // Internal only
-    this._platform = 'safari';
 
     this._ready = this._init();
   }
 
   async _init() {
-    // Temporary until the website push id endpoint is up and running
     this._websitePushId = await this._fetchWebsitePushId();
     this._serviceUrl = __url;
 
@@ -59,7 +29,6 @@ export class SafariClient extends BaseClient {
     }
 
     await this._deviceStateStore.connect();
-
     await this._detectSubscriptionChange();
 
     this._deviceId = await this._deviceStateStore.getDeviceId(
@@ -165,9 +134,9 @@ export class SafariClient extends BaseClient {
   async setUserId(userId, tokenProvider) {
     await this._resolveSDKState();
 
-    // if (!isSupportedBrowser()) {
-    //   return;
-    // }
+    if (!isSupportedBrowser()) {
+      return;
+    }
 
     if (this._deviceId === null) {
       const error = new Error('.start must be called before .setUserId');
@@ -240,10 +209,6 @@ export class SafariClient extends BaseClient {
 }
 
 function isSupportedBrowser() {
-  return isSupportedVersion();
-}
-
-function isSupportedVersion() {
   return 'safari' in window && 'pushNotification' in window.safari;
 }
 

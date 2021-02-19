@@ -1,39 +1,14 @@
 import doRequest from './do-request';
 import BaseClient from './base-client';
-import DeviceStateStore from './device-state-store';
 import { version as sdkVersion } from '../package.json';
 import { RegistrationState } from './base-client';
 
 const SERVICE_WORKER_URL = `/service-worker.js?pusherBeamsWebSDKVersion=${sdkVersion}`;
+const platform = 'web';
 
 export class WebPushClient extends BaseClient {
   constructor(config) {
-    // TODO can this validation be moved into the base client
-    super(config);
-    if (!config) {
-      throw new Error('Config object required');
-    }
-    const {
-      instanceId,
-      endpointOverride = null,
-      serviceWorkerRegistration = null,
-    } = config;
-
-    if (instanceId === undefined) {
-      throw new Error('Instance ID is required');
-    }
-    if (typeof instanceId !== 'string') {
-      throw new Error('Instance ID must be a string');
-    }
-    if (instanceId.length === 0) {
-      throw new Error('Instance ID cannot be empty');
-    }
-
-    if (!('indexedDB' in window)) {
-      throw new Error(
-        'Pusher Beams does not support this browser version (IndexedDB not supported)'
-      );
-    }
+    super(config, platform);
 
     if (!window.isSecureContext) {
       throw new Error(
@@ -53,6 +28,8 @@ export class WebPushClient extends BaseClient {
       );
     }
 
+    const { serviceWorkerRegistration = null } = config;
+
     if (serviceWorkerRegistration) {
       const serviceWorkerScope = serviceWorkerRegistration.scope;
       const currentURL = window.location.href;
@@ -63,16 +40,7 @@ export class WebPushClient extends BaseClient {
         );
       }
     }
-
-    this.instanceId = instanceId;
-    this._deviceId = null;
-    this._token = null;
-    this._userId = null;
     this._serviceWorkerRegistration = serviceWorkerRegistration;
-    this._deviceStateStore = new DeviceStateStore(instanceId);
-    this._endpoint = endpointOverride; // Internal only
-    this._platform = 'web';
-
     this._ready = this._init();
   }
 
