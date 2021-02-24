@@ -115,15 +115,16 @@ export class SafariClient extends BaseClient {
   }
 
   async clearAllState() {
-    // TODO we can only call start() in a user gesture so this may not work in
-    // safari, can't we clear the state another way
-    throw new Error('Not implemented');
-    // if (!this._isSupportedBrowser()) {
-    //   return;
-    // }
+    if (!this._isSupportedBrowser()) {
+      return;
+    }
 
-    // await this.stop();
-    // await this.start();
+    await this._deleteDevice();
+    await this._deviceStateStore.clear();
+
+    this._deviceId = null;
+    this._token = null;
+    this._userId = null;
   }
 
   async stop() {
@@ -136,14 +137,7 @@ export class SafariClient extends BaseClient {
     if (this._deviceId === null) {
       return;
     }
-
-    await this._deleteDevice();
-    await this._deviceStateStore.clear();
-    this._clearPushToken().catch(() => {}); // Not awaiting this, best effort.
-
-    this._deviceId = null;
-    this._token = null;
-    this._userId = null;
+    await this.clearAllState();
   }
 
   async _registerDevice(token, websitePushId) {
