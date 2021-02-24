@@ -43,8 +43,9 @@ export class SafariClient extends BaseClient {
 
     const tokenHasChanged = storedToken !== actualToken;
     if (tokenHasChanged) {
-      // The device token has changed. This is should only really happen when
-      // users restore from an iCloud backup
+      // The device token has changed. This could be because the user has
+      // rescinded permission, or because the user has restored from a backup.
+      // Either way we should clear out the old state
       await this._deviceStateStore.clear();
       this._deviceId = null;
       this._token = null;
@@ -53,6 +54,12 @@ export class SafariClient extends BaseClient {
   }
 
   _requestPermission() {
+    // Check to see whether we've already asked for permission, if we have we
+    // can't ask again
+    let { deviceToken, permission } = getPermission(this._websitePushId);
+    if (permission !== 'default') {
+      return Promise.resolve({ deviceToken, permission });
+    }
     return new Promise(resolve => {
       window.safari.pushNotification.requestPermission(
         this._serviceUrl,
@@ -70,27 +77,20 @@ export class SafariClient extends BaseClient {
       return this;
     }
 
-    let { permission } = getPermission(this._websitePushId);
-
-    if (permission === 'default') {
-      console.debug('permission is default, requesting permission');
-      let { deviceToken, permission } = await this._requestPermission(
+    let { deviceToken, permission } = await this._requestPermission();
+    if (permission == 'granted') {
+      const deviceId = await this._registerDevice(
+        deviceToken,
         this._websitePushId
       );
-      if (permission == 'granted') {
-        const deviceId = await this._registerDevice(
-          deviceToken,
-          this._websitePushId
-        );
-        await this._deviceStateStore.setToken(deviceToken);
-        await this._deviceStateStore.setDeviceId(deviceId);
-        await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
-        await this._deviceStateStore.setLastSeenUserAgent(
-          window.navigator.userAgent
-        );
-        this._token = deviceToken;
-        this._deviceId = deviceId;
-      }
+      await this._deviceStateStore.setToken(deviceToken);
+      await this._deviceStateStore.setDeviceId(deviceId);
+      await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
+      await this._deviceStateStore.setLastSeenUserAgent(
+        window.navigator.userAgent
+      );
+      this._token = deviceToken;
+      this._deviceId = deviceId;
     }
   }
 
