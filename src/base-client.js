@@ -1,5 +1,6 @@
 import doRequest from './do-request';
 import { version as sdkVersion } from '../package.json';
+import DeviceStateStore from './device-state-store';
 
 const INTERESTS_REGEX = new RegExp('^(_|\\-|=|@|,|\\.|;|[A-Z]|[a-z]|[0-9])*$');
 const MAX_INTEREST_LENGTH = 164;
@@ -15,7 +16,41 @@ export const RegistrationState = Object.freeze({
 });
 
 export default class BaseClient {
-  constructor(_) {}
+  constructor(config, platform) {
+    if (this.constructor === BaseClient) {
+      throw new Error(
+        'BaseClient is abstract and should not be directly constructed.'
+      );
+    }
+
+    if (!config) {
+      throw new Error('Config object required');
+    }
+
+    const { instanceId, endpointOverride = null } = config;
+    if (instanceId === undefined) {
+      throw new Error('Instance ID is required');
+    }
+    if (typeof instanceId !== 'string') {
+      throw new Error('Instance ID must be a string');
+    }
+    if (instanceId.length === 0) {
+      throw new Error('Instance ID cannot be empty');
+    }
+
+    if (!('indexedDB' in window)) {
+      throw new Error(
+        'Pusher Beams does not support this browser version (IndexedDB not supported)'
+      );
+    }
+    this.instanceId = instanceId;
+    this._deviceId = null;
+    this._token = null;
+    this._userId = null;
+    this._deviceStateStore = new DeviceStateStore(instanceId);
+    this._endpoint = endpointOverride; // Internal only
+    this._platform = platform;
+  }
 
   async getDeviceId() {
     await this._resolveSDKState();
@@ -25,6 +60,7 @@ export default class BaseClient {
     await this._resolveSDKState();
     return this._ready.then(() => this._token);
   }
+
   async getUserId() {
     await this._resolveSDKState();
     return this._ready.then(() => this._userId);
