@@ -89,7 +89,7 @@ export class WebPushClient extends BaseClient {
   async start() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return this;
     }
 
@@ -135,49 +135,10 @@ export class WebPushClient extends BaseClient {
     return RegistrationState.PERMISSION_PROMPT_REQUIRED;
   }
 
-  async setUserId(userId, tokenProvider) {
-    await this._resolveSDKState();
-
-    if (!isSupportedBrowser()) {
-      return;
-    }
-
-    if (this._deviceId === null) {
-      const error = new Error('.start must be called before .setUserId');
-      return Promise.reject(error);
-    }
-    if (typeof userId !== 'string') {
-      throw new Error(`User ID must be a string (was ${userId})`);
-    }
-    if (userId === '') {
-      throw new Error('User ID cannot be the empty string');
-    }
-    if (this._userId !== null && this._userId !== userId) {
-      throw new Error('Changing the `userId` is not allowed.');
-    }
-
-    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
-      this.instanceId
-    )}/devices/web/${this._deviceId}/user`;
-
-    const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
-    const options = {
-      method: 'PUT',
-      path,
-      headers: {
-        Authorization: `Bearer ${beamsAuthToken}`,
-      },
-    };
-    await doRequest(options);
-
-    this._userId = userId;
-    return this._deviceStateStore.setUserId(userId);
-  }
-
   async stop() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -195,7 +156,7 @@ export class WebPushClient extends BaseClient {
   }
 
   async clearAllState() {
-    if (!isSupportedBrowser()) {
+    if (!this._isSupportedBrowser()) {
       return;
     }
 
@@ -243,6 +204,32 @@ export class WebPushClient extends BaseClient {
       },
     });
   }
+
+  /**
+   * Modified from https://stackoverflow.com/questions/4565112
+   */
+  _isSupportedBrowser() {
+    const winNav = window.navigator;
+    const vendorName = winNav.vendor;
+
+    const isChromium =
+      window.chrome !== null && typeof window.chrome !== 'undefined';
+    const isOpera = winNav.userAgent.indexOf('OPR') > -1;
+    const isEdge = winNav.userAgent.indexOf('Edg') > -1;
+    const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
+
+    const isChrome =
+      isChromium && vendorName === 'Google Inc.' && !isEdge && !isOpera;
+
+    const isSupported = isChrome || isOpera || isFirefox || isEdge;
+
+    if (!isSupported) {
+      console.warn(
+        'Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
+      );
+    }
+    return isSupported;
+  }
 }
 
 async function getServiceWorkerRegistration() {
@@ -278,30 +265,4 @@ function urlBase64ToUInt8Array(base64String) {
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
   return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
-}
-
-/**
- * Modified from https://stackoverflow.com/questions/4565112
- */
-function isSupportedBrowser() {
-  const winNav = window.navigator;
-  const vendorName = winNav.vendor;
-
-  const isChromium =
-    window.chrome !== null && typeof window.chrome !== 'undefined';
-  const isOpera = winNav.userAgent.indexOf('OPR') > -1;
-  const isEdge = winNav.userAgent.indexOf('Edg') > -1;
-  const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
-
-  const isChrome =
-    isChromium && vendorName === 'Google Inc.' && !isEdge && !isOpera;
-
-  const isSupported = isChrome || isOpera || isFirefox || isEdge;
-
-  if (!isSupported) {
-    console.warn(
-      'Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
-    );
-  }
-  return isSupported;
 }

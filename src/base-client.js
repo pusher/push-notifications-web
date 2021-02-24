@@ -15,6 +15,19 @@ export const RegistrationState = Object.freeze({
   PERMISSION_DENIED: 'PERMISSION_DENIED',
 });
 
+/* BaseClient is an abstract client containing functionality shared between
+ * safari and web push clients. Platform specific classes should extend this
+ * class. This method expects sub classes to implement the following public
+ * methods:
+ * async start()
+ * async getRegistrationState() {
+ * async stop() {
+ * async clearAllState() {
+ *
+ * It also assumes that the following private methods are implemented:
+ * async _init()
+ * async _detectSubscriptionChange()
+ */
 export default class BaseClient {
   constructor(config, platform) {
     if (this.constructor === BaseClient) {
@@ -224,6 +237,65 @@ export default class BaseClient {
     const response = await doRequest(options);
     return response.id;
   }
+
+  async setUserId(userId, tokenProvider) {
+    await this._resolveSDKState();
+
+    if (!this._isSupportedBrowser()) {
+      return;
+    }
+
+    if (this._deviceId === null) {
+      const error = new Error('.start must be called before .setUserId');
+      return Promise.reject(error);
+    }
+    if (typeof userId !== 'string') {
+      throw new Error(`User ID must be a string (was ${userId})`);
+    }
+    if (userId === '') {
+      throw new Error('User ID cannot be the empty string');
+    }
+    if (this._userId !== null && this._userId !== userId) {
+      throw new Error('Changing the `userId` is not allowed.');
+    }
+
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/devices/web/${this._deviceId}/user`;
+
+    const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
+    const options = {
+      method: 'PUT',
+      path,
+      headers: {
+        Authorization: `Bearer ${beamsAuthToken}`,
+      },
+    };
+    await doRequest(options);
+
+    this._userId = userId;
+    return this._deviceStateStore.setUserId(userId);
+  }
+
+  async start() {
+    throwNotImplementedError('start');
+  }
+  async getRegistrationState() {
+    throwNotImplementedError('getRegistrationState');
+  }
+  async stop() {
+    throwNotImplementedError('stop');
+  }
+  async clearAllState() {
+    throwNotImplementedError('clearAllState');
+  }
+}
+
+function throwNotImplementedError(method) {
+  throw new Error(
+    `${method} not implemented on abstract BaseClient.` +
+      'Instantiate either WebPushClient or SafariClient'
+  );
 }
 
 function validateInterestName(interest) {
