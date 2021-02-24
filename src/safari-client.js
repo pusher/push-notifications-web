@@ -39,7 +39,7 @@ export class SafariClient extends BaseClient {
 
   async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
-    const actualToken = getDeviceToken(this._websitePushId);
+    const { deviceToken: actualToken } = getPermission(this._websitePushId);
 
     const tokenHasChanged = storedToken !== actualToken;
     if (tokenHasChanged) {
@@ -167,12 +167,6 @@ export class SafariClient extends BaseClient {
   }
 }
 
-function getPermission(pushId) {
-  return window.safari.pushNotification.permission(pushId);
-}
-function getDeviceToken(websitePushId) {
-  const { deviceToken } = window.safari.pushNotification.permission(
-    websitePushId
-  );
-  return deviceToken;
+function getPermission(websitePushId) {
+  return window.safari.pushNotification.permission(websitePushId);
 }
