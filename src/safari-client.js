@@ -50,6 +50,10 @@ export class SafariClient extends BaseClient {
   }
 
   async _init() {
+    // Temporary until the website push id endpoint is up and running
+    this._websitePushId = await this._fetchWebsitePushId();
+    this._serviceUrl = __url;
+
     if (this._deviceId !== null) {
       return;
     }
@@ -58,14 +62,16 @@ export class SafariClient extends BaseClient {
 
     await this._detectSubscriptionChange();
 
-    this._deviceId = await this._deviceStateStore.getDeviceId();
+    this._deviceId = await this._deviceStateStore.getDeviceId(
+      this._websitePushId
+    );
     this._token = await this._deviceStateStore.getToken();
     this._userId = await this._deviceStateStore.getUserId();
   }
 
   async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
-    const actualToken = getDeviceToken();
+    const actualToken = getDeviceToken(this._websitePushId);
 
     const tokenHasChanged = storedToken !== actualToken;
     if (tokenHasChanged) {
@@ -81,8 +87,8 @@ export class SafariClient extends BaseClient {
   _requestPermission() {
     return new Promise(resolve => {
       window.safari.pushNotification.requestPermission(
-        __url,
-        __pushId,
+        this._serviceUrl,
+        this._websitePushId,
         { userID: 'abcdef' },
         resolve
       );
@@ -90,15 +96,19 @@ export class SafariClient extends BaseClient {
   }
 
   async start() {
+    await this.ready;
+
     if (this._deviceId !== null) {
       return this;
     }
 
-    let { permission } = getPermission(__pushId);
+    let { permission } = getPermission(this._websitePushId);
 
     if (permission === 'default') {
       console.debug('permission is default, requesting permission');
-      let { deviceToken, permission } = await this._requestPermission(__pushId);
+      let { deviceToken, permission } = await this._requestPermission(
+        this._websitePushId
+      );
       if (permission == 'granted') {
         const deviceId = await this._registerDevice(
           deviceToken,
@@ -119,7 +129,7 @@ export class SafariClient extends BaseClient {
   async getRegistrationState() {
     await this._resolveSDKState();
 
-    const { permission } = getPermission(__pushId);
+    const { permission } = getPermission(this._websitePushId);
 
     if (permission === 'denied') {
       return RegistrationState.PERMISSION_DENIED;
@@ -220,6 +230,13 @@ export class SafariClient extends BaseClient {
       },
     });
   }
+
+  _fetchWebsitePushId() {
+    return new Promise(resolve => {
+      // TODO temporary
+      resolve(__pushId);
+    });
+  }
 }
 
 function isSupportedBrowser() {
@@ -233,7 +250,9 @@ function isSupportedVersion() {
 function getPermission(pushId) {
   return window.safari.pushNotification.permission(pushId);
 }
-function getDeviceToken() {
-  const { deviceToken } = window.safari.pushNotification.permission(__pushId);
+function getDeviceToken(websitePushId) {
+  const { deviceToken } = window.safari.pushNotification.permission(
+    websitePushId
+  );
   return deviceToken;
 }
