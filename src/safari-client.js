@@ -1,10 +1,9 @@
+import doRequest from './do-request';
 import BaseClient from './base-client';
 import { version as sdkVersion } from '../package.json';
 import { RegistrationState } from './base-client';
 
 const __url = 'https://localhost:8080';
-const __pushId = 'web.io.lees.safari-push';
-
 const platform = 'safari';
 
 export class SafariClient extends BaseClient {
@@ -20,7 +19,8 @@ export class SafariClient extends BaseClient {
   }
 
   async _init() {
-    this._websitePushId = await this._fetchWebsitePushId();
+    let { websitePushId } = await this._fetchWebsitePushId();
+    this._websitePushId = websitePushId;
     this._serviceUrl = __url;
 
     if (this._deviceId !== null) {
@@ -64,7 +64,7 @@ export class SafariClient extends BaseClient {
       window.safari.pushNotification.requestPermission(
         this._serviceUrl,
         this._websitePushId,
-        { userID: 'abcdef' },
+        {},
         resolve
       );
     });
@@ -151,11 +151,14 @@ export class SafariClient extends BaseClient {
   }
 
   _fetchWebsitePushId() {
-    return new Promise(resolve => {
-      // TODO temporary
-      resolve(__pushId);
-    });
+    const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
+      this.instanceId
+    )}/safari-website-push-id`;
+
+    const options = { method: 'GET', path };
+    return doRequest(options);
   }
+
   _isSupportedBrowser() {
     return 'safari' in window && 'pushNotification' in window.safari;
   }
