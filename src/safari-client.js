@@ -39,12 +39,15 @@ export class SafariClient extends BaseClient {
 
   async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
-    const actualToken = getDeviceToken(this._websitePushId);
+    const { deviceToken: actualToken } = getCurrentPermission(
+      this._websitePushId
+    );
 
     const tokenHasChanged = storedToken !== actualToken;
     if (tokenHasChanged) {
-      // The device token has changed. This is should only really happen when
-      // users restore from an iCloud backup
+      // The device token has changed. This could be because the user has
+      // rescinded permission, or because the user has restored from a backup.
+      // Either way we should clear out the old state
       await this._deviceStateStore.clear();
       this._deviceId = null;
       this._token = null;
@@ -53,6 +56,12 @@ export class SafariClient extends BaseClient {
   }
 
   _requestPermission() {
+    // Check to see whether we've already asked for permission, if we have we
+    // can't ask again
+    let { deviceToken, permission } = getCurrentPermission(this._websitePushId);
+    if (permission !== 'default') {
+      return Promise.resolve({ deviceToken, permission });
+    }
     return new Promise(resolve => {
       window.safari.pushNotification.requestPermission(
         this._serviceUrl,
@@ -70,34 +79,27 @@ export class SafariClient extends BaseClient {
       return this;
     }
 
-    let { permission } = getPermission(this._websitePushId);
-
-    if (permission === 'default') {
-      console.debug('permission is default, requesting permission');
-      let { deviceToken, permission } = await this._requestPermission(
+    let { deviceToken, permission } = await this._requestPermission();
+    if (permission == 'granted') {
+      const deviceId = await this._registerDevice(
+        deviceToken,
         this._websitePushId
       );
-      if (permission == 'granted') {
-        const deviceId = await this._registerDevice(
-          deviceToken,
-          this._websitePushId
-        );
-        await this._deviceStateStore.setToken(deviceToken);
-        await this._deviceStateStore.setDeviceId(deviceId);
-        await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
-        await this._deviceStateStore.setLastSeenUserAgent(
-          window.navigator.userAgent
-        );
-        this._token = deviceToken;
-        this._deviceId = deviceId;
-      }
+      await this._deviceStateStore.setToken(deviceToken);
+      await this._deviceStateStore.setDeviceId(deviceId);
+      await this._deviceStateStore.setLastSeenSdkVersion(sdkVersion);
+      await this._deviceStateStore.setLastSeenUserAgent(
+        window.navigator.userAgent
+      );
+      this._token = deviceToken;
+      this._deviceId = deviceId;
     }
   }
 
   async getRegistrationState() {
     await this._resolveSDKState();
 
-    const { permission } = getPermission(this._websitePushId);
+    const { permission } = getCurrentPermission(this._websitePushId);
 
     if (permission === 'denied') {
       return RegistrationState.PERMISSION_DENIED;
@@ -115,15 +117,16 @@ export class SafariClient extends BaseClient {
   }
 
   async clearAllState() {
-    // TODO we can only call start() in a user gesture so this may not work in
-    // safari, can't we clear the state another way
-    throw new Error('Not implemented');
-    // if (!this._isSupportedBrowser()) {
-    //   return;
-    // }
+    if (!this._isSupportedBrowser()) {
+      return;
+    }
 
-    // await this.stop();
-    // await this.start();
+    await this._deleteDevice();
+    await this._deviceStateStore.clear();
+
+    this._deviceId = null;
+    this._token = null;
+    this._userId = null;
   }
 
   async stop() {
@@ -136,14 +139,7 @@ export class SafariClient extends BaseClient {
     if (this._deviceId === null) {
       return;
     }
-
-    await this._deleteDevice();
-    await this._deviceStateStore.clear();
-    this._clearPushToken().catch(() => {}); // Not awaiting this, best effort.
-
-    this._deviceId = null;
-    this._token = null;
-    this._userId = null;
+    await this.clearAllState();
   }
 
   async _registerDevice(token, websitePushId) {
@@ -167,12 +163,6 @@ export class SafariClient extends BaseClient {
   }
 }
 
-function getPermission(pushId) {
-  return window.safari.pushNotification.permission(pushId);
-}
-function getDeviceToken(websitePushId) {
-  const { deviceToken } = window.safari.pushNotification.permission(
-    websitePushId
-  );
-  return deviceToken;
+function getCurrentPermission(websitePushId) {
+  return window.safari.pushNotification.permission(websitePushId);
 }
