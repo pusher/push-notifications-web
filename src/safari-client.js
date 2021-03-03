@@ -39,7 +39,9 @@ export class SafariClient extends BaseClient {
 
   async _detectSubscriptionChange() {
     const storedToken = await this._deviceStateStore.getToken();
-    const { deviceToken: actualToken } = getPermission(this._websitePushId);
+    const { deviceToken: actualToken } = getCurrentPermission(
+      this._websitePushId
+    );
 
     const tokenHasChanged = storedToken !== actualToken;
     if (tokenHasChanged) {
@@ -56,7 +58,7 @@ export class SafariClient extends BaseClient {
   _requestPermission() {
     // Check to see whether we've already asked for permission, if we have we
     // can't ask again
-    let { deviceToken, permission } = getPermission(this._websitePushId);
+    let { deviceToken, permission } = getCurrentPermission(this._websitePushId);
     if (permission !== 'default') {
       return Promise.resolve({ deviceToken, permission });
     }
@@ -97,7 +99,7 @@ export class SafariClient extends BaseClient {
   async getRegistrationState() {
     await this._resolveSDKState();
 
-    const { permission } = getPermission(this._websitePushId);
+    const { permission } = getCurrentPermission(this._websitePushId);
 
     if (permission === 'denied') {
       return RegistrationState.PERMISSION_DENIED;
@@ -161,6 +163,6 @@ export class SafariClient extends BaseClient {
   }
 }
 
-function getPermission(websitePushId) {
+function getCurrentPermission(websitePushId) {
   return window.safari.pushNotification.permission(websitePushId);
 }
