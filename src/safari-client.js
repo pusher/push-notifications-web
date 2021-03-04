@@ -3,7 +3,6 @@ import BaseClient from './base-client';
 import { version as sdkVersion } from '../package.json';
 import { RegistrationState } from './base-client';
 
-const __url = 'https://localhost:8080';
 const platform = 'safari';
 
 export class SafariClient extends BaseClient {
@@ -21,7 +20,9 @@ export class SafariClient extends BaseClient {
   async _init() {
     let { websitePushId } = await this._fetchWebsitePushId();
     this._websitePushId = websitePushId;
-    this._serviceUrl = __url;
+    this._serviceUrl = `${
+      this._baseURL
+    }/safari_api/v1/instances/${encodeURIComponent(this.instanceId)}`;
 
     if (this._deviceId !== null) {
       return;
