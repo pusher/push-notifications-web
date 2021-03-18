@@ -20,7 +20,7 @@ export class SafariClient extends BaseClient {
   async _init() {
     this._websitePushId = await this._fetchWebsitePushId();
     if (this._websitePushId === null) {
-      return
+      return;
     }
     this._serviceUrl = `${
       this._baseURL
@@ -174,6 +174,16 @@ export class SafariClient extends BaseClient {
 
   _isSupportedBrowser() {
     return 'safari' in window && 'pushNotification' in window.safari;
+  }
+
+  // Checks whether the browser is supported, but also whether the instance has
+  // safari credentials configured
+  async isSupportedBrowser() {
+    if (!this._isSupportedBrowser()) {
+      return false;
+    }
+    await this._ready;
+    return this._websitePushId != null;
   }
 }
 

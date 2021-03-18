@@ -230,6 +230,12 @@ export class WebPushClient extends BaseClient {
     }
     return isSupported;
   }
+
+  // This method doesn't do anything asynchronous, but the safari equivalent
+  // does and the API should be the same
+  async isSupportedBrowser() {
+    return this._isSupportedBrowser();
+  }
 }
 
 async function getServiceWorkerRegistration() {
