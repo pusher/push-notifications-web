@@ -18,8 +18,10 @@ export class SafariClient extends BaseClient {
   }
 
   async _init() {
-    let { websitePushId } = await this._fetchWebsitePushId();
-    this._websitePushId = websitePushId;
+    this._websitePushId = await this._fetchWebsitePushId();
+    if (this._websitePushId === null) {
+      return
+    }
     this._serviceUrl = `${
       this._baseURL
     }/safari_api/v1/instances/${encodeURIComponent(this.instanceId)}`;
@@ -153,13 +155,21 @@ export class SafariClient extends BaseClient {
     });
   }
 
-  _fetchWebsitePushId() {
+  async _fetchWebsitePushId() {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/safari-website-push-id`;
 
     const options = { method: 'GET', path };
-    return doRequest(options);
+    try {
+      let { websitePushId } = await doRequest(options);
+      return websitePushId;
+    } catch (err) {
+      if (err.message.match(/Unexpected status code 404/)) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   _isSupportedBrowser() {
