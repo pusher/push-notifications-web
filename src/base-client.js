@@ -261,7 +261,7 @@ export default class BaseClient {
 
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
-    )}/devices/web/${this._deviceId}/user`;
+    )}/devices/${this._platform}/${this._deviceId}/user`;
 
     const { token: beamsAuthToken } = await tokenProvider.fetchToken(userId);
     const options = {

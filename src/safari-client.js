@@ -63,13 +63,17 @@ export class SafariClient extends BaseClient {
     if (permission !== 'default') {
       return Promise.resolve({ deviceToken, permission });
     }
-    return new Promise(resolve => {
-      window.safari.pushNotification.requestPermission(
-        this._serviceUrl,
-        this._websitePushId,
-        {},
-        resolve
-      );
+    return new Promise((resolve, reject) => {
+      try {
+        window.safari.pushNotification.requestPermission(
+          this._serviceUrl,
+          this._websitePushId,
+          {},
+          resolve
+        );
+      } catch (e) {
+        reject(e);
+      }
     });
   }
 
@@ -95,6 +99,7 @@ export class SafariClient extends BaseClient {
       this._token = deviceToken;
       this._deviceId = deviceId;
     }
+    return this;
   }
 
   async getRegistrationState() {
