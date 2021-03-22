@@ -10,22 +10,23 @@ export class WebPushClient extends BaseClient {
   constructor(config) {
     super(config, platform);
 
+    this.error = null;
     if (!window.isSecureContext) {
-      throw new Error(
-        'Pusher Beams relies on Service Workers, which only work in secure contexts. Check that your page is being served from localhost/over HTTPS'
-      );
+      this.error =
+        'Pusher Beams relies on Service Workers, which only work in secure contexts. Check that your page is being served from localhost/over HTTPS';
+      return;
     }
 
     if (!('serviceWorker' in navigator)) {
-      throw new Error(
-        'Pusher Beams does not support this browser version (Service Workers not supported)'
-      );
+      this.error =
+        'Pusher Beams does not support this browser version (Service Workers not supported)';
+      return;
     }
 
     if (!('PushManager' in window)) {
-      throw new Error(
-        'Pusher Beams does not support this browser version (Web Push not supported)'
-      );
+      this.error =
+        'Pusher Beams does not support this browser version (Web Push not supported)';
+      return;
     }
 
     const { serviceWorkerRegistration = null } = config;
@@ -35,9 +36,8 @@ export class WebPushClient extends BaseClient {
       const currentURL = window.location.href;
       const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
       if (!scopeMatchesCurrentPage) {
-        throw new Error(
-          `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
-        );
+        this.error = `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`;
+        return;
       }
     }
     this._serviceWorkerRegistration = serviceWorkerRegistration;
@@ -231,10 +231,9 @@ export class WebPushClient extends BaseClient {
     return isSupported;
   }
 
-  // This method doesn't do anything asynchronous, but the safari equivalent
-  // does and the API should be the same
   async isSupportedBrowser() {
-    return this._isSupportedBrowser();
+    await this._ready;
+    return this.error === null;
   }
 }
 

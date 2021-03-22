@@ -8,20 +8,23 @@ const platform = 'safari';
 export class SafariClient extends BaseClient {
   constructor(config) {
     super(config, platform);
-    if (!this._isSupportedBrowser()) {
-      throw new Error(
-        'Pusher Beams does not support this Safari version (Safari Push Notifications not supported)'
-      );
-    }
-
     this._ready = this._init();
   }
 
   async _init() {
-    this._websitePushId = await this._fetchWebsitePushId();
-    if (this._websitePushId === null) {
+    this.error = null;
+    if (!this._isSupportedBrowser()) {
+      this.error = 'Pusher Beams does not support this Safari version';
       return;
     }
+
+    this._websitePushId = await this._fetchWebsitePushId();
+    if (this._websitePushId === null) {
+      this.error =
+        'Safari credentials are not configured for this Pusher Beams instance';
+      return;
+    }
+
     this._serviceUrl = `${
       this._baseURL
     }/safari_api/v1/instances/${encodeURIComponent(this.instanceId)}`;
@@ -173,17 +176,16 @@ export class SafariClient extends BaseClient {
   }
 
   _isSupportedBrowser() {
-    return 'safari' in window && 'pushNotification' in window.safari;
+    return (
+      'safari' in window &&
+      'pushNotification' in window.safari &&
+      'indexedDB' in window
+    );
   }
 
-  // Checks whether the browser is supported, but also whether the instance has
-  // safari credentials configured
   async isSupportedBrowser() {
-    if (!this._isSupportedBrowser()) {
-      return false;
-    }
     await this._ready;
-    return this._websitePushId != null;
+    return this.error === null;
   }
 }
 
