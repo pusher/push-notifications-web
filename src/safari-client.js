@@ -98,6 +98,8 @@ export class SafariClient extends BaseClient {
       );
       this._token = deviceToken;
       this._deviceId = deviceId;
+    } else if (permission === 'denied') {
+      throw new Error('Registration failed - permission denied');
     }
     return this;
   }
