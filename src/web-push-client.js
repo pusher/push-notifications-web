@@ -36,8 +36,9 @@ export class WebPushClient extends BaseClient {
       const currentURL = window.location.href;
       const scopeMatchesCurrentPage = currentURL.startsWith(serviceWorkerScope);
       if (!scopeMatchesCurrentPage) {
-        this.error = `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`;
-        return;
+        throw new Error(
+          `Could not initialize Pusher web push: current page not in serviceWorkerRegistration scope (${serviceWorkerScope})`
+        );
       }
     }
     this._serviceWorkerRegistration = serviceWorkerRegistration;

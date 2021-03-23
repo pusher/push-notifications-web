@@ -44,32 +44,6 @@ describe('Constructor', () => {
     ).toThrow('IndexedDB not supported');
   });
 
-  test('will throw if the SDK is loaded from a context that is not secure', () => {
-    setUpGlobals({ isSecureContext: false });
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(
-      () => new PusherPushNotifications.Client({ instanceId })
-    ).toThrow(
-      'Pusher Beams relies on Service Workers, which only work in secure contexts'
-    );
-  });
-
-  test('will throw if ServiceWorkerRegistration not supported', () => {
-    setUpGlobals({ serviceWorkerSupport: false });
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(
-      () => new PusherPushNotifications.Client({ instanceId })
-    ).toThrow('Service Workers not supported');
-  });
-
-  test('will throw if Web Push not supported', () => {
-    setUpGlobals({ webPushSupport: false });
-    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
-    return expect(
-      () => new PusherPushNotifications.Client({ instanceId })
-    ).toThrow('Web Push not supported');
-  });
-
   test('will return properly configured instance otherwise', () => {
     const PusherPushNotifications = require('./push-notifications');
     const devicestatestore = require('./device-state-store');
@@ -681,6 +655,44 @@ describe('SDK state', () => {
         // Device ID should have been cleared
         return expect(deviceId).toBeNull();
       });
+  });
+});
+
+describe('.browserIsSupported', () => {
+  afterEach(() => {
+    jest.resetModules();
+    tearDownGlobals();
+  });
+  test('will resolve to false if the SDK is loaded from a context that is not secure', () => {
+    setUpGlobals({ isSecureContext: false });
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    const client = new PusherPushNotifications.Client({ instanceId });
+    return client.isSupportedBrowser().then(result => {
+      expect(result).toEqual(false);
+      expect(client.error).toMatch(
+        'Pusher Beams relies on Service Workers, which only work in secure contexts'
+      );
+    });
+  });
+
+  test('will resolve to false if ServiceWorkerRegistration not supported', () => {
+    setUpGlobals({ serviceWorkerSupport: false });
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    const client = new PusherPushNotifications.Client({ instanceId });
+    return client.isSupportedBrowser().then(result => {
+      expect(result).toEqual(false);
+      expect(client.error).toMatch('Service Workers not supported');
+    });
+  });
+
+  test('will resolve to false if Web Push not supported', () => {
+    setUpGlobals({ webPushSupport: false });
+    const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+    const client = new PusherPushNotifications.Client({ instanceId });
+    return client.isSupportedBrowser().then(result => {
+      expect(result).toEqual(false);
+      expect(client.error).toMatch('Web Push not supported');
+    });
   });
 });
 
