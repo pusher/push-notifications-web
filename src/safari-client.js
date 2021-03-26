@@ -78,7 +78,7 @@ export class SafariClient extends BaseClient {
   }
 
   async start() {
-    await this.ready;
+    await this._ready;
 
     if (this._deviceId !== null) {
       return this;
