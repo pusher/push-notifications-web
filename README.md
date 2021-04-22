@@ -1,5 +1,5 @@
 # Push Notifications Web
-[![Build Status](https://travis-ci.org/pusher/push-notifications-web.svg?branch=master)](https://travis-ci.org/pusher/push-notifications-web)
+[![Build Status](https://github.com/pusher/push-notifications-web/workflows/run-tests/badge.svg)](https://github.com/pusher/push-notifications-web/actions?query=branch%3Amaster)
 [![Twitter](https://img.shields.io/badge/twitter-@Pusher-blue.svg?style=flat)](http://twitter.com/Pusher)
 
 This is the web SDK for the [Pusher Beams](https://pusher.com/beams) service.
