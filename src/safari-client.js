@@ -8,18 +8,23 @@ const platform = 'safari';
 export class SafariClient extends BaseClient {
   constructor(config) {
     super(config, platform);
-    if (!this._isSupportedBrowser()) {
-      throw new Error(
-        'Pusher Beams does not support this Safari version (Safari Push Notifications not supported)'
-      );
-    }
-
     this._ready = this._init();
   }
 
   async _init() {
-    let { websitePushId } = await this._fetchWebsitePushId();
-    this._websitePushId = websitePushId;
+    this.error = null;
+    if (!this._isSupportedBrowser()) {
+      this.error = 'Pusher Beams does not support this Safari version';
+      return;
+    }
+
+    this._websitePushId = await this._fetchWebsitePushId();
+    if (this._websitePushId === null) {
+      this.error =
+        'Safari credentials are not configured for this Pusher Beams instance';
+      return;
+    }
+
     this._serviceUrl = `${
       this._baseURL
     }/safari_api/v1/instances/${encodeURIComponent(this.instanceId)}`;
@@ -160,17 +165,34 @@ export class SafariClient extends BaseClient {
     });
   }
 
-  _fetchWebsitePushId() {
+  async _fetchWebsitePushId() {
     const path = `${this._baseURL}/device_api/v1/instances/${encodeURIComponent(
       this.instanceId
     )}/safari-website-push-id`;
 
     const options = { method: 'GET', path };
-    return doRequest(options);
+    try {
+      let { websitePushId } = await doRequest(options);
+      return websitePushId;
+    } catch (err) {
+      if (err.message.match(/Unexpected status code 404/)) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   _isSupportedBrowser() {
-    return 'safari' in window && 'pushNotification' in window.safari;
+    return (
+      'safari' in window &&
+      'pushNotification' in window.safari &&
+      'indexedDB' in window
+    );
+  }
+
+  async isSupportedBrowser() {
+    await this._ready;
+    return this.error === null;
   }
 }
 
