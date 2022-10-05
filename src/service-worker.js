@@ -164,10 +164,22 @@ self.addEventListener('notificationclick', e => {
       pusherMetadata: pusher.pusherMetadata,
     });
 
-    if (pusher.customerPayload.notification.deep_link) {
-      e.waitUntil(
-        clients.openWindow(pusher.customerPayload.notification.deep_link)
-      );
+    const deepLink = pusher.customerPayload.notification.deep_link;
+    if (deepLink) {
+      // if the deep link is already opened, focus the existing window, else open a new window
+      const promise = clients
+        .matchAll({ includeUncontrolled: true })
+        .then(windowClients => {
+          const existingWindow = windowClients.find(
+            windowClient => windowClient.url === deepLink
+          );
+          if (existingWindow) {
+            return existingWindow.focus();
+          } else {
+            return clients.openWindow(deepLink);
+          }
+        });
+      e.waitUntil(promise);
     }
     e.notification.close();
   }
