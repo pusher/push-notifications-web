@@ -7,6 +7,8 @@ const TEST_PUBLISH_ID = 'some-publish-id';
 const TEST_NOTIFICATION_TITLE = 'Hi!';
 const TEST_NOTIFICATION_BODY = 'This is a test notification!';
 const TEST_NOTIFICATION_ICON = 'an-icon.png';
+const TEST_DEVICE_ID = 'web-1db66b8a-f51f-49de-b225-72591535c855';
+const TEST_USER_ID = 'alice';
 
 let listeners = {};
 let shownNotifications = [];
@@ -39,9 +41,9 @@ beforeEach(() => {
   // Mock out IO modules
   const devicestatestore = require('./device-state-store');
   devicestatestore.default = makeDeviceStateStore({
-    deviceId: 'web-1db66b8a-f51f-49de-b225-72591535c855',
+    deviceId: TEST_DEVICE_ID,
     token: 'some-token',
-    userId: 'alice',
+    userId: TEST_USER_ID,
   });
   const dorequest = require('./do-request');
   dorequest.default = () => Promise.resolve('ok');
@@ -186,6 +188,17 @@ test('SW should pass correct params to onNotificationReceived', () => {
   expect(typeof onNotificationReceivedParams.handleNotification).toEqual(
     'function'
   );
+  onNotificationReceivedParams.statePromise.then(state => {
+    expect(state).toEqual({
+      instanceId: TEST_INSTANCE_ID,
+      publishId: TEST_PUBLISH_ID,
+      deviceId: TEST_DEVICE_ID,
+      userId: TEST_USER_ID,
+      appInBackground: true,
+      hasDisplayableContent: true,
+      hasData: false,
+    });
+  });
 });
 
 test('SW should show correct notification if handleNotification is called', () => {
