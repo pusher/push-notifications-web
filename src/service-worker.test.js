@@ -246,7 +246,7 @@ test('SW should show correct notification if handleNotification is called', () =
   });
 });
 
-test('SW should open deep link in click handler if one is provided', async () => {
+test('SW should open deep link in click handler if one is provided', () => {
   require('./service-worker.js');
 
   // Given a notification click event with a deep link
@@ -277,16 +277,17 @@ test('SW should open deep link in click handler if one is provided', async () =>
     throw new Error('No click listener has been set');
   }
   clickListener(clickEvent);
-  await new Promise(process.nextTick);
 
-  // Then the deep link should be opened in a new tab
-  expect(clients).toContainEqual({ url: 'https://pusher.com' });
+  return clickEvent.getWaitUntilPromise().then(() => {
+    // Then the deep link should be opened in a new tab
+    expect(clients).toContainEqual({ url: 'https://pusher.com' });
 
-  // And the notification should be closed
-  expect(clickEvent._isOpen()).toEqual(false);
+    // And the notification should be closed
+    expect(clickEvent._isOpen()).toEqual(false);
+  });
 });
 
-test('SW should focus existing window if the deep link in click handler is already open', async () => {
+test('SW should focus existing window if the deep link in click handler is already open', () => {
   require('./service-worker.js');
 
   // Given a notification click event with a deep link
@@ -326,19 +327,20 @@ test('SW should focus existing window if the deep link in click handler is alrea
     throw new Error('No click listener has been set');
   }
   clickListener(clickEvent);
-  await new Promise(process.nextTick);
 
-  // Then a new window should not be opened
-  expect(
-    clients.filter(client => client.url === 'https://pusher.com')
-  ).toHaveLength(1);
+  return clickEvent.getWaitUntilPromise().then(() => {
+    // Then a new window should not be opened
+    expect(
+      clients.filter(client => client.url === 'https://pusher.com')
+    ).toHaveLength(1);
 
-  // And the existing window should be focused
-  const window = clients.find(client => client.url === 'https://pusher.com');
-  expect(window.focused).toEqual(true);
+    // And the existing window should be focused
+    const window = clients.find(client => client.url === 'https://pusher.com');
+    expect(window.focused).toEqual(true);
 
-  // And the notification should be closed
-  expect(clickEvent._isOpen()).toEqual(false);
+    // And the notification should be closed
+    expect(clickEvent._isOpen()).toEqual(false);
+  });
 });
 
 test('SW should do nothing on click if notification is not from Pusher', () => {
@@ -715,7 +717,14 @@ const makeClickEvent = ({ data }) => {
   return {
     _isOpen: () => isOpen,
 
-    waitUntil: () => {},
+    waitUntil(promise) {
+      this.waitUntilPromise = promise;
+    },
+    getWaitUntilPromise() {
+      expect(this.waitUntilPromise).not.toBeUndefined();
+      return this.waitUntilPromise;
+    },
+
     notification: {
       data,
       close: () => {
