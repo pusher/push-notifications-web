@@ -28,7 +28,7 @@ beforeEach(() => {
   };
   global.clients = {
     openWindow: url => {
-      const client = { url };
+      const client = new FakeWindowClient({ url });
       clients.push(client);
       return Promise.resolve(client);
     },
@@ -313,13 +313,7 @@ test('SW should focus existing window if the deep link in click handler is alrea
   });
 
   // And an existing window of the deep link is already opened
-  clients.push({
-    url: 'https://pusher.com',
-    focus() {
-      this.focused = true;
-      return Promise.resolve(this);
-    },
-  });
+  clients.push(new FakeWindowClient({ url: 'https://pusher.com' }));
 
   // When the notificationclick listener is called
   const clickListener = listeners['notificationclick'];
@@ -734,7 +728,21 @@ const makeClickEvent = ({ data }) => {
   };
 };
 
-const registerVisibleClient = () =>
-  clients.push({ visibilityState: 'visible' });
+class FakeWindowClient {
+  constructor({ url, focused, visibilityState }) {
+    this.url = url;
+    this.focused = focused;
+    this.visibilityState = visibilityState;
+  }
 
-const registerFocusedClient = () => clients.push({ focused: true });
+  focus() {
+    this.focused = true;
+    return Promise.resolve(this);
+  }
+}
+
+const registerVisibleClient = () =>
+  clients.push(new FakeWindowClient({ visibilityState: 'visible' }));
+
+const registerFocusedClient = () =>
+  clients.push(new FakeWindowClient({ focused: true }));
