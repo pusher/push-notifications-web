@@ -1,6 +1,7 @@
 export default function doRequest({
   method,
   path,
+  params = {},
   body = null,
   headers = {},
   credentials = 'same-origin',
@@ -10,6 +11,13 @@ export default function doRequest({
     headers,
     credentials,
   };
+
+  if (!(function (x) { for (let i in x) return false; return true })(params)) { // check for empty params obj
+    path += Object.entries(params)
+              .filter(x => x[1])
+              .reduce((prev, cur) => prev + cur.map(x => encodeURIComponent(x))
+                .join("="), "?");
+  }
 
   if (body !== null) {
     options.body = JSON.stringify(body);

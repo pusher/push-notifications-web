@@ -244,7 +244,7 @@ export class Client {
     await doRequest(options);
   }
 
-  async getDeviceInterests() {
+  async getDeviceInterests(limit = 100, cursor = null) {
     await this._resolveSDKState();
     this._throwIfNotStarted('Could not get Device Interests');
 
@@ -254,8 +254,14 @@ export class Client {
     const options = {
       method: 'GET',
       path,
+      params: { limit, cursor }
     };
-    return (await doRequest(options))['interests'] || [];
+    let res = await doRequest(options);
+    res = {
+      interests: res['interests'] || [],
+      ...(res?.responseMetadata || {})
+    };
+    return res;
   }
 
   async setDeviceInterests(interests) {
@@ -352,7 +358,7 @@ export class Client {
 
     await this._deleteDevice();
     await this._deviceStateStore.clear();
-    this._clearPushToken().catch(() => {}); // Not awaiting this, best effort.
+    this._clearPushToken().catch(() => { }); // Not awaiting this, best effort.
 
     this._deviceId = null;
     this._token = null;
