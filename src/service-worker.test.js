@@ -10,14 +10,12 @@ const TEST_NOTIFICATION_ICON = 'an-icon.png';
 
 let listeners = {};
 let shownNotifications = [];
-let openedWindows = [];
 let clients = [];
 let now;
 
 beforeEach(() => {
   listeners = {};
   shownNotifications = [];
-  openedWindows = [];
   clients = [];
   now = new Date('2000-01-01T00:00:00Z');
 
@@ -29,7 +27,11 @@ beforeEach(() => {
       shownNotifications.push({ title, options }),
   };
   global.clients = {
-    openWindow: url => openedWindows.push(url),
+    openWindow: url => {
+      const client = new FakeWindowClient({ url });
+      clients.push(client);
+      return Promise.resolve(client);
+    },
     matchAll: () => Promise.resolve(clients),
   };
   global.Date.now = () => now.getTime();
@@ -276,12 +278,63 @@ test('SW should open deep link in click handler if one is provided', () => {
   }
   clickListener(clickEvent);
 
-  // Then the deep link should be opened in a new tab
-  expect(openedWindows).toHaveLength(1);
-  expect(openedWindows[0]).toEqual('https://pusher.com');
+  return clickEvent.getWaitUntilPromise().then(() => {
+    // Then the deep link should be opened in a new tab
+    expect(clients).toContainEqual({ url: 'https://pusher.com' });
 
-  // And the notification should be closed
-  expect(clickEvent._isOpen()).toEqual(false);
+    // And the notification should be closed
+    expect(clickEvent._isOpen()).toEqual(false);
+  });
+});
+
+test('SW should focus existing window if the deep link in click handler is already open', () => {
+  require('./service-worker.js');
+
+  // Given a notification click event with a deep link
+  const clickEvent = makeClickEvent({
+    data: {
+      pusher: {
+        customerPayload: {
+          notification: {
+            title: 'Hi!',
+            body: 'This is a notification!',
+            deep_link: 'https://pusher.com',
+          },
+          data: {},
+        },
+        pusherMetadata: {
+          instanceId: TEST_INSTANCE_ID,
+          publishId: TEST_PUBLISH_ID,
+          hasDisplayableContent: true,
+          hasData: false,
+        },
+      },
+    },
+  });
+
+  // And an existing window of the deep link is already opened
+  clients.push(new FakeWindowClient({ url: 'https://pusher.com' }));
+
+  // When the notificationclick listener is called
+  const clickListener = listeners['notificationclick'];
+  if (!clickListener) {
+    throw new Error('No click listener has been set');
+  }
+  clickListener(clickEvent);
+
+  return clickEvent.getWaitUntilPromise().then(() => {
+    // Then a new window should not be opened
+    expect(
+      clients.filter(client => client.url === 'https://pusher.com')
+    ).toHaveLength(1);
+
+    // And the existing window should be focused
+    const window = clients.find(client => client.url === 'https://pusher.com');
+    expect(window.focused).toEqual(true);
+
+    // And the notification should be closed
+    expect(clickEvent._isOpen()).toEqual(false);
+  });
 });
 
 test('SW should do nothing on click if notification is not from Pusher', () => {
@@ -300,7 +353,7 @@ test('SW should do nothing on click if notification is not from Pusher', () => {
   clickListener(clickEvent);
 
   // Then no new tabs should be opened
-  expect(openedWindows).toHaveLength(0);
+  expect(clients).toHaveLength(0);
 
   // And the notification should NOT be closed
   expect(clickEvent._isOpen()).toEqual(true);
@@ -658,7 +711,14 @@ const makeClickEvent = ({ data }) => {
   return {
     _isOpen: () => isOpen,
 
-    waitUntil: () => {},
+    waitUntil(promise) {
+      this.waitUntilPromise = promise;
+    },
+    getWaitUntilPromise() {
+      expect(this.waitUntilPromise).not.toBeUndefined();
+      return this.waitUntilPromise;
+    },
+
     notification: {
       data,
       close: () => {
@@ -668,7 +728,21 @@ const makeClickEvent = ({ data }) => {
   };
 };
 
-const registerVisibleClient = () =>
-  clients.push({ visibilityState: 'visible' });
+class FakeWindowClient {
+  constructor({ url, focused, visibilityState }) {
+    this.url = url;
+    this.focused = focused;
+    this.visibilityState = visibilityState;
+  }
 
-const registerFocusedClient = () => clients.push({ focused: true });
+  focus() {
+    this.focused = true;
+    return Promise.resolve(this);
+  }
+}
+
+const registerVisibleClient = () =>
+  clients.push(new FakeWindowClient({ visibilityState: 'visible' }));
+
+const registerFocusedClient = () =>
+  clients.push(new FakeWindowClient({ focused: true }));
