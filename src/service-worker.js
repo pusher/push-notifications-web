@@ -37,7 +37,7 @@ self.PusherPushNotifications = {
       client => client !== undefined
     ),
 
-  reportEvent: async ({ eventType, pusherMetadata }) => {
+  _getState: async pusherMetadata => {
     const {
       instanceId,
       publishId,
@@ -57,22 +57,34 @@ self.PusherPushNotifications = {
 
     const appInBackground = !(await self.PusherPushNotifications._hasVisibleClient());
 
+    return {
+      instanceId,
+      publishId,
+      deviceId,
+      userId,
+      appInBackground,
+      hasDisplayableContent,
+      hasData,
+    };
+  },
+
+  reportEvent: async ({ eventType, state }) => {
     const path = `${self.PusherPushNotifications._endpoint(
-      instanceId
-    )}/reporting_api/v2/instances/${instanceId}/events`;
+      state.instanceId
+    )}/reporting_api/v2/instances/${state.instanceId}/events`;
 
     const options = {
       method: 'POST',
       path,
       body: {
-        publishId,
+        publishId: state.publishId,
         event: eventType,
-        deviceId,
-        userId,
+        deviceId: state.deviceId,
+        userId: state.userId,
         timestampSecs: Math.floor(Date.now() / 1000),
-        appInBackground,
-        hasDisplayableContent,
-        hasData,
+        appInBackground: state.appInBackground,
+        hasDisplayableContent: state.hasDisplayableContent,
+        hasData: state.hasData,
       },
     };
 
@@ -96,10 +108,16 @@ self.addEventListener('push', e => {
     return; // Not a pusher notification
   }
 
-  // Report analytics event, best effort
-  self.PusherPushNotifications.reportEvent({
-    eventType: 'delivery',
-    pusherMetadata: payload.data.pusher,
+  const statePromise = self.PusherPushNotifications._getState(
+    payload.data.pusher
+  );
+
+  statePromise.then(state => {
+    // Report analytics event, best effort
+    self.PusherPushNotifications.reportEvent({
+      eventType: 'delivery',
+      state,
+    });
   });
 
   const customerPayload = { ...payload };
@@ -147,6 +165,7 @@ self.addEventListener('push', e => {
       payload: customerPayload,
       pushEvent: e,
       handleNotification,
+      statePromise,
     });
   } else {
     e.waitUntil(handleNotification(customerPayload));
@@ -158,10 +177,16 @@ self.addEventListener('notificationclick', e => {
 
   const isPusherNotification = pusher !== undefined;
   if (isPusherNotification) {
+    const statePromise = self.PusherPushNotifications._getState(
+      pusher.pusherMetadata
+    );
+
     // Report analytics event, best effort
-    self.PusherPushNotifications.reportEvent({
-      eventType: 'open',
-      pusherMetadata: pusher.pusherMetadata,
+    statePromise.then(state => {
+      self.PusherPushNotifications.reportEvent({
+        eventType: 'open',
+        state,
+      });
     });
 
     const deepLink = pusher.customerPayload.notification.deep_link;
