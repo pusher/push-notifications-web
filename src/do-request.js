@@ -15,7 +15,7 @@ export default function doRequest({
   if (!(function (x) { for (let i in x) return false; return true })(params)) { // check for empty params obj
     path += Object.entries(params)
               .filter(x => x[1])
-              .reduce((prev, cur) => prev + cur.map(x => encodeURIComponent(x))
+              .reduce((prev, cur) => prev + (prev !== "?" ? "&" : "") + cur.map(x => encodeURIComponent(x))
                 .join("="), "?");
   }
 
