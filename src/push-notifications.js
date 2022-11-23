@@ -258,8 +258,8 @@ export class Client {
     };
     let res = await doRequest(options);
     res = {
-      interests: res['interests'] || [],
-      ...(res?.responseMetadata || {})
+      interests: (res && res['interests']) || [],
+      ...((res && res.responseMetadata) || {})
     };
     return res;
   }

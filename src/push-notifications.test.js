@@ -314,6 +314,10 @@ describe('interest methods', () => {
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
           method: 'GET',
+          params: {
+            cursor: null,
+            limit: 100,
+          },
           path: [
             'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
             '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
@@ -321,7 +325,9 @@ describe('interest methods', () => {
             '/interests',
           ].join(''),
         });
-        expect(interests).toEqual(['donuts']);
+        expect(interests).toEqual({
+          interests: ['donuts'],
+        });
       });
     });
 

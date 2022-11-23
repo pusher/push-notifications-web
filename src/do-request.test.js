@@ -6,7 +6,7 @@ test('doRequest', () => {
 
 test('Handles URL with params', () => {
   const options = { method: 'GET', path: 'http://fake-url.com', params: { search: "test string" } };
-  return doRequest(options).then(() => expect(fetch.mock.lastCall[0]).toEqual("http://fake-url.com?search=test%20string"));
+  return doRequest(options).then(() => expect(fetch.mock.calls[0][0]).toEqual("http://fake-url.com?search=test%20string"));
 });
 
 test('Handles responses with no body', () => {
