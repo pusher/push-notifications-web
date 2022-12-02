@@ -346,7 +346,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-        return beamsClient.getDeviceInterests(150, 2).then(interests => {
+      return beamsClient.getDeviceInterests(150, 2).then(interests => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
@@ -366,8 +366,7 @@ describe('interest methods', () => {
           interests: ['donuts'],
         });
       });
-    }
-        );
+    });
 
     test('should fail if SDK is not started', () => {
       // Emulate a fresh SDK, where start has not been called
