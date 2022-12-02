@@ -254,12 +254,12 @@ export class Client {
     const options = {
       method: 'GET',
       path,
-      params: { limit, cursor }
+      params: { limit, cursor },
     };
     let res = await doRequest(options);
     res = {
       interests: (res && res['interests']) || [],
-      ...((res && res.responseMetadata) || {})
+      ...((res && res.responseMetadata) || {}),
     };
     return res;
   }
@@ -358,7 +358,7 @@ export class Client {
 
     await this._deleteDevice();
     await this._deviceStateStore.clear();
-    this._clearPushToken().catch(() => { }); // Not awaiting this, best effort.
+    this._clearPushToken().catch(() => {}); // Not awaiting this, best effort.
 
     this._deviceId = null;
     this._token = null;
