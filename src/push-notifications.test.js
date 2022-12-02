@@ -330,6 +330,44 @@ describe('interest methods', () => {
         });
       });
     });
+    test('should make correct request with cursor and return the interests', () => {
+      const instanceId = 'df3c1965-e870-4bd6-8d75-fea56b26335f';
+
+      const mockDoRequest = jest.fn();
+      mockDoRequest.mockReturnValueOnce(
+        Promise.resolve({
+          interests: ['donuts'],
+          responseMetadata: {},
+        })
+      );
+
+      dorequest.default = mockDoRequest;
+
+      const beamsClient = new PusherPushNotifications.Client({
+        instanceId,
+      });
+        return beamsClient.getDeviceInterests(150, 2).then(interests => {
+        expect(mockDoRequest.mock.calls.length).toBe(1);
+        expect(mockDoRequest.mock.calls[0].length).toBe(1);
+        expect(mockDoRequest.mock.calls[0][0]).toEqual({
+          method: 'GET',
+          params: {
+            cursor: 2,
+            limit: 150,
+          },
+          path: [
+            'https://df3c1965-e870-4bd6-8d75-fea56b26335f.pushnotifications.pusher.com',
+            '/device_api/v1/instances/df3c1965-e870-4bd6-8d75-fea56b26335f',
+            '/devices/web/web-1db66b8a-f51f-49de-b225-72591535c855',
+            '/interests',
+          ].join(''),
+        });
+        expect(interests).toEqual({
+          interests: ['donuts'],
+        });
+      });
+    }
+        );
 
     test('should fail if SDK is not started', () => {
       // Emulate a fresh SDK, where start has not been called
