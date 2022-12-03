@@ -17,6 +17,19 @@ test('Handles URL with params', () => {
   );
 });
 
+test('Handles URL with multiple params', () => {
+  const options = {
+    method: 'GET',
+    path: 'http://fake-url.com',
+    params: { search: 'test string', other: 123 },
+  };
+  return doRequest(options).then(() =>
+    expect(fetch.mock.calls[1][0]).toEqual(
+      'http://fake-url.com?search=test%20string&other=123'
+    )
+  );
+});
+
 test('Handles responses with no body', () => {
   const options = { method: 'POST', path: 'http://fake-url.com' };
   return doRequest(options).then(res => expect(res).toBeNull());

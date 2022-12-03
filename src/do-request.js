@@ -12,22 +12,13 @@ export default function doRequest({
     credentials,
   };
 
-  if (
-    !(function(x) {
-      for (let i in x) return false;
-      return true;
-    })(params)
-  ) {
+  if (!emptyParams(params)) {
     // check for empty params obj
+    path += '?';
     path += Object.entries(params)
       .filter(x => x[1])
-      .reduce(
-        (prev, cur) =>
-          prev +
-          (prev !== '?' ? '&' : '') +
-          cur.map(x => encodeURIComponent(x)).join('='),
-        '?'
-      );
+      .map(pair => pair.map(x => encodeURIComponent(x)).join('='))
+      .join('&');
   }
 
   if (body !== null) {
@@ -46,6 +37,11 @@ export default function doRequest({
       return null;
     }
   });
+}
+
+function emptyParams(params) {
+  for (let i in params) return false;
+  return true;
 }
 
 async function handleError(response) {
