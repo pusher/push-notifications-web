@@ -40,7 +40,7 @@
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^4.2.3",
     "selenium-webdriver": "^4.0.0-alpha.3",
-    "tsd": "^0.13.1"
+    "tsd": "^0.25.0"
   },
   "browserify": {
     "transform": [
