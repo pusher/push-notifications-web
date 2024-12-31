@@ -112,7 +112,7 @@ test('SDK should set user id with errol', async () => {
   const response = await errolClient.getWebDevice(deviceId);
   expect(response.statusCode).toBe(200);
   expect(JSON.parse(response.body).userId).toBe('cucas');
-});
+}, 60000);
 
 test('SDK should return an error if we try to reassign the user id', async () => {
   await chromeDriver.get('http://localhost:3000');

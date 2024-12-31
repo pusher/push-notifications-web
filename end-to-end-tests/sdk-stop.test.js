@@ -104,7 +104,7 @@ test('Calling .stop should clear SDK state', async () => {
   // Assert that the device no longer exists on the server
   const response = await errolClient.getWebDevice(deviceIdBeforeStop);
   expect(response.statusCode).toBe(404);
-});
+}, 60000);
 
 test('Calling .stop before .start should do nothing', async () => {
   const errolClient = new ErrolTestClient(

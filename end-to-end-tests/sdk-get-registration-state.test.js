@@ -39,7 +39,7 @@ test('.getState should return PERMISSION_GRANTED_REGISTERED_WITH_BEAMS if start 
   });
 
   expect(state).toBe(PusherPushNotifications.RegistrationState.PERMISSION_GRANTED_REGISTERED_WITH_BEAMS);
-});
+}, 60000);
 
 test('.getState should return PERMISSION_PROMPT_REQUIRED if start has not been called and permissions are default', async () => {
   await prepareServer(NOTIFICATIONS_DEFAULT)

@@ -23,10 +23,6 @@ export const NOTIFICATIONS_DEFAULT = 0
 export const NOTIFICATIONS_GRANTED = 1
 export const NOTIFICATIONS_DENIED = 2
 
-beforeAll(() => {
-  jest.setTimeout(SCRIPT_TIMEOUT_MS);
-});
-
 /**
  * Helper for launching a test application server
  * @async

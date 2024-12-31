@@ -2,7 +2,8 @@ import {
   launchServer,
   createChromeWebDriver,
   NOTIFICATIONS_GRANTED,
-  unregisterServiceWorker
+  unregisterServiceWorker,
+  SCRIPT_TIMEOUT_MS
 } from './test-utils';
 
 let killServer = null;
@@ -24,23 +25,28 @@ afterEach(() => unregisterServiceWorker(chromeDriver));
 test('SDK should register a device with errol', async () => {
   await chromeDriver.get('http://localhost:3000');
   await chromeDriver.wait(() => {
-    return chromeDriver.getTitle().then(title => title.includes('Test Page'));
+    return chromeDriver.getTitle().then(title => {
+      return title.includes('Test Page');
+    });
   }, 2000);
 
   const initialDeviceId = await chromeDriver.executeAsyncScript(() => {
     const asyncScriptReturnCallback = arguments[arguments.length - 1];
-
     const instanceId = 'deadc0de-2ce6-46e3-ad9a-5c02d0ab119b';
     const beamsClient = new PusherPushNotifications.Client({ instanceId });
     beamsClient
       .start()
       .then(() => beamsClient.getDeviceId())
-      .then(deviceId => asyncScriptReturnCallback(deviceId))
-      .catch(e => asyncScriptReturnCallback(e.message));
+      .then(deviceId => {
+        asyncScriptReturnCallback(deviceId);
+      })
+      .catch(e => {
+        asyncScriptReturnCallback(e.message);
+      });
   });
 
   expect(initialDeviceId).toContain('web-');
-});
+}, 60000);
 
 test('SDK should remember the device ID', async () => {
   await chromeDriver.get('http://localhost:3000');
