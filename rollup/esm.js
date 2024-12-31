@@ -1,6 +1,6 @@
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
-import babel from 'rollup-plugin-babel';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
+import { babel } from '@rollup/plugin-babel';
 import json from 'rollup-plugin-json';
 
 export default [
@@ -12,10 +12,10 @@ export default [
     },
     plugins: [
       json(),
-      resolve(),
+      nodeResolve(),
       commonjs(),
       babel({
-        runtimeHelpers: true,
+        babelHelpers: 'runtime',
         presets: ['@babel/preset-env'],
         plugins: ['@babel/plugin-transform-runtime'],
         exclude: ['node_modules/**'],
