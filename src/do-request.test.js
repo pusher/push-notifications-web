@@ -32,7 +32,7 @@ test('Handles URL with multiple params', () => {
 
 test('Handles responses with no body', () => {
   const options = { method: 'POST', path: 'http://fake-url.com' };
-  return doRequest(options).then(res => expect(res).toBeNull());
+  return doRequest(options).then((res) => expect(res).toBeNull());
 });
 
 test('Handles HTML response body', () => {
@@ -47,7 +47,7 @@ test('Handles HTML response body', () => {
 <body></body>
 </html>`);
   const options = { method: 'GET', path: 'http://fake-url.com' };
-  return doRequest(options).then(res => {
+  return doRequest(options).then((res) => {
     expect(res).toBeNull();
   });
 });
@@ -55,7 +55,7 @@ test('Handles HTML response body', () => {
 test('Handles bad JSON', () => {
   fetch.mockResponseOnce('{"badjson": "very incorrect"');
   const options = { method: 'GET', path: 'http://fake-url.com' };
-  return doRequest(options).then(res => {
+  return doRequest(options).then((res) => {
     expect(res).toBeNull();
   });
 });

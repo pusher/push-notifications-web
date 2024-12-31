@@ -16,8 +16,8 @@ export default function doRequest({
     // check for empty params obj
     path += '?';
     path += Object.entries(params)
-      .filter(x => x[1])
-      .map(pair => pair.map(x => encodeURIComponent(x)).join('='))
+      .filter((x) => x[1])
+      .map((pair) => pair.map((x) => encodeURIComponent(x)).join('='))
       .join('&');
   }
 
@@ -26,7 +26,7 @@ export default function doRequest({
     options.headers = { 'Content-Type': 'application/json', ...headers };
   }
 
-  return fetch(path, options).then(async response => {
+  return fetch(path, options).then(async (response) => {
     if (!response.ok) {
       await handleError(response);
     }
@@ -47,10 +47,8 @@ function emptyParams(params) {
 async function handleError(response) {
   let errorMessage;
   try {
-    const {
-      error = 'Unknown error',
-      description = 'No description',
-    } = await response.json();
+    const { error = 'Unknown error', description = 'No description' } =
+      await response.json();
     errorMessage = `Unexpected status code ${
       response.status
     }: ${error}, ${description}`;

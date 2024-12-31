@@ -29,7 +29,7 @@ beforeEach(() => {
       shownNotifications.push({ title, options }),
   };
   global.clients = {
-    openWindow: url => {
+    openWindow: (url) => {
       const client = new FakeWindowClient({ url });
       clients.push(client);
       return Promise.resolve(client);
@@ -55,7 +55,7 @@ afterEach(() => {
   // Wait for any async operations to complete
   // This is horrible, but we we want to do open/delivery tracking without
   // blocking the callbacks this will have to do.
-  return new Promise(resolve => setTimeout(resolve, ASYNC_TEST_WAIT_MS));
+  return new Promise((resolve) => setTimeout(resolve, ASYNC_TEST_WAIT_MS));
 });
 
 describe('SW should ignore notification when', () => {
@@ -166,7 +166,7 @@ test('SW should pass correct params to onNotificationReceived', () => {
 
   // And an onNotificationReceived had been set
   let onNotificationReceivedParams;
-  PusherPushNotifications.onNotificationReceived = params => {
+  PusherPushNotifications.onNotificationReceived = (params) => {
     onNotificationReceivedParams = params;
   };
 
@@ -190,7 +190,7 @@ test('SW should pass correct params to onNotificationReceived', () => {
   expect(typeof onNotificationReceivedParams.handleNotification).toEqual(
     'function'
   );
-  onNotificationReceivedParams.statePromise.then(state => {
+  onNotificationReceivedParams.statePromise.then((state) => {
     expect(state).toEqual({
       instanceId: TEST_INSTANCE_ID,
       publishId: TEST_PUBLISH_ID,
@@ -338,11 +338,13 @@ test('SW should focus existing window if the deep link in click handler is alrea
   return clickEvent.getWaitUntilPromise().then(() => {
     // Then a new window should not be opened
     expect(
-      clients.filter(client => client.url === 'https://pusher.com')
+      clients.filter((client) => client.url === 'https://pusher.com')
     ).toHaveLength(1);
 
     // And the existing window should be focused
-    const window = clients.find(client => client.url === 'https://pusher.com');
+    const window = clients.find(
+      (client) => client.url === 'https://pusher.com'
+    );
     expect(window.focused).toEqual(true);
 
     // And the notification should be closed
@@ -400,7 +402,7 @@ test('SW should send delivery event when notification arrives', () => {
   pushListener(pushEvent);
 
   // Then the correct delivery event should be reported
-  return new Promise(resolve => setTimeout(resolve, 200)).then(() => {
+  return new Promise((resolve) => setTimeout(resolve, 200)).then(() => {
     expect(mockDoRequest.mock.calls.length).toBe(1);
     expect(mockDoRequest.mock.calls[0].length).toBe(1);
     const requestOptions = mockDoRequest.mock.calls[0][0];
@@ -453,7 +455,7 @@ test('SW should send integer timestamp when time has fractional millis', () => {
   }
   pushListener(pushEvent);
 
-  return new Promise(resolve => setTimeout(resolve, 200)).then(() => {
+  return new Promise((resolve) => setTimeout(resolve, 200)).then(() => {
     expect(mockDoRequest.mock.calls.length).toBe(1);
     expect(mockDoRequest.mock.calls[0].length).toBe(1);
     const requestOptions = mockDoRequest.mock.calls[0][0];
@@ -518,7 +520,7 @@ test('SW should send open event when notification clicked', () => {
   clickListener(clickEvent);
 
   // Then an open event should be reported
-  return new Promise(resolve => setTimeout(resolve, 200)).then(() => {
+  return new Promise((resolve) => setTimeout(resolve, 200)).then(() => {
     expect(mockDoRequest.mock.calls.length).toBe(1);
     expect(mockDoRequest.mock.calls[0].length).toBe(1);
     const requestOptions = mockDoRequest.mock.calls[0][0];
@@ -572,7 +574,7 @@ test('SW should send event with appInBackground false given a visible client', (
   pushListener(pushEvent);
 
   // Then the correct delivery event should be reported
-  return new Promise(resolve => setTimeout(resolve, 200)).then(() => {
+  return new Promise((resolve) => setTimeout(resolve, 200)).then(() => {
     expect(mockDoRequest.mock.calls.length).toBe(1);
     expect(mockDoRequest.mock.calls[0].length).toBe(1);
     const requestOptions = mockDoRequest.mock.calls[0][0];
@@ -683,7 +685,7 @@ class FakePushEvent {
     this.data = {
       json: () => JSON.parse(payload),
     };
-    this.waitUntil = promise => {
+    this.waitUntil = (promise) => {
       this.waitUntilPromise = promise;
     };
   }
@@ -694,7 +696,7 @@ class FakePushEvent {
   }
 }
 
-const makePushEvent = payload => new FakePushEvent(payload);
+const makePushEvent = (payload) => new FakePushEvent(payload);
 
 const makeBeamsPushEvent = ({
   instanceId = TEST_INSTANCE_ID,

@@ -11,7 +11,7 @@ export default class TokenProvider {
   async fetchToken(userId) {
     let queryParams = { user_id: userId, ...this.queryParams };
     const encodedParams = Object.entries(queryParams)
-      .map(kv => kv.map(encodeURIComponent).join('='))
+      .map((kv) => kv.map(encodeURIComponent).join('='))
       .join('&');
     const options = {
       method: 'GET',
