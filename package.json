@@ -48,7 +48,9 @@
     "tsd": "^0.31.2"
   },
   "overrides": {
-    "braces": ">=3.0.3"
+    "braces": ">=3.0.3",
+    "lodash": "^4.17.21",
+    "semver": "^7.5.0"
   },
   "browserify": {
     "transform": [
