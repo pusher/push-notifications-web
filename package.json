@@ -39,7 +39,7 @@
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^4.2.3",
-    "selenium-webdriver": "^4.0.0-alpha.3",
+    "selenium-webdriver": "4.7.1",
     "tsd": "^0.13.1"
   },
   "browserify": {
