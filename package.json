@@ -45,6 +45,9 @@
     "selenium-webdriver": "4.7.1",
     "tsd": "^0.13.1"
   },
+  "overrides": {
+    "braces": ">=3.0.3"
+  },
   "browserify": {
     "transform": [
       [
