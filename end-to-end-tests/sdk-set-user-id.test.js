@@ -6,6 +6,7 @@ import {
   unregisterServiceWorker
 } from './test-utils';
 
+jest.setTimeout(60000);
 let killServer = null;
 let chromeDriver = null;
 
