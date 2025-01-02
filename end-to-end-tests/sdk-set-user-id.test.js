@@ -9,45 +9,41 @@ import {
 let killServer = null;
 let chromeDriver = null;
 
-beforeAll(() => {
-  return launchServer()
-    .then(killFunc => {
-      killServer = killFunc;
-    })
-    .then(() => createChromeWebDriver(NOTIFICATIONS_GRANTED))
-    .then(driver => {
-      chromeDriver = driver;
-    })
-    .then(async () => {
-      const errolClient = new ErrolTestClient(
-        '1b880590-6301-4bb5-b34f-45db1c5f5644'
-      );
-      const response = await errolClient.deleteUser('cucas');
-      expect(response.statusCode).toBe(200);
-    });
+beforeAll(async () => {
+  killServer = await launchServer();
+  chromeDriver = await createChromeWebDriver(NOTIFICATIONS_GRANTED);
+  const errolClient = new ErrolTestClient(
+    '1b880590-6301-4bb5-b34f-45db1c5f5644'
+  );
+  const response = await errolClient.deleteUser('cucas');
+  expect(response.statusCode).toBe(200);
 });
 
-beforeEach(() => {
-  return (async () => {
-    await chromeDriver.get('http://localhost:3000');
-    await chromeDriver.wait(() => {
-      return chromeDriver.getTitle().then(title => title.includes('Test Page'));
-    }, 2000);
+beforeEach(async () => {
+  await chromeDriver.get('http://localhost:3000');
 
-    return chromeDriver.executeAsyncScript(() => {
-      const asyncScriptReturnCallback = arguments[arguments.length - 1];
+  await chromeDriver.wait(async () => {
+    const title = await chromeDriver.getTitle();
+    return title.includes('Test Page');
+  },
+    2000
+  );
 
-      let deleteDbRequest = window.indexedDB.deleteDatabase(
-        'beams-1b880590-6301-4bb5-b34f-45db1c5f5644'
-      );
-      deleteDbRequest.onsuccess = asyncScriptReturnCallback;
-      deleteDbRequest.onerror = asyncScriptReturnCallback;
-    });
-
-  })();
+  await chromeDriver.executeAsyncScript(() => {
+    const callback = arguments[arguments.length - 1];
+    const req = window.indexedDB.deleteDatabase(
+      'beams-1b880590-6301-4bb5-b34f-45db1c5f5644'
+    );
+    req.onsuccess = callback;
+    req.onerror = callback;
+  });
 });
 
-afterEach(() => unregisterServiceWorker(chromeDriver));
+afterEach(async () => {
+  await unregisterServiceWorker(chromeDriver);
+  // await chromeDriver.quit();
+  // chromeDriver = null;
+});
 
 test('SDK should set user id with errol', async () => {
   await chromeDriver.get('http://localhost:3000');
@@ -81,8 +77,8 @@ test('SDK should set user id with errol', async () => {
         if (userId !== 'cucas') {
           throw new Error(
             'Unexpected user ID ' +
-              userId +
-              ', this token provider is hardcoded to "cucas"'
+            userId +
+            ', this token provider is hardcoded to "cucas"'
           );
         } else {
           return {
@@ -272,11 +268,7 @@ test('SDK should return an error if user ID is not a string', async () => {
   expect(setUserIdError).toBe('User ID must be a string (was undefined)');
 });
 
-afterAll(() => {
-  if (killServer) {
-    killServer();
-  }
-  if (chromeDriver) {
-    chromeDriver.quit();
-  }
+afterAll(async () => {
+  if (killServer) killServer();
+  if (chromeDriver) await chromeDriver.quit();
 });

@@ -23,6 +23,8 @@ jobs:
         run: npm run test:unit
       - name: "Run end-to-end tests"
         run: |
+          google-chrome --version
+          chromedriver --version
           export DISPLAY=:99
           chromedriver --url-base=/wd/hub &
           sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 &
