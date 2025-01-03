@@ -309,7 +309,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      return beamsClient.getDeviceInterests().then(interests => {
+      return beamsClient.getDeviceInterests().then((interests) => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
@@ -346,7 +346,7 @@ describe('interest methods', () => {
       const beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      return beamsClient.getDeviceInterests(150, 2).then(interests => {
+      return beamsClient.getDeviceInterests(150, 2).then((interests) => {
         expect(mockDoRequest.mock.calls.length).toBe(1);
         expect(mockDoRequest.mock.calls[0].length).toBe(1);
         expect(mockDoRequest.mock.calls[0][0]).toEqual({
@@ -480,8 +480,9 @@ describe('interest methods', () => {
           instanceId,
         }).setDeviceInterests(interests)
       ).rejects.toThrow(
-        `Number of interests (${maxInterests +
-          1}) exceeds maximum of ${maxInterests}`
+        `Number of interests (${
+          maxInterests + 1
+        }) exceeds maximum of ${maxInterests}`
       );
     });
 
@@ -610,7 +611,7 @@ describe('.getRegistrationState', () => {
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      return beamsClient.getRegistrationState().then(state => {
+      return beamsClient.getRegistrationState().then((state) => {
         expect(state).toEqual(
           PusherPushNotifications.RegistrationState
             .PERMISSION_GRANTED_REGISTERED_WITH_BEAMS
@@ -641,7 +642,7 @@ describe('.getRegistrationState', () => {
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      return beamsClient.getRegistrationState().then(state => {
+      return beamsClient.getRegistrationState().then((state) => {
         expect(state).toEqual(
           PusherPushNotifications.RegistrationState.PERMISSION_DENIED
         );
@@ -654,7 +655,7 @@ describe('.getRegistrationState', () => {
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      return beamsClient.getRegistrationState().then(state => {
+      return beamsClient.getRegistrationState().then((state) => {
         expect(state).toEqual(
           PusherPushNotifications.RegistrationState.PERMISSION_PROMPT_REQUIRED
         );
@@ -667,7 +668,7 @@ describe('.getRegistrationState', () => {
       let beamsClient = new PusherPushNotifications.Client({
         instanceId,
       });
-      return beamsClient.getRegistrationState().then(state => {
+      return beamsClient.getRegistrationState().then((state) => {
         expect(state).toEqual(
           PusherPushNotifications.RegistrationState
             .PERMISSION_GRANTED_NOT_REGISTERED_WITH_BEAMS
@@ -711,7 +712,7 @@ describe('SDK state', () => {
 
     return beamsClient
       .getDeviceId()
-      .then(returnedDeviceId => {
+      .then((returnedDeviceId) => {
         // Device ID should have been set
         return expect(returnedDeviceId).toEqual(deviceId);
       })
@@ -720,7 +721,7 @@ describe('SDK state', () => {
         subscription = newSubscription;
       })
       .then(() => beamsClient.getDeviceId())
-      .then(deviceId => {
+      .then((deviceId) => {
         // Device ID should have been cleared
         return expect(deviceId).toBeNull();
       });

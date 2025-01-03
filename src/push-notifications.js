@@ -400,8 +400,8 @@ export class Client {
 
   async _clearPushToken() {
     return navigator.serviceWorker.ready
-      .then(reg => reg.pushManager.getSubscription())
-      .then(sub => {
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => {
         if (sub) sub.unsubscribe();
       });
   }
@@ -438,7 +438,8 @@ export class Client {
   async _updateDeviceMetadata() {
     const userAgent = window.navigator.userAgent;
     const storedUserAgent = await this._deviceStateStore.getLastSeenUserAgent();
-    const storedSdkVersion = await this._deviceStateStore.getLastSeenSdkVersion();
+    const storedSdkVersion =
+      await this._deviceStateStore.getLastSeenSdkVersion();
 
     if (userAgent === storedUserAgent && sdkVersion === storedSdkVersion) {
       // Nothing to do
@@ -461,7 +462,7 @@ export class Client {
   }
 }
 
-const validateInterestName = interest => {
+const validateInterestName = (interest) => {
   if (interest === undefined || interest === null) {
     throw new Error('Interest name is required');
   }
@@ -503,7 +504,7 @@ async function getServiceWorkerRegistration() {
 function getWebPushToken(swReg) {
   return swReg.pushManager
     .getSubscription()
-    .then(sub => (!sub ? null : encodeSubscription(sub)));
+    .then((sub) => (!sub ? null : encodeSubscription(sub)));
 }
 
 function encodeSubscription(sub) {
@@ -514,7 +515,7 @@ function urlBase64ToUInt8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
 /**

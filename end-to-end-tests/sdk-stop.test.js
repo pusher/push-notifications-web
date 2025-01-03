@@ -3,7 +3,8 @@ import {
   launchServer,
   createChromeWebDriver,
   NOTIFICATIONS_GRANTED,
-  unregisterServiceWorker
+  unregisterServiceWorker,
+  SCRIPT_TIMEOUT_MS
 } from './test-utils';
 
 let killServer = null;
@@ -104,7 +105,7 @@ test('Calling .stop should clear SDK state', async () => {
   // Assert that the device no longer exists on the server
   const response = await errolClient.getWebDevice(deviceIdBeforeStop);
   expect(response.statusCode).toBe(404);
-});
+}, SCRIPT_TIMEOUT_MS);
 
 test('Calling .stop before .start should do nothing', async () => {
   const errolClient = new ErrolTestClient(

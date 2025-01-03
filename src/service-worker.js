@@ -6,7 +6,7 @@ self.PusherPushNotifications = {
   endpointOverride: null,
   onNotificationReceived: null,
 
-  _endpoint: instanceId =>
+  _endpoint: (instanceId) =>
     self.PusherPushNotifications.endpointOverride
       ? self.PusherPushNotifications.endpointOverride
       : `https://${instanceId}.pushnotifications.pusher.com`,
@@ -17,11 +17,11 @@ self.PusherPushNotifications = {
         type: 'window',
         includeUncontrolled: true,
       })
-      .then(clients => clients.find(c => c.visibilityState === 'visible')),
+      .then((clients) => clients.find((c) => c.visibilityState === 'visible')),
 
   _hasVisibleClient: () =>
     self.PusherPushNotifications._getVisibleClient().then(
-      client => client !== undefined
+      (client) => client !== undefined
     ),
 
   _getFocusedClient: () =>
@@ -30,20 +30,16 @@ self.PusherPushNotifications = {
         type: 'window',
         includeUncontrolled: true,
       })
-      .then(clients => clients.find(c => c.focused === true)),
+      .then((clients) => clients.find((c) => c.focused === true)),
 
   _hasFocusedClient: () =>
     self.PusherPushNotifications._getFocusedClient().then(
-      client => client !== undefined
+      (client) => client !== undefined
     ),
 
-  _getState: async pusherMetadata => {
-    const {
-      instanceId,
-      publishId,
-      hasDisplayableContent,
-      hasData,
-    } = pusherMetadata;
+  _getState: async (pusherMetadata) => {
+    const { instanceId, publishId, hasDisplayableContent, hasData } =
+      pusherMetadata;
     if (!instanceId || !publishId) {
       // Can't report this notification, fail silently.
       return;
@@ -55,7 +51,8 @@ self.PusherPushNotifications = {
     const deviceId = await deviceStateStore.getDeviceId();
     const userId = (await deviceStateStore.getUserId()) || null;
 
-    const appInBackground = !(await self.PusherPushNotifications._hasVisibleClient());
+    const appInBackground =
+      !(await self.PusherPushNotifications._hasVisibleClient());
 
     return {
       instanceId,
@@ -96,7 +93,7 @@ self.PusherPushNotifications = {
   },
 };
 
-self.addEventListener('push', e => {
+self.addEventListener('push', (e) => {
   let payload;
   try {
     payload = e.data.json();
@@ -112,7 +109,7 @@ self.addEventListener('push', e => {
     payload.data.pusher
   );
 
-  statePromise.then(state => {
+  statePromise.then((state) => {
     // Report analytics event, best effort
     self.PusherPushNotifications.reportEvent({
       eventType: 'delivery',
@@ -122,7 +119,7 @@ self.addEventListener('push', e => {
 
   const customerPayload = { ...payload };
   const customerData = {};
-  Object.keys(customerPayload.data || {}).forEach(key => {
+  Object.keys(customerPayload.data || {}).forEach((key) => {
     if (key !== 'pusher') {
       customerData[key] = customerPayload.data[key];
     }
@@ -131,7 +128,7 @@ self.addEventListener('push', e => {
 
   const pusherMetadata = payload.data.pusher;
 
-  const handleNotification = async payloadFromCallback => {
+  const handleNotification = async (payloadFromCallback) => {
     const hideNotificationIfSiteHasFocus =
       payloadFromCallback.notification.hide_notification_if_site_has_focus ===
       true;
@@ -172,7 +169,7 @@ self.addEventListener('push', e => {
   }
 });
 
-self.addEventListener('notificationclick', e => {
+self.addEventListener('notificationclick', (e) => {
   const { pusher } = e.notification.data;
 
   const isPusherNotification = pusher !== undefined;
@@ -182,7 +179,7 @@ self.addEventListener('notificationclick', e => {
     );
 
     // Report analytics event, best effort
-    statePromise.then(state => {
+    statePromise.then((state) => {
       self.PusherPushNotifications.reportEvent({
         eventType: 'open',
         state,
@@ -194,9 +191,9 @@ self.addEventListener('notificationclick', e => {
       // if the deep link is already opened, focus the existing window, else open a new window
       const promise = clients
         .matchAll({ includeUncontrolled: true })
-        .then(windowClients => {
+        .then((windowClients) => {
           const existingWindow = windowClients.find(
-            windowClient => windowClient.url === deepLink
+            (windowClient) => windowClient.url === deepLink
           );
           if (existingWindow) {
             return existingWindow.focus();

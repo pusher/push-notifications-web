@@ -16,23 +16,23 @@ export default class DeviceStateStore {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this._dbName);
 
-      request.onsuccess = event => {
+      request.onsuccess = (event) => {
         const db = event.target.result;
         this._dbConn = db;
 
         this._readState()
-          .then(state => (state === null ? this.clear() : Promise.resolve()))
+          .then((state) => (state === null ? this.clear() : Promise.resolve()))
           .then(resolve);
       };
 
-      request.onupgradeneeded = event => {
+      request.onupgradeneeded = (event) => {
         const db = event.target.result;
         db.createObjectStore('beams', {
           keyPath: 'instance_id',
         });
       };
 
-      request.onerror = event => {
+      request.onerror = (event) => {
         const error = new Error(`Database error: ${event.target.error}`);
         reject(error);
       };
@@ -61,7 +61,7 @@ export default class DeviceStateStore {
         .objectStore('beams')
         .get(this._instanceId);
 
-      request.onsuccess = event => {
+      request.onsuccess = (event) => {
         const state = event.target.result;
         if (!state) {
           resolve(null);
@@ -69,7 +69,7 @@ export default class DeviceStateStore {
         resolve(state);
       };
 
-      request.onerror = event => {
+      request.onerror = (event) => {
         reject(event.target.error);
       };
     });
@@ -96,11 +96,11 @@ export default class DeviceStateStore {
         .objectStore('beams')
         .put(state);
 
-      request.onsuccess = _ => {
+      request.onsuccess = (_) => {
         resolve();
       };
 
-      request.onerror = event => {
+      request.onerror = (event) => {
         reject(event.target.error);
       };
     });
