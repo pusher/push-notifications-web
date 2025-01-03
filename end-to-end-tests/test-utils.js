@@ -5,7 +5,7 @@ const path = require('path');
 const chrome = require('selenium-webdriver/chrome');
 const { Builder } = require('selenium-webdriver');
 
-const SCRIPT_TIMEOUT_MS = 60000;
+export const SCRIPT_TIMEOUT_MS = 60000;
 
 const MAX_TEST_SERVER_CHECKS = 10;
 const TEST_SERVER_CHECK_SLEEP_MS = 200;

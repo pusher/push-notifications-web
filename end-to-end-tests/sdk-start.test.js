@@ -46,7 +46,7 @@ test('SDK should register a device with errol', async () => {
   });
 
   expect(initialDeviceId).toContain('web-');
-}, 60000);
+}, SCRIPT_TIMEOUT_MS);
 
 test('SDK should remember the device ID', async () => {
   await chromeDriver.get('http://localhost:3000');
