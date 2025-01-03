@@ -42,8 +42,6 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await unregisterServiceWorker(chromeDriver);
-  // await chromeDriver.quit();
-  // chromeDriver = null;
 });
 
 test('SDK should set user id with errol', async () => {
