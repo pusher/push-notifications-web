@@ -166,7 +166,7 @@ export class Client {
   async start() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!isWebPushSupported()) {
       return this;
     }
 
@@ -309,7 +309,7 @@ export class Client {
   async setUserId(userId, tokenProvider) {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!isWebPushSupported()) {
       return;
     }
 
@@ -348,7 +348,7 @@ export class Client {
   async stop() {
     await this._resolveSDKState();
 
-    if (!isSupportedBrowser()) {
+    if (!isWebPushSupported()) {
       return;
     }
 
@@ -366,7 +366,7 @@ export class Client {
   }
 
   async clearAllState() {
-    if (!isSupportedBrowser()) {
+    if (!isWebPushSupported()) {
       return;
     }
 
@@ -518,30 +518,17 @@ function urlBase64ToUInt8Array(base64String) {
   return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 }
 
-/**
- * Modified from https://stackoverflow.com/questions/4565112
- */
-function isSupportedBrowser() {
-  const winNav = window.navigator;
-  const vendorName = winNav.vendor;
+function isWebPushSupported() {
+  const hasNotification = 'Notification' in window;
+  const hasPushManager = 'PushManager' in window;
+  const hasServiceWorker = 'serviceWorker' in navigator;
 
-  const isChromium =
-    window.chrome !== null && typeof window.chrome !== 'undefined';
-  const isOpera = winNav.userAgent.indexOf('OPR') > -1;
-  const isEdge = winNav.userAgent.indexOf('Edg') > -1;
-  const isFirefox = winNav.userAgent.indexOf('Firefox') > -1;
-
-  const isChrome =
-    isChromium && vendorName === 'Google Inc.' && !isEdge && !isOpera;
-
-  const isSupported = isChrome || isOpera || isFirefox || isEdge;
-
-  if (!isSupported) {
-    console.warn(
-      'Pusher Web Push Notifications supports Chrome, Firefox, Edge and Opera.'
-    );
+  if (!hasNotification || !hasPushManager || !hasServiceWorker) {
+    console.warn('Missing required Web Push APIs. Please upgrade your browser');
+    return false;
   }
-  return isSupported;
+
+  return true;
 }
 
 export { TokenProvider };
