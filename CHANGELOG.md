@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased](https://github.com/pusher/push-notifications-web/compare/2.1.0...HEAD)
 
-## [2.1.0](https://github.com/pusher/push-notifications-web/compare/2.1.0...2.0.0) - 2025-01-17
+## [2.1.0](https://github.com/pusher/push-notifications-web/compare/2.0.0...2.1.0) - 2025-01-17
 - Safari is now explicitly supported for Web Push notifications, leveraging the Web Push standard APIs. This is made possible by server-side updates to handle Safari-specific requirements.
 - Replaced browser type checks with direct feature detection for required Web Push APIs (Notification, PushManager, and serviceWorker). 
 
-## [2.0.0](https://github.com/pusher/push-notifications-web/compare/2.0.0...1.10) - 2022-12-05
+## [2.0.0](https://github.com/pusher/push-notifications-web/compare/1.1.0...2.0.0) - 2022-12-05
  - getDeviceInterests now accepts limit and cursor parameters and returns Object instead of an Array.
 
 ## [1.1.0](https://github.com/pusher/push-notifications-web/compare/1.0.3...1.1.0) - 2020-09-16
